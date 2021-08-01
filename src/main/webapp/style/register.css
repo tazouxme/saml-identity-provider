@@ -1,0 +1,80 @@
+#register {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	margin-top: -200px;
+	margin-left: -300px;
+	width: 600px;
+	height: 400px;
+	box-shadow: 0px 0px 5px 0px #454545;
+	font-family: Arial;
+	color: #454545;
+}
+
+#register-header {
+	position: absolute;
+	top: 50px;
+	left: 50px;
+	width: 500px;
+	height: 30px;
+	border-bottom: 1px solid #454545;
+	font-size: 16pt;
+	vertical-align: middle;
+}
+
+#register-form {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+#register-form form #register-error {
+	position: absolute;
+	top: 200px;
+	left: 20px;
+	font-size: 10pt;
+	color: red;
+}
+
+#register-form form #register-ok {
+	position: absolute;
+	top: 230px;
+	left: 20px;
+	font-size: 10pt;
+	color: #454545;
+}
+
+#register-form form {
+	position: absolute;
+	top: 130px;
+	left: 50px;
+}
+
+#register-form form input[type="text"] {
+	padding: 10px 20px;
+	width: 380px;
+	border: 1px solid #454545;
+	margin-bottom: 5px;
+}
+
+#register-form form input[type="password"] {
+	padding: 10px 20px;
+	width: 380px;
+	border: 1px solid #454545;
+}
+
+#register-form form input[type="submit"] {
+	padding: 10px 20px;
+	width: 120px;
+	background-color: #5f7bde;
+	border: 1px solid #454545;
+	color: white;
+}
+#register-form form input[type="submit"]:hover {
+	cursor: pointer;
+}
+
+#register-form form input.separator {
+	position: relative;
+	margin-top: 30px;
+}

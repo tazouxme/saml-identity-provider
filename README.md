@@ -1,4 +1,4 @@
-# saml-identity-provider (Simple personal project)
+# SAML Identity Provider (Simple personal project)
 A simple personal project to develop an Identity Provider. Version 1.0.0.  
   
 Identity Provider using open source frameworks
@@ -13,6 +13,10 @@ To change the KeyStore and Certificate (src/main/resources/cert), you can execut
 2. keytool -export -rfc -keystore /path/to/x.p12 -storepass STOREPASS -alias ALIAS -file /path/to/x.crt -storetype PKCS12
 ```
 
+##### Request type handled:
+- [x] AuthnRequest -> Responds with an SAML Response
+- [ ] ArtifactResolve
+
 ##### Supported initializations: 
 - [x] SP-Initialization
 - [ ] IdP-Initialization
@@ -22,6 +26,7 @@ To change the KeyStore and Certificate (src/main/resources/cert), you can execut
 - [x] urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST
 - [x] urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign
 - [ ] urn:oasis:names:tc:SAML:2.0:bindings:SOAP
+- [ ] urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact
 
 ##### Supported AuthnContextClassRef:
 - [x] urn:oasis:names:tc:SAML:2.0:ac:classes:Password

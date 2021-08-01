@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd">
+
+	<bean id="filterChainProxy" class="org.springframework.security.web.FilterChainProxy">
+		<constructor-arg>
+			<list>
+				<!-- Pictures, Styles and Scripts -->
+				<security:filter-chain pattern="/img/**" filters="none" />
+				<security:filter-chain pattern="/script/**" filters="none" />
+				<security:filter-chain pattern="/style/**" filters="none" />
+				
+				<!-- Simple pages -->
+				<security:filter-chain pattern="/register" filters="none" />
+				
+				<!-- Security -->
+				<security:filter-chain pattern="/**" filters="
+					securityContextPersistenceFilter,
+					getSingleSignOnFilter,
+					postSingleSignOnFilter,
+					loginAuthenticateFilter,
+					startAuthenticateFilter,
+					finishAuthenticateFilter,
+					samlHandlerFilter,
+					exceptionTranslationFilter,
+					filterSecurityInterceptor" />
+			</list>
+		</constructor-arg>
+	</bean>
+
+	<bean id="securityContextPersistenceFilter" class="org.springframework.security.web.context.SecurityContextPersistenceFilter" />
+	
+	<bean id="ssoStages" class="com.tazouxme.idp.security.stage.chain.StageChain">
+		<property name="stages">
+			<list>
+				<bean class="com.tazouxme.idp.security.stage.ValidateRequestParametersStage" />
+				<bean class="com.tazouxme.idp.security.stage.ValidateRequestValuesStage" />
+				<bean class="com.tazouxme.idp.security.stage.ValidateRequestURLStage" />
+				<bean class="com.tazouxme.idp.security.stage.ValidateCookiesStage" />
+				<bean class="com.tazouxme.idp.security.stage.ValidateSignaturesStage" />
+				<bean class="com.tazouxme.idp.security.stage.ValidateOrganizationAccessStage" />
+				<bean class="com.tazouxme.idp.security.stage.ValidateUserAccessStage" />
+			</list>
+		</property>
+	</bean>
+	
+	<bean id="getSingleSignOnFilter" class="com.tazouxme.idp.security.filter.sso.GetSingleSignOnFilter">
+		<property name="stages" ref="ssoStages" />
+	</bean>
+	<bean id="postSingleSignOnFilter" class="com.tazouxme.idp.security.filter.sso.PostSingleSignOnFilter">
+		<property name="stages" ref="ssoStages" />
+	</bean>
+	<bean id="loginAuthenticateFilter" class="com.tazouxme.idp.security.filter.login.LoginAuthenticationFilter" />
+	<bean id="startAuthenticateFilter" class="com.tazouxme.idp.security.filter.login.StartAuthenticateFilter" />
+	<bean id="finishAuthenticateFilter" class="com.tazouxme.idp.security.filter.login.FinishAuthenticateFilter">
+		<property name="authenticationManager" ref="authenticationManager" />
+	</bean>
+	<bean id="samlHandlerFilter" class="com.tazouxme.idp.security.filter.SAMLHandlerFilter" />
+	
+	<bean id="exceptionTranslationFilter" class="org.springframework.security.web.access.ExceptionTranslationFilter">
+		<constructor-arg index="0">
+			<bean class="com.tazouxme.idp.security.IdentityProviderAuthenticationEntryPoint" />
+		</constructor-arg>
+	</bean>
+	
+	<bean id="filterSecurityInterceptor" class="org.springframework.security.web.access.intercept.FilterSecurityInterceptor">
+		<property name="accessDecisionManager" ref="accessDecisionManager" />
+		<property name="securityMetadataSource">
+			<security:filter-security-metadata-source>
+				<security:intercept-url pattern="/**" access="hasRole('ROLE_USER')" />
+			</security:filter-security-metadata-source>
+		</property>
+	</bean>
+	
+	<bean id="accessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased">
+		<constructor-arg>
+			<list>
+				<bean class="org.springframework.security.access.vote.RoleVoter">
+					<property name="rolePrefix" value="ROLE_" />
+				</bean>
+				<bean class="org.springframework.security.access.vote.AuthenticatedVoter" />
+				<bean class="org.springframework.security.web.access.expression.WebExpressionVoter" />
+			</list>
+		</constructor-arg>
+	</bean>
+	
+	<bean id="authenticateProvider" class="com.tazouxme.idp.security.provider.AuthenticateProvider" />
+	
+	<security:authentication-manager alias="authenticationManager">
+		<security:authentication-provider ref="authenticateProvider" />
+	</security:authentication-manager>
+	
+</beans>

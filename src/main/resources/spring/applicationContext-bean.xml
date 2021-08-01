@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+    
+    <context:property-placeholder location="classpath:application.properties" />
+	<context:annotation-config />
+    
+    <bean id="accessBo" class="com.tazouxme.idp.bo.AccessBo" />
+    <bean id="activationBo" class="com.tazouxme.idp.bo.ActivationBo" />
+    <bean id="applicationBo" class="com.tazouxme.idp.bo.ApplicationBo" />
+    <bean id="organizationBo" class="com.tazouxme.idp.bo.OrganizationBo" />
+    <bean id="sessionBo" class="com.tazouxme.idp.bo.SessionBo" />
+    <bean id="userBo" class="com.tazouxme.idp.bo.UserBo" />
+    
+    <bean id="accessDao" class="com.tazouxme.idp.dao.AccessDao" />
+    <bean id="activationDao" class="com.tazouxme.idp.dao.ActivationDao" />
+    <bean id="applicationDao" class="com.tazouxme.idp.dao.ApplicationDao" />
+    <bean id="organizationDao" class="com.tazouxme.idp.dao.OrganizationDao" />
+    <bean id="sessionDao" class="com.tazouxme.idp.dao.SessionDao" />
+    <bean id="userDao" class="com.tazouxme.idp.dao.UserDao" />
+    
+    <bean id="configuration" class="com.tazouxme.idp.IdentityProviderConfiguration">
+    	<property name="domain" value="${idp.domain}" />
+    	<property name="path" value="${idp.path}" />
+    	<property name="urn" value="${idp.urn}" />
+    	<property name="keystorePath" value="${idp.keystore}" />
+    	<property name="keystorePassword" value="${idp.keystore.pass}" />
+    	<property name="alias" value="${idp.key.alias}" />
+    	<property name="keyPassword" value="${idp.key.pass}" />
+    	<property name="certificatePath" value="${idp.cert}" />
+    </bean>
+    
+    <bean id="httpEncoder" class="com.tazouxme.idp.security.encoder.IdpHTTPPostSignEncoder" scope="prototype">
+		<property name="velocityTemplateId" value="/velocity/post-saml.vm" />
+		<property name ="velocityEngine">
+			<bean class="com.tazouxme.idp.security.encoder.velocity.IdpVelocityEngine" />
+		</property>
+	</bean>
+        
+</beans>
