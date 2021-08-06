@@ -10,6 +10,7 @@ import com.tazouxme.idp.security.stage.exception.StageExceptionType;
 import com.tazouxme.idp.security.stage.parameters.StageParameters;
 import com.tazouxme.idp.security.token.UserAuthenticationPhase;
 import com.tazouxme.idp.security.token.UserAuthenticationToken;
+import com.tazouxme.idp.security.token.UserAuthenticationType;
 import com.tazouxme.idp.util.SAMLUtils;
 
 public class ValidateRequestParametersStage implements Stage {
@@ -19,6 +20,8 @@ public class ValidateRequestParametersStage implements Stage {
 	@Override
 	public UserAuthenticationToken execute(UserAuthenticationToken authentication, 
 			StageParameters o) throws StageException {
+		authentication.getDetails().setType(UserAuthenticationType.SAML);
+		
 		if (StringUtils.isEmpty(o.getSamlRequestParam())) {
 			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0101, o);
 		}

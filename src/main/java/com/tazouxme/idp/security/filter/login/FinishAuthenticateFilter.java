@@ -1,7 +1,6 @@
 package com.tazouxme.idp.security.filter.login;
 
 import java.io.IOException;
-import java.util.UUID;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -11,16 +10,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tazouxme.idp.IdentityProviderConstants;
-import com.tazouxme.idp.bo.contract.ISessionBo;
-import com.tazouxme.idp.exception.SessionException;
-import com.tazouxme.idp.model.Session;
 import com.tazouxme.idp.security.filter.AbstractIdentityProviderFilter;
 import com.tazouxme.idp.security.filter.entity.PasswordEntity;
 import com.tazouxme.idp.security.stage.StageResultCode;
@@ -32,9 +27,6 @@ import com.tazouxme.idp.security.token.UserAuthenticationToken;
 public class FinishAuthenticateFilter extends AbstractIdentityProviderFilter {
 
 	private AuthenticationManager authenticationManager;
-	
-	@Autowired
-	private ISessionBo sessionBo;
 	
 	public FinishAuthenticateFilter() {
 		super(new AntPathRequestMatcher("/login", "POST"));
@@ -71,19 +63,6 @@ public class FinishAuthenticateFilter extends AbstractIdentityProviderFilter {
 					new UserAuthenticationToken(username, new ObjectMapper().readValue(password.getBytes(), PasswordEntity.class)));
 			
 			if (UserAuthenticationPhase.IS_AUTHENTICATED.equals(endAuthentication.getDetails().getPhase())) {
-				// register new token
-				Session session = new Session();
-				session.setOrganizationExternalId(organization);
-				session.setUserExternalId(username);
-				session.setToken(UUID.randomUUID().toString());
-				
-				try {
-					sessionBo.create(session);
-					endAuthentication.getDetails().getIdentity().setToken(session.getToken());
-				} catch (SessionException e) {
-					throw new StageException(StageExceptionType.ACCESS, StageResultCode.FAT_1102);
-				}
-
 				logger.info("User successfully authenticated");
 				// SAML Response
 				SecurityContextHolder.getContext().setAuthentication(endAuthentication);

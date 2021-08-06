@@ -36,7 +36,7 @@ public abstract class AbstractIdentityProviderFilter extends GenericFilterBean {
 			return;
 		}
 		
-		request.setAttribute(IdentityProviderConstants.SECURITY_SAML_PROCESS, Boolean.TRUE);
+		request.setAttribute(IdentityProviderConstants.REQUEST_ACTIVE_AUTHENTICATION, Boolean.TRUE);
 		doFilterInternal(request, response, chain);
 	}
 	

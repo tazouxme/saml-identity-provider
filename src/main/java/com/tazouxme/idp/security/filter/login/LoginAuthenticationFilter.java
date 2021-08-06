@@ -14,6 +14,7 @@ import com.tazouxme.idp.security.filter.AbstractIdentityProviderFilter;
 import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.security.token.UserAuthenticationPhase;
 import com.tazouxme.idp.security.token.UserAuthenticationToken;
+import com.tazouxme.idp.security.token.UserAuthenticationType;
 
 public class LoginAuthenticationFilter extends AbstractIdentityProviderFilter {
 
@@ -25,14 +26,8 @@ public class LoginAuthenticationFilter extends AbstractIdentityProviderFilter {
 	protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws IOException, ServletException {
 		UserAuthenticationToken startAuthentication = (UserAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
 		
-		boolean isAuthnRequestPresent = startAuthentication != null && startAuthentication.getDetails().getParameters() != null &&
-				startAuthentication.getDetails().getParameters().getAuthnRequest() != null;
-		
-		boolean isSPinitialization = isAuthnRequestPresent &&
-				UserAuthenticationPhase.MUST_AUTHENTICATE.equals(startAuthentication.getDetails().getPhase());
-		
-		if (!isSPinitialization) {
-			logger.info("IDP Initialization process");
+		if (startAuthentication == null || startAuthentication.getDetails().getParameters() == null ||
+				!UserAuthenticationPhase.MUST_AUTHENTICATE.equals(startAuthentication.getDetails().getPhase())) {
 			SecurityContextHolder.clearContext();
 			
 			UserAuthenticationToken authentication = new UserAuthenticationToken();
@@ -42,8 +37,13 @@ public class LoginAuthenticationFilter extends AbstractIdentityProviderFilter {
 			
 			chain.doFilter(req, res);
 			return;
-		} else {
+		}
+		
+		if (UserAuthenticationType.SAML.equals(startAuthentication.getDetails().getType())) {
 			logger.info("SP Initialization process");
+
+		} else {
+			logger.info("IdP Initialization process");
 			
 		}
 		

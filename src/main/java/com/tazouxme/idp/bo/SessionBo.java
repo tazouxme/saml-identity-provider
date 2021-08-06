@@ -1,6 +1,7 @@
 package com.tazouxme.idp.bo;
 
 import java.util.Date;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -27,7 +28,8 @@ public class SessionBo implements ISessionBo {
 		} catch (SessionException e) {
 			// session does not exist, proceed
 		}
-		
+
+		session.setToken(UUID.randomUUID().toString());
 		session.setExternalId(IDUtils.generateId("SES_", 8));
 		session.setCreationDate(new Date().getTime());
 		return dao.create(session);

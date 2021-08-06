@@ -10,6 +10,8 @@ import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.config.InitializationService;
@@ -18,6 +20,7 @@ import org.opensaml.security.credential.Credential;
 import org.opensaml.security.credential.CredentialSupport;
 import org.opensaml.security.credential.impl.KeyStoreCredentialResolver;
 import org.opensaml.security.x509.BasicX509Credential;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -26,7 +29,9 @@ import net.shibboleth.utilities.java.support.resolver.CriteriaSet;
 import net.shibboleth.utilities.java.support.resolver.Criterion;
 import net.shibboleth.utilities.java.support.resolver.ResolverException;
 
-public class IdentityProviderConfiguration {
+public class IdentityProviderConfiguration implements InitializingBean {
+
+	protected final Log logger = LogFactory.getLog(getClass());
 
 	@Autowired
 	private ResourceLoader resourceLoader;
@@ -44,6 +49,7 @@ public class IdentityProviderConfiguration {
 	private String certificatePath;
 	
 	public IdentityProviderConfiguration() throws InitializationException {
+		logger.info("Initializing OpenSAML and BouncyCastle");
 		InitializationService.initialize();
 		Security.addProvider(new BouncyCastleProvider());
 	}
@@ -116,8 +122,7 @@ public class IdentityProviderConfiguration {
 		Map<String, String> passwordMap = new HashMap<String, String>();
 		passwordMap.put(getAlias(), getKeyPassword());
 
-		KeyStore keystore = readKeystoreFromFile(getKeystorePath(), getKeystorePassword());
-		KeyStoreCredentialResolver resolver = new KeyStoreCredentialResolver(keystore, passwordMap);
+		KeyStoreCredentialResolver resolver = new KeyStoreCredentialResolver(loadKeyStore(), passwordMap);
 		Criterion criterion = new EntityIdCriterion(getAlias());
 		CriteriaSet criteriaSet = new CriteriaSet();
 		criteriaSet.add(criterion);
@@ -130,8 +135,13 @@ public class IdentityProviderConfiguration {
 	}
 
 	public BasicX509Credential getPublicCredential() {
+		return loadX509Credential();
+	}
+
+	private BasicX509Credential loadX509Credential() {
 		try {
 			if (x509 == null) {
+				logger.info("Loading X509");
 				Resource resource = resourceLoader.getResource(getCertificatePath());
 				CertificateFactory factory = CertificateFactory.getInstance("X.509");
 				X509Certificate cert = (X509Certificate) factory.generateCertificate(resource.getInputStream());
@@ -150,18 +160,25 @@ public class IdentityProviderConfiguration {
 		return null;
 	}
 
-	private KeyStore readKeystoreFromFile(String pathToKeyStore, String keyStorePassword) {
+	private KeyStore loadKeyStore() {
 		try {
 			if (keystore == null) {
+				logger.info("Loading KeyStore");
 				keystore = KeyStore.getInstance(KeyStore.getDefaultType());
-				Resource resource = resourceLoader.getResource(pathToKeyStore);
-				keystore.load(resource.getInputStream(), keyStorePassword.toCharArray());
+				Resource resource = resourceLoader.getResource(getKeystorePath());
+				keystore.load(resource.getInputStream(), getKeystorePassword().toCharArray());
 			}
 			
 			return keystore;
 		} catch (Exception e) {
 			throw new RuntimeException("Something went wrong reading keystore", e);
 		}
+	}
+	
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		loadX509Credential();
+		loadKeyStore();
 	}
 
 }

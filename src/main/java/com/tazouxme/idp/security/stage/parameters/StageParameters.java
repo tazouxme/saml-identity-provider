@@ -7,6 +7,7 @@ import org.opensaml.security.credential.Credential;
 import org.opensaml.security.x509.BasicX509Credential;
 
 import com.tazouxme.idp.IdentityProviderConfiguration;
+import com.tazouxme.idp.model.Application;
 import com.tazouxme.idp.model.Organization;
 import com.tazouxme.idp.model.User;
 
@@ -21,12 +22,23 @@ public class StageParameters {
 	
 	private Organization organization;
 	private User user;
+	private Application application;
+	private String redirectUrl;
+	
+	public StageParameters(IdentityProviderConfiguration configuration, String redirectUrl) {
+		this.configuration = configuration;
+		this.redirectUrl = redirectUrl;
+	}
 	
 	public StageParameters(IdentityProviderConfiguration configuration, 
 			String urlMethod, String urlParam, String samlRequestParam, String relayStateParam, String organization, String user, String signature) {
 		this.configuration = configuration;
 		this.requestParameters = new StageRequestParameters(urlMethod, urlParam, samlRequestParam, relayStateParam);
 		this.cookieParameters = new StageCookieParameters(organization, user, signature);
+	}
+	
+	public String getRedirectUrl() {
+		return redirectUrl;
 	}
 	
 	public String getUrlMethod() {
@@ -107,6 +119,14 @@ public class StageParameters {
 	
 	public void setUser(User user) {
 		this.user = user;
+	}
+	
+	public Application getApplication() {
+		return application;
+	}
+	
+	public void setApplication(Application application) {
+		this.application = application;
 	}
 
 }

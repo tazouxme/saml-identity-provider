@@ -1,23 +1,32 @@
 package com.tazouxme.idp.model;
 
+import java.util.Objects;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.tazouxme.idp.dao.query.AccessQueries;
 
 @Entity
 @Table(name = "tz_access")
 @NamedQueries({
-	@NamedQuery(name = "Access.findByExternalId", query = AccessQueries.FIND_BY_ID),
-	@NamedQuery(name = "Access.findByUser", query = AccessQueries.FIND_BY_USER),
-	@NamedQuery(name = "Access.findByOrganization", query = AccessQueries.FIND_BY_ORGANIZATION)
+	@NamedQuery(name = AccessQueries.NQ_FIND_BY_ID, query = AccessQueries.FIND_BY_ID),
+	@NamedQuery(name = AccessQueries.NQ_FIND_BY_URN, query = AccessQueries.FIND_BY_URN),
+	@NamedQuery(name = AccessQueries.NQ_FIND_BY_USER, query = AccessQueries.FIND_BY_USER),
+	@NamedQuery(name = AccessQueries.NQ_FIND_BY_USER_AND_URN, query = AccessQueries.FIND_BY_USER_AND_URN),
+	@NamedQuery(name = AccessQueries.NQ_FIND_BY_ORGANIZATION, query = AccessQueries.FIND_BY_ORGANIZATION)
 })
 public class Access {
 
@@ -30,24 +39,32 @@ public class Access {
 	@Column(name = "external_id", length = 16, updatable = false, nullable = false)
 	private String externalId;
 	
-	@Column(name = "urn", length = 32, updatable = false, nullable = false)
-	private String urn;
-	
-	@Column(name = "access_type", length = 4, updatable = false, nullable = false)
-	private String accessType;
-	
-	@Column(name = "access_key", length = 16, updatable = false, nullable = false)
-	private String accessKey;
-	
-	@Column(name = "role", length = 16, updatable = true, nullable = false)
-	private String role;
-	
 	@Column(name = "enabled", length = 1, updatable = true, nullable = false)
 	private boolean enabled;
 	
 	@Column(name = "creation_date", length = 16, updatable = false, nullable = false)
 	private long creationDate;
 
+	@JsonIgnoreProperties("accesses")
+	@ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organization_id", foreignKey = @ForeignKey(name = "fk_tz_access_organization"))
+	private Organization organization;
+
+	@JsonIgnoreProperties("accesses")
+	@ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", foreignKey = @ForeignKey(name = "fk_tz_access_user"))
+	private User user;
+
+	@JsonIgnoreProperties("accesses")
+	@ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "application_id", foreignKey = @ForeignKey(name = "fk_tz_access_application"))
+	private Application application;
+
+	@JsonIgnoreProperties("accesses")
+	@ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "role_id", foreignKey = @ForeignKey(name = "fk_tz_access_role"))
+	private Role role;
+	
 	public long getId() {
 		return id;
 	}
@@ -55,45 +72,13 @@ public class Access {
 	public void setId(long id) {
 		this.id = id;
 	}
-	
+
 	public String getExternalId() {
 		return externalId;
 	}
-	
+
 	public void setExternalId(String externalId) {
 		this.externalId = externalId;
-	}
-
-	public String getUrn() {
-		return urn;
-	}
-
-	public void setUrn(String urn) {
-		this.urn = urn;
-	}
-
-	public String getAccessType() {
-		return accessType;
-	}
-
-	public void setAccessType(String accessType) {
-		this.accessType = accessType;
-	}
-
-	public String getAccessKey() {
-		return accessKey;
-	}
-
-	public void setAccessKey(String accessKey) {
-		this.accessKey = accessKey;
-	}
-
-	public String getRole() {
-		return role;
-	}
-
-	public void setRole(String role) {
-		this.role = role;
 	}
 
 	public boolean isEnabled() {
@@ -110,6 +95,57 @@ public class Access {
 
 	public void setCreationDate(long creationDate) {
 		this.creationDate = creationDate;
+	}
+
+	public Organization getOrganization() {
+		return organization;
+	}
+
+	public void setOrganization(Organization organization) {
+		this.organization = organization;
+	}
+
+	public User getUser() {
+		return user;
+	}
+
+	public void setUser(User user) {
+		this.user = user;
+	}
+
+	public Application getApplication() {
+		return application;
+	}
+
+	public void setApplication(Application application) {
+		this.application = application;
+	}
+
+	public Role getRole() {
+		return role;
+	}
+
+	public void setRole(Role role) {
+		this.role = role;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null || !(obj instanceof Access)) {
+			return false;
+		}
+		
+		if (this == obj) {
+			return true;
+		}
+		
+		Access a = (Access) obj;
+		return getExternalId().equals(a.getExternalId());
+	}
+	
+	@Override
+	public int hashCode() {
+		return Objects.hash(getExternalId());
 	}
 
 }

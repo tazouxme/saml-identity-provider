@@ -5,11 +5,20 @@ import com.tazouxme.idp.security.stage.parameters.StageParameters;
 
 public class UserAuthenticationDetails {
 	
+	private UserAuthenticationType type;
 	private UserAuthenticationPhase phase;
 	private StageParameters parameters;
 	private StageResultCode resultCode;
 	
 	private UserIdentity identity = new UserIdentity();
+	
+	public UserAuthenticationType getType() {
+		return type;
+	}
+	
+	public void setType(UserAuthenticationType type) {
+		this.type = type;
+	}
 	
 	public UserAuthenticationPhase getPhase() {
 		return phase;

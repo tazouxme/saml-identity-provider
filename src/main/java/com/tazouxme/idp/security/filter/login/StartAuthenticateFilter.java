@@ -29,15 +29,19 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import com.tazouxme.idp.IdentityProviderConstants;
+import com.tazouxme.idp.bo.contract.IApplicationBo;
 import com.tazouxme.idp.bo.contract.IOrganizationBo;
 import com.tazouxme.idp.bo.contract.IUserBo;
+import com.tazouxme.idp.exception.ApplicationException;
 import com.tazouxme.idp.exception.OrganizationException;
 import com.tazouxme.idp.exception.UserException;
+import com.tazouxme.idp.model.Application;
 import com.tazouxme.idp.model.Organization;
 import com.tazouxme.idp.model.User;
 import com.tazouxme.idp.security.filter.AbstractIdentityProviderFilter;
 import com.tazouxme.idp.security.token.UserAuthenticationPhase;
 import com.tazouxme.idp.security.token.UserAuthenticationToken;
+import com.tazouxme.idp.security.token.UserAuthenticationType;
 
 public class StartAuthenticateFilter extends AbstractIdentityProviderFilter {
 
@@ -46,6 +50,9 @@ public class StartAuthenticateFilter extends AbstractIdentityProviderFilter {
 	
 	@Autowired
 	private IUserBo userBo;
+	
+	@Autowired
+	private IApplicationBo applicationBo;
 	
 	public StartAuthenticateFilter() {
 		super(new AntPathRequestMatcher("/login", "HEAD"));
@@ -68,7 +75,6 @@ public class StartAuthenticateFilter extends AbstractIdentityProviderFilter {
 		
 		try {
 			if (startAuthentication == null || startAuthentication.getDetails().getParameters() == null ||
-					startAuthentication.getDetails().getParameters().getAuthnRequest() == null ||
 					!UserAuthenticationPhase.MUST_AUTHENTICATE.equals(startAuthentication.getDetails().getPhase())) {
 				logger.error("Authentication phase is not correct");
 				SecurityContextHolder.clearContext();
@@ -93,13 +99,35 @@ public class StartAuthenticateFilter extends AbstractIdentityProviderFilter {
 			
 			UserAuthenticationToken inAuthentication = new UserAuthenticationToken(user.getExternalId(), user.getPassword());
 			inAuthentication.getDetails().setParameters(startAuthentication.getDetails().getParameters());
+			inAuthentication.getDetails().getParameters().setOrganization(organization);
+			inAuthentication.getDetails().getParameters().setUser(user);
 			inAuthentication.getDetails().getParameters().setSecretKey(generateSharedSecret(keys.getPrivate(), obtainPublicKey(publicKey)));
+			
 			inAuthentication.getDetails().setPhase(UserAuthenticationPhase.IS_AUTHENTICATING);
+			inAuthentication.getDetails().setType(startAuthentication.getDetails().getType());
 			
 			inAuthentication.getDetails().getIdentity().setOrganizationId(organization.getExternalId());
 			inAuthentication.getDetails().getIdentity().setOrganization(organization.getCode());
 			inAuthentication.getDetails().getIdentity().setUserId(user.getExternalId());
 			inAuthentication.getDetails().getIdentity().setEmail(user.getEmail());
+			inAuthentication.getDetails().getIdentity().setRole(user.isAdministrator() ? "ADMIN" : "USER");
+			
+			if (UserAuthenticationType.SAML.equals(startAuthentication.getDetails().getType())) {
+				// SP Initialized
+				Application application = inAuthentication.getDetails().getParameters().getApplication();
+				if (application == null) {
+					application = applicationBo.findByUrn(startAuthentication.getDetails().getParameters().getAuthnRequest().getIssuer().getValue(), organization.getExternalId());
+					inAuthentication.getDetails().getParameters().setApplication(application);
+				}
+				
+				if (!application.getAssertionUrl().equals(startAuthentication.getDetails().getParameters().getAuthnRequest().getAssertionConsumerServiceURL())) {
+					logger.error("Invalid Assertion Consumer Service URL in AuthnRequest");
+					response.setStatus(406);
+					response.setHeader(IdentityProviderConstants.AUTH_HEADER_CSRF, csrf);
+					response.setHeader(IdentityProviderConstants.AUTH_HEADER_ERROR, "Invalid Assertion Consumer Service URL in AuthnRequest");
+					return;
+				}
+			}
 			
 			SecurityContextHolder.getContext().setAuthentication(inAuthentication);
 
@@ -118,6 +146,11 @@ public class StartAuthenticateFilter extends AbstractIdentityProviderFilter {
 			response.setStatus(404);
 			response.setHeader(IdentityProviderConstants.AUTH_HEADER_CSRF, csrf);
 			response.setHeader(IdentityProviderConstants.AUTH_HEADER_ERROR, "Unknown User");
+		} catch (ApplicationException e) {
+			logger.error("Unknown Application");
+			response.setStatus(404);
+			response.setHeader(IdentityProviderConstants.AUTH_HEADER_CSRF, csrf);
+			response.setHeader(IdentityProviderConstants.AUTH_HEADER_ERROR, "Unknown Application");
 		} catch (GeneralSecurityException e) {
 			logger.error("Unable to generate the SecretKey from the PublicKey", e);
 			response.setStatus(417);

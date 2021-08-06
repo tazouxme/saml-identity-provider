@@ -92,6 +92,7 @@ public class ClientTest {
 	private static final String SSO_RELAY_STATE = UUID.randomUUID().toString();
 
 	private static final String LOGIN_URL = "http://localhost:20126/saml-identity-provider/login";
+	private static final String REGISTER_URL = "http://localhost:20126/saml-identity-provider/register";
 
 	private static Server server;
 
@@ -153,31 +154,6 @@ public class ClientTest {
 
 	@Test
 	@Order(3)
-	public void testUnknownApplication() {
-		CloseableHttpClient httpClient = HttpClients.createDefault();
-
-		try {
-			HttpGet get = new HttpGet(buildQueryParams(SSO_RELAY_STATE, SSO_URN, SSO_ACS1, "1"));
-			CloseableHttpResponse res = httpClient.execute(get);
-			assertEquals(200, res.getStatusLine().getStatusCode());
-
-			String text = new BufferedReader(
-					new InputStreamReader(res.getEntity().getContent(), StandardCharsets.UTF_8)).lines()
-							.collect(Collectors.joining("\n"));
-
-			assertTrue(text.contains("RelayState"));
-			assertEquals(SSO_RELAY_STATE, findInputValue(text, "RelayState"));
-			
-			assertTrue(text.contains("SAMLResponse"));
-			Response response = SAMLUtilsTest.getResponse(Base64.decode(findInputValue(text, "SAMLResponse")));
-			assertEquals(StageResultCode.FAT_0212.getStatus(), response.getStatus().getStatusCode().getValue());
-		} catch (Exception e) {
-			fail(e);
-		}
-	}
-
-	@Test
-	@Order(4)
 	public void testUnknownIdpUrn() {
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 
@@ -202,25 +178,74 @@ public class ClientTest {
 	}
 
 	@Test
+	@Order(4)
+	public void testUnknownApplication() {
+		CloseableHttpClient httpClient = HttpClients.createDefault();
+
+		try {
+			HttpGet get = new HttpGet(buildQueryParams(SSO_RELAY_STATE, SSO_URN, SSO_ACS1, "1"));
+			CloseableHttpResponse loginPage = httpClient.execute(get); // -- User is redirected to Login page
+			assertEquals(200, loginPage.getStatusLine().getStatusCode());
+
+			String text = new BufferedReader(
+					new InputStreamReader(loginPage.getEntity().getContent(), StandardCharsets.UTF_8)).lines()
+							.collect(Collectors.joining("\n"));
+
+			assertTrue(text.contains("Login"));
+
+			KeyPair keys = generateKeys();
+
+			HttpHead head = new HttpHead(LOGIN_URL);
+			head.setHeader(IdentityProviderConstants.AUTH_HEADER_USERNAME, "user1@test.com");
+			head.setHeader(IdentityProviderConstants.AUTH_HEADER_CSRF, "csrf");
+			head.setHeader(IdentityProviderConstants.AUTH_HEADER_PUBLIC_KEY,
+					new String(Base64.encode(keys.getPublic().getEncoded())));
+
+			CloseableHttpResponse loginUser = httpClient.execute(head); // -- User gets Organization, User and PublicKey information for login
+			assertEquals(404, loginUser.getStatusLine().getStatusCode());
+
+			String csrf = loginUser.getFirstHeader(IdentityProviderConstants.AUTH_HEADER_CSRF).getValue();
+			String error = loginUser.getFirstHeader(IdentityProviderConstants.AUTH_HEADER_ERROR).getValue();
+
+			assertEquals("csrf", csrf);
+			assertEquals("Unknown Application", error);
+		} catch (Exception e) {
+			fail(e);
+		}
+	}
+
+	@Test
 	@Order(5)
 	public void testUnknownApplicationAcs() {
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 
 		try {
-			HttpGet get = new HttpGet(buildQueryParams(SSO_RELAY_STATE, SSO_URN, "acs", "1"));
-			CloseableHttpResponse res = httpClient.execute(get);
-			assertEquals(200, res.getStatusLine().getStatusCode());
+			HttpGet get = new HttpGet(buildQueryParams(SSO_RELAY_STATE, SSO_URN, "acs", SSO_APP1));
+			CloseableHttpResponse loginPage = httpClient.execute(get); // -- User is redirected to Login page
+			assertEquals(200, loginPage.getStatusLine().getStatusCode());
 
 			String text = new BufferedReader(
-					new InputStreamReader(res.getEntity().getContent(), StandardCharsets.UTF_8)).lines()
+					new InputStreamReader(loginPage.getEntity().getContent(), StandardCharsets.UTF_8)).lines()
 							.collect(Collectors.joining("\n"));
 
-			assertTrue(text.contains("RelayState"));
-			assertEquals(SSO_RELAY_STATE, findInputValue(text, "RelayState"));
-			
-			assertTrue(text.contains("SAMLResponse"));
-			Response response = SAMLUtilsTest.getResponse(Base64.decode(findInputValue(text, "SAMLResponse")));
-			assertEquals(StageResultCode.FAT_0213.getStatus(), response.getStatus().getStatusCode().getValue());
+			assertTrue(text.contains("Login"));
+
+			KeyPair keys = generateKeys();
+
+			HttpHead head = new HttpHead(LOGIN_URL);
+			head.setHeader(IdentityProviderConstants.AUTH_HEADER_USERNAME, "user1@test.com");
+			head.setHeader(IdentityProviderConstants.AUTH_HEADER_CSRF, "csrf");
+			head.setHeader(IdentityProviderConstants.AUTH_HEADER_PUBLIC_KEY,
+					new String(Base64.encode(keys.getPublic().getEncoded())));
+
+			CloseableHttpResponse loginUser = httpClient.execute(head); // -- User gets Organization, User and PublicKey information for login
+			assertEquals(406, loginUser.getStatusLine().getStatusCode());
+
+			String csrf = loginUser.getFirstHeader(IdentityProviderConstants.AUTH_HEADER_CSRF).getValue();
+			String error = loginUser.getFirstHeader(IdentityProviderConstants.AUTH_HEADER_ERROR).getValue();
+
+			assertEquals("csrf", csrf);
+			assertEquals("Invalid Assertion Consumer Service URL in AuthnRequest", error);
 		} catch (Exception e) {
 			fail(e);
 		}
@@ -266,6 +291,7 @@ public class ClientTest {
 			List<NameValuePair> params = new ArrayList<>();
 			params.add(new BasicNameValuePair("organization", orgId));
 			params.add(new BasicNameValuePair("username", userId));
+			params.add(new BasicNameValuePair("keepalive", "on"));
 			params.add(new BasicNameValuePair("password", "{\"password\":" + "\"" + password.getPassword() + "\","
 					+ "\"iv\":" + "\"" + password.getIv() + "\"}"));
 
@@ -320,6 +346,194 @@ public class ClientTest {
 			assertTrue(text.contains("SAMLResponse"));
 			response = SAMLUtilsTest.getResponse(Base64.decode(findInputValue(text, "SAMLResponse")));
 			assertEquals(StageResultCode.OK.getStatus(), response.getStatus().getStatusCode().getValue());
+		} catch (Exception e) {
+			fail(e);
+		}
+	}
+
+	@Test
+	@Order(7)
+	public void testRegisterEmptyValue() {
+		CloseableHttpClient httpClient = HttpClients.createDefault();
+
+		try {
+			HttpGet get = new HttpGet(REGISTER_URL);
+			CloseableHttpResponse registerPage = httpClient.execute(get);
+			assertEquals(200, registerPage.getStatusLine().getStatusCode());
+
+			String text = new BufferedReader(
+					new InputStreamReader(registerPage.getEntity().getContent(), StandardCharsets.UTF_8)).lines()
+							.collect(Collectors.joining("\n"));
+
+			assertTrue(text.contains("Register to SSO"));
+
+			List<NameValuePair> params = new ArrayList<>();
+			params.add(new BasicNameValuePair("organization", ""));
+			params.add(new BasicNameValuePair("domain", "xx.com"));
+			params.add(new BasicNameValuePair("username", "helloworld"));
+			params.add(new BasicNameValuePair("password", "pass1234"));
+
+			HttpPost post = new HttpPost(REGISTER_URL);
+			post.setEntity(new UrlEncodedFormEntity(params));
+
+			CloseableHttpResponse registeredUser = httpClient.execute(post);
+			assertEquals(200, registeredUser.getStatusLine().getStatusCode());
+			
+			text = new BufferedReader(
+					new InputStreamReader(registeredUser.getEntity().getContent(), StandardCharsets.UTF_8)).lines()
+					.collect(Collectors.joining("\n"));
+
+			assertTrue(text.contains("Value cannot be empty"));
+			
+			params = new ArrayList<>();
+			params.add(new BasicNameValuePair("organization", "my_org"));
+			params.add(new BasicNameValuePair("domain", ""));
+			params.add(new BasicNameValuePair("username", "helloworld"));
+			params.add(new BasicNameValuePair("password", "pass1234"));
+
+			post = new HttpPost(REGISTER_URL);
+			post.setEntity(new UrlEncodedFormEntity(params));
+
+			registeredUser = httpClient.execute(post);
+			assertEquals(200, registeredUser.getStatusLine().getStatusCode());
+			
+			text = new BufferedReader(
+					new InputStreamReader(registeredUser.getEntity().getContent(), StandardCharsets.UTF_8)).lines()
+					.collect(Collectors.joining("\n"));
+
+			assertTrue(text.contains("Value cannot be empty"));
+			
+			params = new ArrayList<>();
+			params.add(new BasicNameValuePair("organization", "my_org"));
+			params.add(new BasicNameValuePair("domain", "xx.com"));
+			params.add(new BasicNameValuePair("username", ""));
+			params.add(new BasicNameValuePair("password", "pass1234"));
+
+			post = new HttpPost(REGISTER_URL);
+			post.setEntity(new UrlEncodedFormEntity(params));
+
+			registeredUser = httpClient.execute(post);
+			assertEquals(200, registeredUser.getStatusLine().getStatusCode());
+			
+			text = new BufferedReader(
+					new InputStreamReader(registeredUser.getEntity().getContent(), StandardCharsets.UTF_8)).lines()
+					.collect(Collectors.joining("\n"));
+
+			assertTrue(text.contains("Value cannot be empty"));
+		} catch (Exception e) {
+			fail(e);
+		}
+	}
+
+	@Test
+	@Order(8)
+	public void testRegisterWrongDomain() {
+		CloseableHttpClient httpClient = HttpClients.createDefault();
+
+		try {
+			HttpGet get = new HttpGet(REGISTER_URL);
+			CloseableHttpResponse registerPage = httpClient.execute(get);
+			assertEquals(200, registerPage.getStatusLine().getStatusCode());
+
+			String text = new BufferedReader(
+					new InputStreamReader(registerPage.getEntity().getContent(), StandardCharsets.UTF_8)).lines()
+							.collect(Collectors.joining("\n"));
+
+			assertTrue(text.contains("Register to SSO"));
+
+			List<NameValuePair> params = new ArrayList<>();
+			params.add(new BasicNameValuePair("organization", "my_org"));
+			params.add(new BasicNameValuePair("domain", "xx"));
+			params.add(new BasicNameValuePair("username", "helloworld"));
+			params.add(new BasicNameValuePair("password", "pass1234"));
+
+			HttpPost post = new HttpPost(REGISTER_URL);
+			post.setEntity(new UrlEncodedFormEntity(params));
+
+			CloseableHttpResponse registeredUser = httpClient.execute(post);
+			assertEquals(200, registeredUser.getStatusLine().getStatusCode());
+			
+			text = new BufferedReader(
+					new InputStreamReader(registeredUser.getEntity().getContent(), StandardCharsets.UTF_8)).lines()
+					.collect(Collectors.joining("\n"));
+
+			assertTrue(text.contains("Domain not correctly formed"));
+		} catch (Exception e) {
+			fail(e);
+		}
+	}
+
+	@Test
+	@Order(9)
+	public void testRegisterWrongPassword() {
+		CloseableHttpClient httpClient = HttpClients.createDefault();
+
+		try {
+			HttpGet get = new HttpGet(REGISTER_URL);
+			CloseableHttpResponse registerPage = httpClient.execute(get);
+			assertEquals(200, registerPage.getStatusLine().getStatusCode());
+
+			String text = new BufferedReader(
+					new InputStreamReader(registerPage.getEntity().getContent(), StandardCharsets.UTF_8)).lines()
+							.collect(Collectors.joining("\n"));
+
+			assertTrue(text.contains("Register to SSO"));
+
+			List<NameValuePair> params = new ArrayList<>();
+			params.add(new BasicNameValuePair("organization", "my_org"));
+			params.add(new BasicNameValuePair("domain", "xx.com"));
+			params.add(new BasicNameValuePair("username", "helloworld"));
+			params.add(new BasicNameValuePair("password", "pass"));
+
+			HttpPost post = new HttpPost(REGISTER_URL);
+			post.setEntity(new UrlEncodedFormEntity(params));
+
+			CloseableHttpResponse registeredUser = httpClient.execute(post);
+			assertEquals(200, registeredUser.getStatusLine().getStatusCode());
+			
+			text = new BufferedReader(
+					new InputStreamReader(registeredUser.getEntity().getContent(), StandardCharsets.UTF_8)).lines()
+					.collect(Collectors.joining("\n"));
+
+			assertTrue(text.contains("Password length must be min. 8 and must contain 1 letter and 1 number"));
+		} catch (Exception e) {
+			fail(e);
+		}
+	}
+
+	@Test
+	@Order(10)
+	public void testRegister() {
+		CloseableHttpClient httpClient = HttpClients.createDefault();
+
+		try {
+			HttpGet get = new HttpGet(REGISTER_URL);
+			CloseableHttpResponse registerPage = httpClient.execute(get);
+			assertEquals(200, registerPage.getStatusLine().getStatusCode());
+
+			String text = new BufferedReader(
+					new InputStreamReader(registerPage.getEntity().getContent(), StandardCharsets.UTF_8)).lines()
+							.collect(Collectors.joining("\n"));
+
+			assertTrue(text.contains("Register to SSO"));
+
+			List<NameValuePair> params = new ArrayList<>();
+			params.add(new BasicNameValuePair("organization", "my_org"));
+			params.add(new BasicNameValuePair("domain", "xx.com"));
+			params.add(new BasicNameValuePair("username", "helloworld"));
+			params.add(new BasicNameValuePair("password", "pass1234"));
+
+			HttpPost post = new HttpPost(REGISTER_URL);
+			post.setEntity(new UrlEncodedFormEntity(params));
+
+			CloseableHttpResponse registeredUser = httpClient.execute(post);
+			assertEquals(200, registeredUser.getStatusLine().getStatusCode());
+			
+			text = new BufferedReader(
+					new InputStreamReader(registeredUser.getEntity().getContent(), StandardCharsets.UTF_8)).lines()
+					.collect(Collectors.joining("\n"));
+
+			assertTrue(text.contains("Validate your instance"));
 		} catch (Exception e) {
 			fail(e);
 		}

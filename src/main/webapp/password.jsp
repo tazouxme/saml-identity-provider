@@ -4,6 +4,7 @@
 <title>SSO Password change</title>
 
 <link rel="stylesheet" href="./style/password.css" />
+<link rel="icon" type="image/png" href="img/gamma.png" sizes="16x16" />
 
 </head>
 <body>

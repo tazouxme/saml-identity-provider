@@ -24,6 +24,7 @@ import com.tazouxme.idp.security.stage.exception.StageExceptionType;
 import com.tazouxme.idp.security.stage.parameters.StageParameters;
 import com.tazouxme.idp.security.token.UserAuthenticationPhase;
 import com.tazouxme.idp.security.token.UserAuthenticationToken;
+import com.tazouxme.idp.security.token.UserAuthenticationType;
 import com.tazouxme.idp.util.CookieUtils;
 
 public abstract class AbstractSingleSignOnFilter extends AbstractIdentityProviderFilter {
@@ -41,7 +42,7 @@ public abstract class AbstractSingleSignOnFilter extends AbstractIdentityProvide
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
-		logger.info("Entering SSO Process");
+		logger.info("Entering SAML SSO Process");
 		SecurityContextHolder.clearContext();
 
 		Cookie organizationCookie = CookieUtils.find(request, IdentityProviderConstants.COOKIE_ORGANIZATION);
@@ -78,6 +79,7 @@ public abstract class AbstractSingleSignOnFilter extends AbstractIdentityProvide
 			UserAuthenticationToken authentication = new UserAuthenticationToken();
 			authentication.getDetails().setResultCode(e.getCode());
 			authentication.getDetails().setParameters(e.getParams());
+			authentication.getDetails().setType(UserAuthenticationType.SAML);
 			
 			if (StageExceptionType.FATAL.equals(e.getType()) || StageExceptionType.ACCESS.equals(e.getType())) {
 				authentication.getDetails().setPhase(UserAuthenticationPhase.SSO_FAILED);

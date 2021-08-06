@@ -1,0 +1,116 @@
+/*
+ * ------------------------
+ * -- DAuth Table styles --
+ * ------------------------
+ */
+
+.dauth-table {
+	width: 300px;
+	padding: 0px;
+	margin: 0px;
+	border-spacing: 0px;
+	border: 1px solid #bbbbbb;
+	font-size: 12px;
+}
+
+.dauth-table-container {
+	overflow: auto;
+}
+
+.dauth-table-head {
+	padding: 0px;
+	margin: 0px;
+	background-color: #205E9B;
+	color: white;
+	font-weight: lighter;
+}
+
+.dauth-table-head tr {
+	padding: 0px;
+	margin: 0px;
+}
+
+.dauth-table-head tr th {
+	padding: 0px;
+	margin: 0px;
+}
+
+.dauth-table-head tr th:not(:last-child) {
+	padding: 5px 10px;
+	margin: 0px;
+	border-right: 1px solid #bbbbbb;
+}
+
+.dauth-table-body {
+	padding: 0px;
+	margin: 0px;
+}
+
+.dauth-table-row {
+	padding: 0px;
+	margin: 0px;
+}
+
+.dauth-table-row:last-child td {
+	border-bottom: 0px solid #bbbbbb;
+}
+
+.dauth-table-row:hover {
+	cursor: pointer;
+	background-color: #89b8e7;
+}
+
+.dauth-table-row td {
+	padding: 5px 10px;
+	margin: 0px;
+	border-top: 1px solid #bbbbbb;
+}
+
+.dauth-table-row td div {
+	position: relative;
+	top: 0px;
+	left: 0px;
+	width: calc(100% - 20px);
+	height: calc(100% - 10px);
+}
+
+.dauth-table-row td div.boolean {
+	text-align: center;
+}
+
+.dauth-table-row td div.date {
+	width: 100%;
+	text-align: center;
+}
+
+.dauth-table-row td div.number {
+	width: 100%;
+	text-align: right;
+}
+
+.dauth-table-row td div > img {
+	position: absolute;
+	top: 0px;
+	width: 16px;
+	height: 16px;
+}
+
+.dauth-table-row td div.boolean > img {
+	top: -8px;
+}
+
+.dauth-table-row td div > span {
+	position: relative;
+	display: inline-block;
+	top: 0px;
+	width: calc(100% - 22px);
+    left: 22px;
+}
+
+.dauth-table-row td:not(:last-child) {
+	border-right: 1px solid #bbbbbb;
+}
+
+.table-row-selected {
+	background-color: #f5f5f5;
+}

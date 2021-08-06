@@ -1,5 +1,7 @@
 package com.tazouxme.idp.bo;
 
+import java.util.Set;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.tazouxme.idp.bo.contract.IApplicationBo;
@@ -12,10 +14,15 @@ public class ApplicationBo implements IApplicationBo {
 	
 	@Autowired
 	private IApplicationDao dao;
+	
+	@Override
+	public Set<Application> findAll(String organizationExternalId) {
+		return dao.findAll(organizationExternalId);
+	}
 
 	@Override
-	public Application findByUrn(String urn) throws ApplicationException {
-		return dao.findByUrn(urn);
+	public Application findByUrn(String urn, String organizationExternalId) throws ApplicationException {
+		return dao.findByUrn(urn, organizationExternalId);
 	}
 
 	@Override

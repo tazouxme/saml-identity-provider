@@ -4,6 +4,7 @@
 <title>SSO Login</title>
 
 <link rel="stylesheet" href="./style/authenticate.css" />
+<link rel="icon" type="image/png" href="img/gamma.png" sizes="16x16" />
 <script src="./script/authenticate.js"></script>
 <script>
 
@@ -40,6 +41,8 @@ document.addEventListener("DOMContentLoaded", (e) => {
 			<input type="text" id="email" placeholder="username" />
 			<input type="password" id="password" name="password" placeholder="****" />
 			<input type="submit" id="submit-username" name="submit-username" value="Enter" />
+			<input type="checkbox" id="keepalive" name="keepalive" />
+			<label for="keepalive">Activate SSO</label>
 			
 			<input type="hidden" id="username" name="username" value="" />
 			<input type="hidden" id="organization" name="organization" value="" />

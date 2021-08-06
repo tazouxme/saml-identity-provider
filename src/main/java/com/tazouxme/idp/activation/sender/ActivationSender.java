@@ -8,6 +8,14 @@ import javax.servlet.http.HttpServletResponse;
 
 public interface ActivationSender {
 	
+	/**
+	 * Send the activation link
+	 * @param req
+	 * @param res
+	 * @param link
+	 * @throws ServletException
+	 * @throws IOException
+	 */
 	public void send(HttpServletRequest req, HttpServletResponse res, String link) throws ServletException, IOException;
 
 }

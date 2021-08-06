@@ -37,15 +37,8 @@ public class UserBo implements IUserBo {
 		User pUser = findByExternalId(user.getExternalId(), user.getOrganization().getExternalId());
 		pUser.setEnabled(user.isEnabled());
 		pUser.setPassword(user.getPassword());
-		pUser.setFirstname(user.getFirstname());
-		pUser.setLastname(user.getLastname());
-		pUser.setSex(user.getSex());
-		pUser.setBirthDate(user.getBirthDate());
-		pUser.setPicture(user.getPicture());
-		pUser.setCity(user.getCity());
-		pUser.setCountry(user.getCountry());
-		pUser.setStreet(user.getStreet());
-		pUser.setZipCode(user.getZipCode());
+		pUser.setAdministrator(user.isAdministrator());
+		pUser.setEnabled(user.isEnabled());
 		
 		return dao.update(user);
 	}

@@ -16,7 +16,7 @@ public class SessionDao implements ISessionDao {
 	@Override
 	public Session find(String orgExternalId, String userExternalId) throws SessionException {
 		try {
-			return em.createNamedQuery("Session.find", Session.class).
+			return em.createNamedQuery(SessionQueries.NQ_FIND, Session.class).
 				setParameter(SessionQueries.PARAM_ORGANIZATION_ID, orgExternalId).
 				setParameter(SessionQueries.PARAM_USER_ID, userExternalId).
 				getSingleResult();

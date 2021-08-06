@@ -16,6 +16,7 @@
 				
 				<!-- Simple pages -->
 				<security:filter-chain pattern="/" filters="none" />
+				<security:filter-chain pattern="/metadata" filters="none" />
 				<security:filter-chain pattern="/activate" filters="none" />
 				<security:filter-chain pattern="/register" filters="none" />
 				
@@ -27,7 +28,7 @@
 					loginAuthenticateFilter,
 					startAuthenticateFilter,
 					finishAuthenticateFilter,
-					samlHandlerFilter,
+					authenticationHandlerFilter,
 					exceptionTranslationFilter,
 					filterSecurityInterceptor" />
 			</list>
@@ -61,7 +62,7 @@
 	<bean id="finishAuthenticateFilter" class="com.tazouxme.idp.security.filter.login.FinishAuthenticateFilter">
 		<property name="authenticationManager" ref="authenticationManager" />
 	</bean>
-	<bean id="samlHandlerFilter" class="com.tazouxme.idp.security.filter.SAMLHandlerFilter" />
+	<bean id="authenticationHandlerFilter" class="com.tazouxme.idp.security.filter.AuthenticationHandlerFilter" />
 	
 	<bean id="exceptionTranslationFilter" class="org.springframework.security.web.access.ExceptionTranslationFilter">
 		<constructor-arg index="0">
@@ -73,6 +74,9 @@
 		<property name="accessDecisionManager" ref="accessDecisionManager" />
 		<property name="securityMetadataSource">
 			<security:filter-security-metadata-source>
+				<security:intercept-url pattern="/dashboard" access="hasRole('ROLE_ADMIN')" />
+				<security:intercept-url pattern="/lib/**" access="hasRole('ROLE_ADMIN')" />
+				<security:intercept-url pattern="/api/**" access="hasRole('ROLE_ADMIN')" />
 				<security:intercept-url pattern="/**" access="hasRole('ROLE_USER')" />
 			</security:filter-security-metadata-source>
 		</property>

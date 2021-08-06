@@ -1,0 +1,76 @@
+/*
+ * ------------------------
+ * -- DAuth Field styles --
+ * ------------------------
+ */
+.dauth-field {
+	position: absolute;
+	height: 55px;
+}
+
+.dauth-field.dauth-validation-error .dauth-field-input {
+	border: 1px solid red;
+}
+
+.dauth-field.dauth-validation-error .dauth-field-label {
+	color: red;
+}
+
+.dauth-field-icon {
+	position: absolute;
+	top: 22px;
+	left: 15px;
+	z-index: 2;
+}
+
+.dauth-field-input {
+	position: absolute;
+	top: 5px;
+	width: 100%;
+	height: 50px;
+	padding-left: 45px;
+	border: 1px solid #ccc;
+	z-index: 1;
+}
+
+.dauth-field-input[disabled="disabled"] {
+	background-color: white;
+}
+
+.dauth-field-label {
+	position: absolute;
+	display: block;
+	font-size: 14px;
+	top: 22px;
+	left: 40px;
+	padding-top: 0px;
+	padding-bottom: 0px;
+	padding-left: 0px;
+	padding-right: 0px;
+	font-weight: lighter;
+	background-color: white;
+	color: #888;
+	z-index: 2;
+	transition: all 0.2s;
+}
+
+.dauth-field-marker {
+	position: absolute;
+	bottom: 1px;
+	right: 1px;
+	display: inline-block;
+	height: 0;
+	width: 0;
+	border-bottom: 10px solid red;
+	border-left: 10px solid transparent;
+	z-index: 2;
+}
+
+.dauth-field-error {
+	position: absolute;
+	top: 55px;
+    left: 5px;
+    font-size: 8pt;
+	color: red;
+	display: none;
+}

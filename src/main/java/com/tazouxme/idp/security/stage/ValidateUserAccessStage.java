@@ -1,7 +1,5 @@
 package com.tazouxme.idp.security.stage;
 
-import java.util.UUID;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +16,7 @@ import com.tazouxme.idp.security.stage.exception.StageExceptionType;
 import com.tazouxme.idp.security.stage.parameters.StageParameters;
 import com.tazouxme.idp.security.token.UserAuthenticationPhase;
 import com.tazouxme.idp.security.token.UserAuthenticationToken;
+import com.tazouxme.idp.security.token.UserAuthenticationType;
 import com.tazouxme.idp.security.token.UserIdentity;
 
 public class ValidateUserAccessStage implements Stage {
@@ -40,7 +39,7 @@ public class ValidateUserAccessStage implements Stage {
 		// find user and check SaaS access
 		Access access = null;
 		try {
-			access = accessBo.findByUser(o.getUserId(), o.getAuthnRequest().getIssuer().getValue());
+			access = accessBo.findByUserAndURN(o.getUserId(), o.getAuthnRequest().getIssuer().getValue(), o.getOrganizationId());
 			if (!access.isEnabled()) {
 				throw new StageException(StageExceptionType.ACCESS, StageResultCode.ACC_0601, o);
 			}
@@ -51,23 +50,20 @@ public class ValidateUserAccessStage implements Stage {
 		User user = o.getUser();
 		authentication.getDetails().getIdentity().setUserId(user.getExternalId());
 		authentication.getDetails().getIdentity().setEmail(user.getEmail());
+		authentication.getDetails().getIdentity().setRole(user.isAdministrator() ? "ADMIN" : "USER");
 		
 		UserIdentity identity = authentication.getDetails().getIdentity();
 		
-		authentication = new UserAuthenticationToken(access.getAccessKey(), "", access.getRole());
+		authentication = new UserAuthenticationToken(access.getUser().getExternalId(), "", access.getRole().getName());
 		authentication.getDetails().setParameters(o);
+		authentication.getDetails().setType(UserAuthenticationType.SAML);
 		authentication.getDetails().setPhase(UserAuthenticationPhase.USER_ACCESS_VALID);
 		authentication.getDetails().setResultCode(StageResultCode.OK);
 		authentication.getDetails().setIdentity(identity);
 		
-		Session session = new Session();
-		session.setOrganizationExternalId(o.getOrganizationId());
-		session.setUserExternalId(o.getUserId());
-		session.setToken(UUID.randomUUID().toString());
-		
 		try {
-			sessionBo.create(session);
-			authentication.getDetails().getIdentity().setToken(session.getToken());
+			String token = registerToken(o.getOrganizationId(), o.getUserId());
+			authentication.getDetails().getIdentity().setToken(token);
 		} catch (SessionException e) {
 			throw new StageException(StageExceptionType.ACCESS, StageResultCode.ACC_0603, o);
 		}
@@ -75,6 +71,19 @@ public class ValidateUserAccessStage implements Stage {
 		logger.info("User access valid");
 		
 		return authentication;
+	}
+	
+	protected String registerToken(String organizationId, String userId) throws SessionException {
+		// register new token
+		Session session = new Session();
+		session.setOrganizationExternalId(organizationId);
+		session.setUserExternalId(userId);
+		
+		try {
+			return sessionBo.create(session).getToken();
+		} catch (SessionException e) {
+			throw new StageException(StageExceptionType.ACCESS, StageResultCode.FAT_1102);
+		}
 	}
 
 }

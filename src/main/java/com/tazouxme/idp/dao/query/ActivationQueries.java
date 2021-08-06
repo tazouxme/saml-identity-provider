@@ -11,4 +11,7 @@ public class ActivationQueries {
 	public static final String FIND = "select s from Activation s where s.externalId = :" + PARAM_ID +
 			" and s.userExternalId = :" + PARAM_USER_ID + " and s.organizationExternalId = :" + PARAM_ORG_ID + " and s.step = :" + PARAM_STEP;
 
+	public static final String NQ_FIND = "Activation.find";
+	public static final String NQ_FIND_BY_ID = "Activation.findByExternalId";
+	
 }

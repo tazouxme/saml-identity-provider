@@ -1,11 +1,15 @@
 package com.tazouxme.idp.dao.contract;
 
+import java.util.Set;
+
 import com.tazouxme.idp.exception.ApplicationException;
 import com.tazouxme.idp.model.Application;
 
 public interface IApplicationDao {
 	
-	public Application findByUrn(String urn) throws ApplicationException;
+	public Set<Application> findAll(String organizationExternalId);
+	
+	public Application findByUrn(String urn, String organizationExternalId) throws ApplicationException;
 	
 	public Application findByExternalId(String externalId) throws ApplicationException;
 	

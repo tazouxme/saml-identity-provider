@@ -6,6 +6,12 @@ import com.tazouxme.idp.sanitizer.validation.SanitizerValidationResultImpl;
 
 public class SanitizerUtils {
 	
+	/**
+	 * Helper method to sinatize more than one values with one Sanitizer
+	 * @param sanitizer
+	 * @param values
+	 * @return
+	 */
 	public static SanitizerValidationResult sanitize(Sanitizer sanitizer, String... values) {
 		SanitizerValidationResult result = new SanitizerValidationResultImpl();
 		if (values == null) {

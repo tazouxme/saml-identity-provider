@@ -23,6 +23,7 @@ public class IdentityProviderConstants {
 	public static final String AUTH_PARAM_ORGANIZATION = "organization";
 	public static final String AUTH_PARAM_USERNAME = "username";
 	public static final String AUTH_PARAM_PASSWORD = "password";
+	public static final String AUTH_PARAM_KEEPALIVE = "keepalive";
 	
 	public static final String ACTIVATION_CONST_ACTIVATE = "ACTIVATE";
 	public static final String ACTIVATION_CONST_PASSWORD = "PASSWORD";
@@ -38,7 +39,8 @@ public class IdentityProviderConstants {
 	public static final String SERVLET_ERROR_WRONG_PASS = "wrongPass";
 	public static final String SERVLET_ERROR_REGISTER = "registerError";
 	public static final String SERVLET_REGISTER_OK = "registerOk";
-	
-	public static final String SECURITY_SAML_PROCESS = "security-saml-process";
+
+	public static final String REQUEST_ACTIVE_AUTHENTICATION = "active_authentication";
+	public static final String SESSION_ATTRIBUTE_MESSAGES = "idp_messages";
 
 }

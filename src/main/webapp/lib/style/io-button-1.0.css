@@ -1,0 +1,44 @@
+/*
+ * -------------------------
+ * -- DAuth Button styles --
+ * -------------------------
+ */
+
+.dauth-button {
+	position: relative;
+	padding: 5px;
+	color: #454545;
+	background-image: linear-gradient(white, #e5e5e5);
+	border: 1px solid #bbbbbb;
+	border-radius: 2px;
+}
+
+.dauth-button[disabled] {
+	color: #999999;
+}
+
+.dauth-button:not([disabled]):hover {
+	cursor: pointer;
+	background-image: linear-gradient(#97aaea, #5f7bde);
+	color: #ffffff;
+}
+
+.dauth-button > span.dauth-button-blank {
+	position: relative;
+	display: block;
+    vertical-align: middle;
+	padding-top: 6px;
+	top: -3px;
+}
+
+.dauth-button > span.dauth-button-img {
+	position: relative;
+	top: -3px;
+}
+
+.dauth-button > img {
+	width: 16px;
+	height: 16px;
+	margin-top: 2px;
+	margin-right: 3px;
+}

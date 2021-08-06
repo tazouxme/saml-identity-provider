@@ -25,58 +25,48 @@ public class ActivationActivateProcessor extends AbstractActivationProcessor {
 	
 	@Override
 	public void activate(String[] codes) throws ServletException, IOException {
-		IActivationBo activationBo = getApplicationContext().getBean(IActivationBo.class);
-		IOrganizationBo organizationBo = getApplicationContext().getBean(IOrganizationBo.class);
-		IUserBo userBo = getApplicationContext().getBean(IUserBo.class);
-		
 		if (codes.length != 1) {
 			getServletRequest().setAttribute(IdentityProviderConstants.SERVLET_ERROR_REGISTER, "Two codes should be provided");
 			getServletRequest().getRequestDispatcher("/register.jsp").forward(getServletRequest(), getServletResponse());
 			return;
 		}
 		
-		String organizationId = null;
-		String userId = null;
+		IActivationBo activationBo = getApplicationContext().getBean(IActivationBo.class);
 		
-		String code = codes[0];
 		try {
-			Activation activation = activationBo.findByExternalId(code);
+			Activation activation = activationBo.findByExternalId(codes[0]);
 			if (!IdentityProviderConstants.ACTIVATION_CONST_ACTIVATE.equals(activation.getStep())) {
 				return;
 			}
 			
-			organizationId = activation.getOrganizationExternalId();
-			userId = activation.getUserExternalId();
-		} catch (ActivationException e) {
+			activateOrganization(activation.getOrganizationExternalId());
+			activateUser(activation.getUserExternalId(), activation.getOrganizationExternalId());
+			
+			activationBo.delete(activation);
+		} catch (ActivationException | UserException | OrganizationException e) {
 			getServletRequest().setAttribute(IdentityProviderConstants.SERVLET_ERROR_REGISTER, "Unable to activate the account");
-			getServletRequest().getRequestDispatcher("/register.jsp").forward(getServletRequest(), getServletResponse());
-			return;
-		}
-		
-		try {
-			Organization organization = organizationBo.findByExternalId(organizationId);
-			organization.setEnabled(true);
-			
-			organizationBo.update(organization);
-		} catch (OrganizationException e) {
-			getServletRequest().setAttribute(IdentityProviderConstants.SERVLET_ERROR_REGISTER, "Unable to activate the Organization");
-			getServletRequest().getRequestDispatcher("/register.jsp").forward(getServletRequest(), getServletResponse());
-			return;
-		}
-		
-		try {
-			User user = userBo.findByExternalId(userId, organizationId);
-			user.setEnabled(true);
-			
-			userBo.update(user);
-		} catch (UserException e) {
-			getServletRequest().setAttribute(IdentityProviderConstants.SERVLET_ERROR_REGISTER, "Unable to activate the User");
 			getServletRequest().getRequestDispatcher("/register.jsp").forward(getServletRequest(), getServletResponse());
 			return;
 		}
 		
 		// redirect to admin
 		getServletResponse().sendRedirect("./dashboard");
+	}
+	
+	private void activateOrganization(String organizationId) throws OrganizationException {
+		IOrganizationBo organizationBo = getApplicationContext().getBean(IOrganizationBo.class);
+		Organization organization = organizationBo.findByExternalId(organizationId);
+		organization.setEnabled(true);
+		
+		organizationBo.update(organization);
+	}
+	
+	private void activateUser(String userId, String organizationId) throws UserException {
+		IUserBo userBo = getApplicationContext().getBean(IUserBo.class);
+		User user = userBo.findByExternalId(userId, organizationId);
+		user.setEnabled(true);
+		
+		userBo.update(user);
 	}
 
 }

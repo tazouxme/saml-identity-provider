@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
@@ -145,7 +147,7 @@ public class SAMLUtils {
 		assertion.setSubject(buildSubject(authnRequest, identity));
 		assertion.setConditions(buildConditions(authnRequest.getIssuer().getValue()));
 		assertion.getAuthnStatements().add(buildAuthnStatement(authnRequest.getRequestedAuthnContext().getAuthnContextClassRefs().get(0).getURI()));
-		assertion.getAttributeStatements().add(buildAttributeStatement(identity.getOrganization(), identity.getEmail(), role));
+		assertion.getAttributeStatements().add(buildAttributeStatement(identity.getClaims(), role));
 		
 		Signature signature = buildSAMLObject(Signature.class);
 		signature.setSigningCredential(credential);
@@ -223,11 +225,13 @@ public class SAMLUtils {
 		return authnStatement;
 	}
 	
-	private static AttributeStatement buildAttributeStatement(String organization, String email, String role) {
+	private static AttributeStatement buildAttributeStatement(Map<String, String> claims, String role) {
 		AttributeStatement attributeStatement = buildSAMLObject(AttributeStatement.class);
-		attributeStatement.getAttributes().add(buildAttribute(IdentityProviderConstants.SAML_CLAIM_ORGANIZATION, organization));
-		attributeStatement.getAttributes().add(buildAttribute(IdentityProviderConstants.SAML_CLAIM_EMAIL, email));
 		attributeStatement.getAttributes().add(buildAttribute(IdentityProviderConstants.SAML_CLAIM_ROLE, role));
+		
+		for (Entry<String, String> claim : claims.entrySet()) {
+			attributeStatement.getAttributes().add(buildAttribute(claim.getKey(), claim.getValue()));
+		}
 		
 		return attributeStatement;
 	}
@@ -246,7 +250,7 @@ public class SAMLUtils {
 	}
 
 	@SuppressWarnings("unchecked")
-	protected static <T> T buildSAMLObject(final Class<T> clazz) {
+	public static <T> T buildSAMLObject(final Class<T> clazz) {
 		T object = null;
 		try {
 			QName defaultElementName = (QName) clazz.getDeclaredField("DEFAULT_ELEMENT_NAME").get(null);

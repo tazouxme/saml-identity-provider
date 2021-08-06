@@ -1,6 +1,8 @@
 # SAML Identity Provider (Simple personal project)
 A simple personal project to develop an Identity Provider. Version 1.0.0.  
   
+Icons provided by [Iconixar](https://www.iconfinder.com/Iconixar)  
+  
 Identity Provider using open source frameworks
 - Spring / Spring Security (5.x version)
 - Hibernate (5.x version)
@@ -19,7 +21,7 @@ To change the KeyStore and Certificate (src/main/resources/cert), you can execut
 
 ##### Supported initializations: 
 - [x] SP-Initialization
-- [ ] IdP-Initialization
+- [x] IdP-Initialization
 
 ##### Supported bindings:
 - [x] urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect
@@ -41,8 +43,10 @@ To change the KeyStore and Certificate (src/main/resources/cert), you can execut
 - [x] Reads, validates and rejects AuthnRequests
 - [x] Single Sign On and POST Response to SP's assertion URL
 - [ ] Single Log Out
+- [x] Claim based attributes
 - [x] Create and activate an account from zero
-- [ ] Manage the account through a web UI
+- [ ] Manage the account through a web UI - Only display
 - [ ] Federation support
-- [x] Trust support - Partial: the SP knows the IdP's certificate
+- [x] Trust support - Partial: the SP knows the IdP's certificate (Cert. import in progress)
 - [ ] Internationalization
+- [x] Automatic Metadata generation

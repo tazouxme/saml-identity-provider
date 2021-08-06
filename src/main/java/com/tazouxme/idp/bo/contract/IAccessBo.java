@@ -1,5 +1,7 @@
 package com.tazouxme.idp.bo.contract;
 
+import java.util.Set;
+
 import org.springframework.transaction.annotation.Transactional;
 
 import com.tazouxme.idp.exception.AccessException;
@@ -11,10 +13,16 @@ public interface IAccessBo {
 	public Access findByExternalId(String externalId) throws AccessException;
 	
 	@Transactional(readOnly = true)
-	public Access findByOrganization(String organizationExternalId, String urn) throws AccessException;
+	public Set<Access> findByURN(String urn, String organizationExternalId);
 	
 	@Transactional(readOnly = true)
-	public Access findByUser(String userExternalId, String urn) throws AccessException;
+	public Set<Access> findByOrganization(String organizationExternalId);
+	
+	@Transactional(readOnly = true)
+	public Set<Access> findByUser(String userExternalId, String organizationExternalId);
+	
+	@Transactional(readOnly = true)
+	public Access findByUserAndURN(String userExternalId, String urn, String organizationExternalId) throws AccessException;
 	
 	@Transactional
 	public Access create(Access access) throws AccessException;

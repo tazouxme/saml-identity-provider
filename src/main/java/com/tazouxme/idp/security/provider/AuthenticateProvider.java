@@ -25,6 +25,7 @@ import com.tazouxme.idp.security.stage.exception.StageException;
 import com.tazouxme.idp.security.stage.exception.StageExceptionType;
 import com.tazouxme.idp.security.token.UserAuthenticationPhase;
 import com.tazouxme.idp.security.token.UserAuthenticationToken;
+import com.tazouxme.idp.security.token.UserAuthenticationType;
 
 public class AuthenticateProvider implements AuthenticationProvider {
 	
@@ -63,16 +64,20 @@ public class AuthenticateProvider implements AuthenticationProvider {
 		}
 		
 		// get and check access
-		String role = null;
+		String role = inAuthentication.getDetails().getIdentity().getRole();
 		try {
-			Access access = accessBo.findByUser(
-				inAuthentication.getName(), 
-				inAuthentication.getDetails().getParameters().getAuthnRequest().getIssuer().getValue());
-			
-			role = access.getRole();
-			
-			if (!access.isEnabled()) {
-				throw new StageException(StageExceptionType.ACCESS, StageResultCode.ACC_0901, inAuthentication.getDetails().getParameters());
+			if (UserAuthenticationType.SAML.equals(inAuthentication.getDetails().getType())) {
+				// SP Initialized
+				Access access = accessBo.findByUserAndURN(
+					inAuthentication.getDetails().getIdentity().getUserId(), 
+					inAuthentication.getDetails().getParameters().getAuthnRequest().getIssuer().getValue(),
+					inAuthentication.getDetails().getIdentity().getOrganizationId());
+				
+				role = access.getRole().getName();
+				
+				if (!access.isEnabled()) {
+					throw new StageException(StageExceptionType.ACCESS, StageResultCode.ACC_0901, inAuthentication.getDetails().getParameters());
+				}
 			}
 		} catch (AccessException e) {
 			throw new StageException(StageExceptionType.ACCESS, StageResultCode.ACC_0902, inAuthentication.getDetails().getParameters());
@@ -83,6 +88,7 @@ public class AuthenticateProvider implements AuthenticationProvider {
 		authenticated.getDetails().setPhase(UserAuthenticationPhase.IS_AUTHENTICATED);
 		authenticated.getDetails().setParameters(inAuthentication.getDetails().getParameters());
 		authenticated.getDetails().setResultCode(StageResultCode.OK);
+		authenticated.getDetails().setType(inAuthentication.getDetails().getType());
 		authenticated.getDetails().setIdentity(inAuthentication.getDetails().getIdentity());
 		
 		return authenticated;

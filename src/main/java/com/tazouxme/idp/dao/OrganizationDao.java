@@ -16,7 +16,7 @@ public class OrganizationDao implements IOrganizationDao {
 	@Override
 	public Organization findByExternalId(String externalId) throws OrganizationException {
 		try {
-			return em.createNamedQuery("Organization.findByExternalId", Organization.class).
+			return em.createNamedQuery(OrganizationQueries.NQ_FIND_BY_EXTERNAL_ID, Organization.class).
 				setParameter(OrganizationQueries.PARAM_ID, externalId).
 				getSingleResult();
 		} catch (Exception e) {
@@ -27,7 +27,7 @@ public class OrganizationDao implements IOrganizationDao {
 	@Override
 	public Organization findByDomain(String domain) throws OrganizationException {
 		try {
-			return em.createNamedQuery("Organization.findByDomain", Organization.class).
+			return em.createNamedQuery(OrganizationQueries.NQ_FIND_BY_DOMAIN, Organization.class).
 				setParameter(OrganizationQueries.PARAM_DOMAIN, domain).
 				getSingleResult();
 		} catch (Exception e) {

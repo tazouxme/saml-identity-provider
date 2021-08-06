@@ -8,18 +8,28 @@
     
     <context:property-placeholder location="classpath:application.properties" />
 	<context:annotation-config />
+	
+    <bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+    	<property name="basename" value="i18n/messages" />
+    </bean>
+    
+    <bean id="idpApplication" class="com.tazouxme.idp.application.IdentityProviderApplication" />
     
     <bean id="accessBo" class="com.tazouxme.idp.bo.AccessBo" />
     <bean id="activationBo" class="com.tazouxme.idp.bo.ActivationBo" />
     <bean id="applicationBo" class="com.tazouxme.idp.bo.ApplicationBo" />
+    <bean id="claimBo" class="com.tazouxme.idp.bo.ClaimBo" />
     <bean id="organizationBo" class="com.tazouxme.idp.bo.OrganizationBo" />
+    <bean id="roleBo" class="com.tazouxme.idp.bo.RoleBo" />
     <bean id="sessionBo" class="com.tazouxme.idp.bo.SessionBo" />
     <bean id="userBo" class="com.tazouxme.idp.bo.UserBo" />
     
     <bean id="accessDao" class="com.tazouxme.idp.dao.AccessDao" />
     <bean id="activationDao" class="com.tazouxme.idp.dao.ActivationDao" />
     <bean id="applicationDao" class="com.tazouxme.idp.dao.ApplicationDao" />
+    <bean id="claimDao" class="com.tazouxme.idp.dao.ClaimDao" />
     <bean id="organizationDao" class="com.tazouxme.idp.dao.OrganizationDao" />
+    <bean id="roleDao" class="com.tazouxme.idp.dao.RoleDao" />
     <bean id="sessionDao" class="com.tazouxme.idp.dao.SessionDao" />
     <bean id="userDao" class="com.tazouxme.idp.dao.UserDao" />
     

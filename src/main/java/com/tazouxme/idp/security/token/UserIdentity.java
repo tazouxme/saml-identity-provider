@@ -1,12 +1,17 @@
 package com.tazouxme.idp.security.token;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class UserIdentity {
 	
 	private String organizationId;
 	private String organization;
 	private String userId;
 	private String email;
+	private String role;
 	private String token;
+	private Map<String, String> claims = new HashMap<>();
 
 	public String getOrganizationId() {
 		return organizationId;
@@ -40,12 +45,28 @@ public class UserIdentity {
 		this.email = email;
 	}
 	
+	public String getRole() {
+		return role;
+	}
+	
+	public void setRole(String role) {
+		this.role = role;
+	}
+	
 	public String getToken() {
 		return token;
 	}
 	
 	public void setToken(String token) {
 		this.token = token;
+	}
+	
+	public Map<String, String> getClaims() {
+		return claims;
+	}
+	
+	public void setClaims(Map<String, String> claims) {
+		this.claims = claims;
 	}
 
 }

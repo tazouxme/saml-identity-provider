@@ -26,8 +26,8 @@ public enum StageResultCode {
 	FAT_0209 ("FAT-0209", "AuthnRequest Issuer not set", StatusCode.REQUEST_UNSUPPORTED),
 	FAT_0210 ("FAT-0210", "AuthnRequest Issuer must not be empty", StatusCode.REQUEST_UNSUPPORTED),
 	FAT_0211 ("FAT-0211", "Unknown Identity Provider", StatusCode.NO_SUPPORTED_IDP),
-	FAT_0212 ("FAT-0212", "Unknown Application", StatusCode.RESOURCE_NOT_RECOGNIZED),
-	FAT_0213 ("FAT-0213", "Unknown AssertionConsumerServiceURL", StatusCode.RESOURCE_NOT_RECOGNIZED),
+//	FAT_0212 ("FAT-0212", "Unknown Application", StatusCode.RESOURCE_NOT_RECOGNIZED),
+//	FAT_0213 ("FAT-0213", "Unknown AssertionConsumerServiceURL", StatusCode.RESOURCE_NOT_RECOGNIZED),
 	FAT_0214 ("FAT-0214", "Unknown NameIDPolicy", StatusCode.INVALID_NAMEID_POLICY),
 	FAT_0215 ("FAT-0215", "Only " + NameIDType.EMAIL + " and " + NameIDType.PERSISTENT + " accepted as NameIDPolicy", StatusCode.INVALID_NAMEID_POLICY),
 	FAT_0216 ("FAT-0216", "AllowCreate is not enabled", StatusCode.INVALID_NAMEID_POLICY),
@@ -64,9 +64,11 @@ public enum StageResultCode {
 	
 	// ValidateOrganizationAccess
 	FAT_0501 ("FAT-0501", "Authentication phase not correctly set", StatusCode.RESPONDER),
+	FAT_0502 ("FAT-0502", "Unknown Application", StatusCode.RESOURCE_NOT_RECOGNIZED),
+	FAT_0503 ("FAT-0503", "Unknown AssertionConsumerServiceURL", StatusCode.RESOURCE_NOT_RECOGNIZED),
 //	FAT_0502 ("FAT-0502", "Organization not found", StatusCode.UNKNOWN_PRINCIPAL),
 	ACC_0501 ("ACC-0501", "Access is disabled for Organization", StatusCode.REQUESTER),
-	ACC_0502 ("ACC-0502", "Access not found for Organization", StatusCode.REQUESTER),
+//	ACC_0502 ("ACC-0502", "Access not found for Organization", StatusCode.REQUESTER),
 	
 	// ValidateUserAccess
 	FAT_0601 ("FAT-0601", "Authentication phase not correctly set", StatusCode.RESPONDER),

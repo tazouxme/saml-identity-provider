@@ -1,7 +1,8 @@
 package com.tazouxme.idp.model;
 
+import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
-import java.util.TreeSet;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -22,8 +23,8 @@ import com.tazouxme.idp.dao.query.OrganizationQueries;
 @Entity
 @Table(name = "tz_organization")
 @NamedQueries({
-	@NamedQuery(name = "Organization.findByDomain", query = OrganizationQueries.FIND_BY_DOMAIN),
-	@NamedQuery(name = "Organization.findByExternalId", query = OrganizationQueries.FIND_BY_EXTERNAL_ID)
+	@NamedQuery(name = OrganizationQueries.NQ_FIND_BY_DOMAIN, query = OrganizationQueries.FIND_BY_DOMAIN),
+	@NamedQuery(name = OrganizationQueries.NQ_FIND_BY_EXTERNAL_ID, query = OrganizationQueries.FIND_BY_EXTERNAL_ID)
 })
 public class Organization {
 
@@ -60,9 +61,19 @@ public class Organization {
 	
 	@JsonIgnoreProperties("organization")
 	@OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
-	private Set<User> users = new TreeSet<>((o1, o2) -> {
-		return o1.getEmail().compareTo(o2.getEmail());
-	});
+	private Set<User> users = new HashSet<>();
+	
+	@JsonIgnoreProperties("organization")
+	@OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
+	private Set<Application> applications = new HashSet<>();
+	
+	@JsonIgnoreProperties("organization")
+	@OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
+	private Set<Claim> claims = new HashSet<>();
+	
+	@JsonIgnoreProperties("organization")
+	@OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
+	private Set<Role> roles = new HashSet<>();
 
 	public long getId() {
 		return id;
@@ -142,6 +153,49 @@ public class Organization {
 
 	public void setUsers(Set<User> users) {
 		this.users = users;
+	}
+	
+	public Set<Application> getApplications() {
+		return applications;
+	}
+	
+	public void setApplications(Set<Application> applications) {
+		this.applications = applications;
+	}
+	
+	public Set<Claim> getClaims() {
+		return claims;
+	}
+	
+	public void setClaims(Set<Claim> claims) {
+		this.claims = claims;
+	}
+	
+	public Set<Role> getRoles() {
+		return roles;
+	}
+	
+	public void setRoles(Set<Role> roles) {
+		this.roles = roles;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null || !(obj instanceof Organization)) {
+			return false;
+		}
+		
+		if (this == obj) {
+			return true;
+		}
+		
+		Organization a = (Organization) obj;
+		return getExternalId().equals(a.getExternalId());
+	}
+	
+	@Override
+	public int hashCode() {
+		return Objects.hash(getExternalId());
 	}
 
 }

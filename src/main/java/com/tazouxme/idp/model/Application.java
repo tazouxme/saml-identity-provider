@@ -1,22 +1,36 @@
 package com.tazouxme.idp.model;
 
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.tazouxme.idp.dao.query.ApplicationQueries;
 
 @Entity
 @Table(name = "tz_application")
 @NamedQueries({
-	@NamedQuery(name = "Application.findByUrn", query = ApplicationQueries.FIND_BY_URN),
-	@NamedQuery(name = "Application.findByExternalId", query = ApplicationQueries.FIND_BY_EXTERNAL_ID)
+	@NamedQuery(name = ApplicationQueries.NQ_FIND_ALL, query = ApplicationQueries.FIND_ALL),
+	@NamedQuery(name = ApplicationQueries.NQ_FIND_BY_URN, query = ApplicationQueries.FIND_BY_URN),
+	@NamedQuery(name = ApplicationQueries.NQ_FIND_BY_EXTERNAL_ID, query = ApplicationQueries.FIND_BY_EXTERNAL_ID)
 })
 public class Application {
 
@@ -40,6 +54,20 @@ public class Application {
 	
 	@Column(name = "assertion_url", length = 200, updatable = true, nullable = true)
 	private String assertionUrl;
+
+	@JsonIgnoreProperties("applications")
+	@ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organization_id", foreignKey = @ForeignKey(name = "fk_tz_application_organization"))
+	private Organization organization;
+	
+	@JsonIgnoreProperties("applications")
+	@ManyToMany(cascade = { CascadeType.ALL })
+    @JoinTable(name = "tz_application_claims", joinColumns = { @JoinColumn(name = "application_id") }, inverseJoinColumns = { @JoinColumn(name = "claim_id") })
+	private Set<Claim> claims = new HashSet<>();
+	
+	@JsonIgnoreProperties("application")
+	@OneToMany(mappedBy = "application", cascade = CascadeType.ALL, orphanRemoval = true)
+	private Set<Access> accesses = new HashSet<>();
 
 	public long getId() {
 		return id;
@@ -87,6 +115,49 @@ public class Application {
 
 	public void setAssertionUrl(String assertionUrl) {
 		this.assertionUrl = assertionUrl;
+	}
+	
+	public Organization getOrganization() {
+		return organization;
+	}
+	
+	public void setOrganization(Organization organization) {
+		this.organization = organization;
+	}
+	
+	public Set<Claim> getClaims() {
+		return claims;
+	}
+	
+	public void setClaims(Set<Claim> claims) {
+		this.claims = claims;
+	}
+	
+	public Set<Access> getAccesses() {
+		return accesses;
+	}
+	
+	public void setAccesses(Set<Access> accesses) {
+		this.accesses = accesses;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null || !(obj instanceof Application)) {
+			return false;
+		}
+		
+		if (this == obj) {
+			return true;
+		}
+		
+		Application a = (Application) obj;
+		return getExternalId().equals(a.getExternalId());
+	}
+	
+	@Override
+	public int hashCode() {
+		return Objects.hash(getExternalId());
 	}
 
 }

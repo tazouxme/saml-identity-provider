@@ -1,5 +1,7 @@
 package com.tazouxme.idp.model;
 
+import java.util.Objects;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -15,8 +17,8 @@ import com.tazouxme.idp.dao.query.ActivationQueries;
 @Entity
 @Table(name = "tz_activation")
 @NamedQueries({
-	@NamedQuery(name = "Activation.find", query = ActivationQueries.FIND),
-	@NamedQuery(name = "Activation.findByExternalId", query = ActivationQueries.FIND_BY_ID)
+	@NamedQuery(name = ActivationQueries.NQ_FIND, query = ActivationQueries.FIND),
+	@NamedQuery(name = ActivationQueries.NQ_FIND_BY_ID, query = ActivationQueries.FIND_BY_ID)
 })
 public class Activation {
 
@@ -87,6 +89,25 @@ public class Activation {
 
 	public void setCreationDate(long creationDate) {
 		this.creationDate = creationDate;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null || !(obj instanceof Activation)) {
+			return false;
+		}
+		
+		if (this == obj) {
+			return true;
+		}
+		
+		Activation a = (Activation) obj;
+		return getExternalId().equals(a.getExternalId());
+	}
+	
+	@Override
+	public int hashCode() {
+		return Objects.hash(getExternalId());
 	}
 
 }

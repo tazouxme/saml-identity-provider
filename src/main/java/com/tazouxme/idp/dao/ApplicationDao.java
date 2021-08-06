@@ -1,5 +1,8 @@
 package com.tazouxme.idp.dao;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
@@ -12,12 +15,20 @@ public class ApplicationDao implements IApplicationDao {
 	
 	@PersistenceContext
 	private EntityManager em;
+	
+	@Override
+	public Set<Application> findAll(String organizationExternalId) {
+		return em.createNamedQuery(ApplicationQueries.NQ_FIND_ALL, Application.class).
+			setParameter(ApplicationQueries.PARAM_ID, organizationExternalId).
+			getResultStream().collect(Collectors.toSet());
+	}
 
 	@Override
-	public Application findByUrn(String urn) throws ApplicationException {
+	public Application findByUrn(String urn, String organizationExternalId) throws ApplicationException {
 		try {
-			return em.createNamedQuery("Application.findByUrn", Application.class).
+			return em.createNamedQuery(ApplicationQueries.NQ_FIND_BY_URN, Application.class).
 				setParameter(ApplicationQueries.PARAM_URN, urn).
+				setParameter(ApplicationQueries.PARAM_ID, organizationExternalId).
 				getSingleResult();
 		} catch (Exception e) {
 			throw new ApplicationException("Cannot retrieve Application with given URN", e);
@@ -27,7 +38,7 @@ public class ApplicationDao implements IApplicationDao {
 	@Override
 	public Application findByExternalId(String externalId) throws ApplicationException {
 		try {
-			return em.createNamedQuery("Application.findByExternalId", Application.class).
+			return em.createNamedQuery(ApplicationQueries.NQ_FIND_BY_EXTERNAL_ID, Application.class).
 				setParameter(ApplicationQueries.PARAM_ID, externalId).
 				getSingleResult();
 		} catch (Exception e) {

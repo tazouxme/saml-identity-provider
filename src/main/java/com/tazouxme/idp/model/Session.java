@@ -1,5 +1,7 @@
 package com.tazouxme.idp.model;
 
+import java.util.Objects;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -15,7 +17,7 @@ import com.tazouxme.idp.dao.query.SessionQueries;
 @Entity
 @Table(name = "tz_session")
 @NamedQueries({
-	@NamedQuery(name = "Session.find", query = SessionQueries.FIND)
+	@NamedQuery(name = SessionQueries.NQ_FIND, query = SessionQueries.FIND)
 })
 public class Session {
 
@@ -86,6 +88,25 @@ public class Session {
 
 	public void setCreationDate(long creationDate) {
 		this.creationDate = creationDate;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null || !(obj instanceof Session)) {
+			return false;
+		}
+		
+		if (this == obj) {
+			return true;
+		}
+		
+		Session a = (Session) obj;
+		return getExternalId().equals(a.getExternalId());
+	}
+	
+	@Override
+	public int hashCode() {
+		return Objects.hash(getExternalId());
 	}
 
 }

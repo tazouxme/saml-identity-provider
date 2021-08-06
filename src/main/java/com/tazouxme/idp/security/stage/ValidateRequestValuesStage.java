@@ -9,12 +9,8 @@ import org.apache.commons.logging.LogFactory;
 import org.opensaml.saml.common.xml.SAMLConstants;
 import org.opensaml.saml.saml2.core.AuthnContext;
 import org.opensaml.saml.saml2.core.NameIDType;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import com.tazouxme.idp.IdentityProviderConstants;
-import com.tazouxme.idp.bo.contract.IApplicationBo;
-import com.tazouxme.idp.exception.ApplicationException;
-import com.tazouxme.idp.model.Application;
 import com.tazouxme.idp.security.stage.exception.StageException;
 import com.tazouxme.idp.security.stage.exception.StageExceptionType;
 import com.tazouxme.idp.security.stage.parameters.StageParameters;
@@ -24,9 +20,6 @@ import com.tazouxme.idp.security.token.UserAuthenticationToken;
 public class ValidateRequestValuesStage implements Stage {
 
 	protected final Log logger = LogFactory.getLog(getClass());
-	
-	@Autowired
-	private IApplicationBo bo;
 	
 	@Override
 	public UserAuthenticationToken execute(UserAuthenticationToken authentication, 
@@ -65,15 +58,6 @@ public class ValidateRequestValuesStage implements Stage {
 		}
 		if (!o.getIdpUrn().equals(o.getAuthnRequest().getDestination())) {
 			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0211, o);
-		}
-		
-		try {
-			Application application = bo.findByUrn(o.getAuthnRequest().getIssuer().getValue());
-			if (!application.getAssertionUrl().equals(o.getAuthnRequest().getAssertionConsumerServiceURL())) {
-				throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0213, o);
-			}
-		} catch (ApplicationException e) {
-			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0212, o);
 		}
 
 		if (o.getAuthnRequest().getNameIDPolicy() == null) {

@@ -16,7 +16,7 @@ public class UserDao implements IUserDao {
 	@Override
 	public User findByExternalId(String externalId, String externalOrganizationId) throws UserException {
 		try {
-			return em.createNamedQuery("User.findByExternalId", User.class).
+			return em.createNamedQuery(UserQueries.NQ_FIND_BY_EXTERNAL_ID, User.class).
 				setParameter(UserQueries.PARAM_ORGANIZATION_ID, externalOrganizationId).
 				setParameter(UserQueries.PARAM_ID, externalId).
 				getSingleResult();
@@ -28,7 +28,7 @@ public class UserDao implements IUserDao {
 	@Override
 	public User findByEmail(String email, String externalOrganizationId) throws UserException {
 		try {
-			return em.createNamedQuery("User.findByEmail", User.class).
+			return em.createNamedQuery(UserQueries.NQ_FIND_BY_EMAIL, User.class).
 				setParameter(UserQueries.PARAM_ORGANIZATION_ID, externalOrganizationId).
 				setParameter(UserQueries.PARAM_EMAIL, email).
 				getSingleResult();

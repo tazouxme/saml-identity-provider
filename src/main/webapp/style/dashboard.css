@@ -1,0 +1,400 @@
+html, body {
+	margin: 0px;
+	padding: 0px;
+	width: 100%;
+	height: 100%;
+	font-family: "Calibri";
+}
+
+header {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	width: 100%;
+	height: 70px;
+	border-bottom: 1px solid #bbbbbb;
+	background-color: #205E9B;
+	color: white;
+}
+
+header img {
+	position: absolute;
+	top: 19px;
+	left: 19px;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+}
+
+header span {
+	position: absolute;
+	top: 26px;
+	left: 65px;
+}
+
+#dashboard-ribbon {
+	position: absolute;
+	top: 69px;
+}
+
+#org {
+	position: absolute;
+	top: 205px;
+	width: calc(100% - 40px);
+	padding: 20px;
+	border-top: 1px solid #ccc;
+	display: block;
+}
+
+#org-main {
+	position: absolute;
+	top: 20px;
+	left: 0px;
+	width: calc(65% - 30px);
+	height: 200px;
+	padding: 10px;
+	border: 1px solid #ccc;
+	border-left: 0px solid #ccc;
+	display: block;
+}
+
+#org-main > span {
+	position: absolute;
+	top: 10px;
+	width: calc(100% - 20px);
+	text-align: center;
+	font-size: 10pt;
+}
+
+#org-id-field {
+	left: calc((100% - 1000px) / 5);
+	top: 40px;
+}
+
+#org-code-field {
+	left: calc(250px + 2 * (100% - 1000px) / 5);
+	top: 40px;
+}
+
+#org-domain-field {
+	left: calc(500px + 3 * (100% - 1000px) / 5);
+	top: 40px;
+}
+
+#org-name-field {
+	left: calc(750px + 4 * (100% - 1000px) / 5);
+	top: 40px;
+}
+
+#org-date-field {
+	left: calc((100% - 1000px) / 5);
+	top: 130px;
+}
+
+#org-description-field {
+	left: calc(250px + 2 * (100% - 1000px) / 5);
+	top: 130px;
+}
+
+#org-public-key {
+	position: absolute;
+	top: 241px;
+	left: 0px;
+	width: calc(35% - 30px);
+	height: 219px;
+	padding: 10px;
+	border: 1px solid #ccc;
+	border-left: 0px solid #ccc;
+	border-top: 1px solid #fff;
+	display: block;
+}
+
+#org-public-key > span {
+	position: absolute;
+	top: 10px;
+	width: calc(100% - 20px);
+	text-align: center;
+	font-size: 10pt;
+}
+
+#org-public-key > p {
+	margin-top: 50px;
+    text-align: justify;
+    font-family: "Consolas";
+    font-size: 10pt;
+    overflow-wrap: break-word;
+    line-height: 20px;
+    letter-spacing: 2px;
+    user-select: none;
+}
+
+#org-roles {
+	position: absolute;
+	top: 260px;
+	left: calc(35% + 10px);
+	width: calc(30% - 40px);
+	height: 200px;
+	padding: 10px;
+	border: 1px solid #ccc;
+	display: block;
+}
+
+#org-roles > span {
+	position: absolute;
+	top: 10px;
+	width: calc(100% - 20px);
+	text-align: center;
+	font-size: 10pt;
+}
+
+#org-roles-table-container {
+	margin-top: 30px;
+	width: 100%;
+	display: inline-block;
+}
+#org-roles-table {
+	width: 100%;
+}
+
+#org-claims {
+	position: absolute;
+	top: 20px;
+	right: 0px;
+	width: calc(35% - 30px);
+	height: 440px;
+	padding: 10px;
+	border: 1px solid #ccc;
+	border-right: 0px solid #ccc;
+	display: block;
+}
+
+#org-claims > span {
+	position: absolute;
+	top: 10px;
+	width: calc(100% - 20px);
+	text-align: center;
+	font-size: 10pt;
+}
+
+#org-claims-table-container {
+	margin-top: 30px;
+	width: 100%;
+	display: inline-block;
+}
+#org-claims-table {
+	width: 100%;
+}
+
+#users {
+	position: absolute;
+	top: 205px;
+	width: calc(100% - 40px);
+	padding: 20px;
+	border-top: 1px solid #ccc;
+	display: none;
+}
+
+#user-main {
+	position: absolute;
+	top: 20px;
+	left: 0px;
+	width: calc(50% - 30px);
+	padding: 10px;
+	border: 1px solid #ccc;
+	border-left: 0px solid #ccc;
+	display: block;
+}
+
+#user-main span {
+	position: absolute;
+	top: 10px;
+	width: calc(100% - 20px);
+	text-align: center;
+	font-size: 10pt;
+}
+
+#users-table-container {
+	margin-top: 30px;
+	width: 100%;
+	display: inline-block;
+}
+#users-table {
+	width: 100%;
+}
+
+#user-claims {
+	position: absolute;
+	top: 20px;
+	right: 0px;
+	width: calc(50% - 30px);
+	padding: 10px;
+	border: 1px solid #ccc;
+	border-right: 0px solid #ccc;
+	display: block;
+}
+
+#user-claims span {
+	position: absolute;
+	top: 10px;
+	width: calc(100% - 20px);
+	text-align: center;
+	font-size: 10pt;
+}
+
+#user-claims-table-container {
+	margin-top: 30px;
+	width: 100%;
+	display: inline-block;
+}
+#user-claims-table {
+	width: 100%;
+}
+
+#slide-user-id-field {
+	top: 20px;
+	left: 20px;
+}
+#slide-user-username-field {
+	top: 100px;
+	left: 20px;
+}
+#slide-user-admin-field {
+	top: 180px;
+	left: 20px;
+}
+#slide-user-save-btn, #slide-user-update-btn {
+	position: absolute;
+	top: 270px;
+	left: 20px;
+}
+#slide-user-cancel-btn {
+	position: absolute;
+	top: 270px;
+	left: 100px;
+}
+
+#apps {
+	position: absolute;
+	top: 205px;
+	width: calc(100% - 40px);
+	padding: 20px;
+	border-top: 1px solid #ccc;
+	display: none;
+}
+
+#app-main {
+	position: absolute;
+	top: 20px;
+	left: 0px;
+	width: calc(50% - 30px);
+	padding: 10px;
+	border: 1px solid #ccc;
+	border-left: 0px solid #ccc;
+	display: block;
+}
+
+#app-main span {
+	position: absolute;
+	top: 10px;
+	width: calc(100% - 20px);
+	text-align: center;
+	font-size: 10pt;
+}
+
+#apps-table-container {
+	margin-top: 30px;
+	width: 100%;
+	display: inline-block;
+}
+#apps-table {
+	width: 100%;
+}
+
+#app-users {
+	position: absolute;
+	top: 20px;
+	right: 0px;
+	width: calc(50% - 30px);
+	height: 360px;
+	padding: 10px;
+	border: 1px solid #ccc;
+	border-right: 0px solid #ccc;
+	display: block;
+}
+
+#app-users span {
+	position: absolute;
+	top: 10px;
+	width: calc(100% - 20px);
+	text-align: center;
+	font-size: 10pt;
+}
+
+#app-users-table-container {
+	margin-top: 30px;
+	width: 100%;
+	display: inline-block;
+}
+#app-users-table {
+	width: 100%;
+}
+
+#app-claims {
+	position: absolute;
+	top: 420px;
+	height: 315px;
+	right: 0px;
+	width: calc(50% - 30px);
+	padding: 10px;
+	border: 1px solid #ccc;
+	border-right: 0px solid #ccc;
+	display: block;
+}
+
+#app-claims span {
+	position: absolute;
+	top: 10px;
+	width: calc(100% - 20px);
+	text-align: center;
+	font-size: 10pt;
+}
+
+#app-claims-table-container {
+	margin-top: 30px;
+	width: 100%;
+	display: inline-block;
+}
+#app-claims-table {
+	width: 100%;
+}
+
+#slide-app-id-field {
+	top: 20px;
+	left: 20px;
+}
+#slide-app-urn-field {
+	top: 100px;
+	left: 20px;
+}
+#slide-app-name-field {
+	top: 180px;
+	left: 20px;
+}
+#slide-app-description-field {
+	top: 260px;
+	left: 20px;
+}
+#slide-app-acs-field {
+	top: 340px;
+	left: 20px;
+}
+#slide-app-save-btn, #slide-app-update-btn {
+	position: absolute;
+	top: 430px;
+	left: 20px;
+}
+#slide-app-cancel-btn {
+	position: absolute;
+	top: 430px;
+	left: 100px;
+}

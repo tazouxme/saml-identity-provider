@@ -1,6 +1,7 @@
 package com.tazouxme.idp.bo;
 
 import java.util.Date;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -19,15 +20,25 @@ public class AccessBo implements IAccessBo {
 	public Access findByExternalId(String externalId) throws AccessException {
 		return dao.findByExternalId(externalId);
 	}
-
+	
 	@Override
-	public Access findByOrganization(String organizationExternalId, String urn) throws AccessException {
-		return dao.findByOrganization(organizationExternalId, urn);
+	public Set<Access> findByURN(String urn, String organizationExternalId) {
+		return dao.findByURN(urn, organizationExternalId);
 	}
 
 	@Override
-	public Access findByUser(String userExternalId, String urn) throws AccessException {
-		return dao.findByUser(userExternalId, urn);
+	public Set<Access> findByOrganization(String organizationExternalId) {
+		return dao.findByOrganization(organizationExternalId);
+	}
+
+	@Override
+	public Set<Access> findByUser(String userExternalId, String organizationExternalId) {
+		return dao.findByUser(userExternalId, organizationExternalId);
+	}
+	
+	@Override
+	public Access findByUserAndURN(String userExternalId, String urn, String organizationExternalId) throws AccessException {
+		return dao.findByUserAndURN(userExternalId, urn, organizationExternalId);
 	}
 
 	@Override

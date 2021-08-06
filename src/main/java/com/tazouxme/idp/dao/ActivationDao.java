@@ -16,7 +16,7 @@ public class ActivationDao implements IActivationDao {
 	@Override
 	public Activation find(String orgExternalId, String userExternalId, String step) throws ActivationException {
 		try {
-			return em.createNamedQuery("Activation.find", Activation.class).
+			return em.createNamedQuery(ActivationQueries.NQ_FIND, Activation.class).
 				setParameter(ActivationQueries.PARAM_ORG_ID, orgExternalId).
 				setParameter(ActivationQueries.PARAM_USER_ID, userExternalId).
 				setParameter(ActivationQueries.PARAM_STEP, step).
@@ -29,7 +29,7 @@ public class ActivationDao implements IActivationDao {
 	@Override
 	public Activation findByExternalId(String externalId) throws ActivationException {
 		try {
-			return em.createNamedQuery("Activation.findByExternalId", Activation.class).
+			return em.createNamedQuery(ActivationQueries.NQ_FIND_BY_ID, Activation.class).
 				setParameter(ActivationQueries.PARAM_ID, externalId).
 				getSingleResult();
 		} catch (Exception e) {
