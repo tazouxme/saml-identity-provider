@@ -1,11 +1,15 @@
 package com.tazouxme.idp.dao.contract;
 
+import java.util.Set;
+
 import com.tazouxme.idp.exception.ActivationException;
 import com.tazouxme.idp.model.Activation;
 
 public interface IActivationDao {
 	
 	public Activation find(String orgExternalId, String userExternalId, String step) throws ActivationException;
+	
+	public Set<Activation> findByUser(String userExternalId, String organizationId);
 	
 	public Activation findByExternalId(String externalId) throws ActivationException;
 	

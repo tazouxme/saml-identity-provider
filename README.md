@@ -24,20 +24,24 @@ To change the KeyStore and Certificate (src/main/resources/cert), you can execut
 - [x] IdP-Initialization
 
 ##### Supported bindings:
-- [x] urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect
-- [x] urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST
-- [x] urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign
+- [x] urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect (Signature not evaluated)
+- [x] urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST (Signature not evaluated)
+- [x] urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign (Signature is mandatory)
 - [ ] urn:oasis:names:tc:SAML:2.0:bindings:SOAP
 - [ ] urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact
 
 ##### Supported AuthnContextClassRef:
-- [x] urn:oasis:names:tc:SAML:2.0:ac:classes:Password
-- [x] urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport
+- [x] urn:oasis:names:tc:SAML:2.0:ac:classes:Password (username / password over HTTP)
+- [x] urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport (username / password over HTTPS)
+- [ ] urn:oasis:names:tc:SAML:2.0:ac:classes:TLSClient (certificate import over HTTPS)
+- [ ] urn:oasis:names:tc:SAML:2.0:ac:classes:X509 (signature import over HTTPS)
 
 ##### Accepted NameIDPolicy:
 - [x] urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress
+- [x] urn:oasis:names:tc:SAML:2.0:nameid-format:encrypted
+- [ ] urn:oasis:names:tc:SAML:2.0:nameid-format:entity
 - [x] urn:oasis:names:tc:SAML:2.0:nameid-format:persistent
-- [ ] urn:oasis:names:tc:SAML:2.0:nameid-format:encrypted
+- [x] urn:oasis:names:tc:SAML:2.0:nameid-format:unspecified
 
 ##### Services implemented
 - [x] Reads, validates and rejects AuthnRequests
@@ -45,8 +49,8 @@ To change the KeyStore and Certificate (src/main/resources/cert), you can execut
 - [ ] Single Log Out
 - [x] Claim based attributes
 - [x] Create and activate an account from zero
-- [ ] Manage the account through a web UI - Only display
+- [x] Manage the account through a web UI (Ongoing...)
 - [ ] Federation support
-- [x] Trust support - Partial: the SP knows the IdP's certificate (Cert. import in progress)
+- [x] Trust support (Ongoing...)
 - [ ] Internationalization
 - [x] Automatic Metadata generation

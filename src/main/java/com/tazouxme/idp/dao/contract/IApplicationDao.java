@@ -11,7 +11,7 @@ public interface IApplicationDao {
 	
 	public Application findByUrn(String urn, String organizationExternalId) throws ApplicationException;
 	
-	public Application findByExternalId(String externalId) throws ApplicationException;
+	public Application findByExternalId(String externalId, String organizationExternalId) throws ApplicationException;
 	
 	public Application create(Application application) throws ApplicationException;
 	

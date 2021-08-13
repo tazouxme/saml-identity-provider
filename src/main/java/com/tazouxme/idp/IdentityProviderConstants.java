@@ -14,6 +14,8 @@ public class IdentityProviderConstants {
 	public static final String COOKIE_USER = "tz_user";
 	public static final String COOKIE_SIGNATURE = "tz_signature";
 	
+	public static final String AUTH_HEADER_ACTIVATION_TYPE = "x-activation-type";
+	public static final String AUTH_HEADER_ACTIVATION_TOKEN = "x-activation-token";
 	public static final String AUTH_HEADER_CSRF = "x-csrf";
 	public static final String AUTH_HEADER_ERROR = "x-error";
 	public static final String AUTH_HEADER_PUBLIC_KEY = "x-public-key";

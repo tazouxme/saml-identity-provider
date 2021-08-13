@@ -6,7 +6,7 @@ import com.tazouxme.idp.sanitizer.validation.SanitizerValidation;
 import com.tazouxme.idp.sanitizer.validation.SanitizerValidation.Severity;
 import com.tazouxme.idp.sanitizer.validation.SanitizerValidationImpl;
 
-public class NonEmptySanitizer implements Sanitizer {
+public class NonEmptySanitizer implements Sanitizer<String> {
 	
 	private RegexSanitizerRule rule;
 	

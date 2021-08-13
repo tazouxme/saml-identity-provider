@@ -2,6 +2,7 @@ package com.tazouxme.idp.bo;
 
 import java.util.Date;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.tazouxme.idp.bo.contract.IUserBo;
@@ -35,12 +36,14 @@ public class UserBo implements IUserBo {
 	@Override
 	public User update(User user) throws UserException {
 		User pUser = findByExternalId(user.getExternalId(), user.getOrganization().getExternalId());
-		pUser.setEnabled(user.isEnabled());
-		pUser.setPassword(user.getPassword());
 		pUser.setAdministrator(user.isAdministrator());
 		pUser.setEnabled(user.isEnabled());
 		
-		return dao.update(user);
+		if (!StringUtils.isBlank(user.getPassword())) {
+			pUser.setPassword(user.getPassword());
+		}
+		
+		return dao.update(pUser);
 	}
 
 	@Override

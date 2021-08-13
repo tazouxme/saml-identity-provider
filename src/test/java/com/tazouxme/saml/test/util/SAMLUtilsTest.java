@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.util.zip.Inflater;
@@ -12,6 +13,11 @@ import java.util.zip.InflaterInputStream;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.opensaml.core.xml.XMLObject;
 import org.opensaml.core.xml.XMLObjectBuilderFactory;
@@ -95,7 +101,8 @@ public class SAMLUtilsTest {
 			throw new RuntimeException("Cannot parse the Response XML.", e);
 		}
 		
-        Element element = document.getDocumentElement();   
+        Element element = document.getDocumentElement();
+        writeXmlDocumentToXmlFile(document);
         Unmarshaller unmarshaller = XMLObjectProviderRegistrySupport.getUnmarshallerFactory().getUnmarshaller(element);
         
 		try {
@@ -107,10 +114,9 @@ public class SAMLUtilsTest {
         return (Response) responseXmlObj;
 	}
 
-	@SuppressWarnings("removal")
 	private static RequestedAuthnContext buildRequestedAuthnContext(String authnContext) {
 		AuthnContextClassRef authnContextClassRef = buildSAMLObject(AuthnContextClassRef.class);
-		authnContextClassRef.setAuthnContextClassRef(authnContext);
+		authnContextClassRef.setURI(authnContext);
 
 		RequestedAuthnContext context = buildSAMLObject(RequestedAuthnContext.class);
 		context.setComparison(AuthnContextComparisonTypeEnumeration.EXACT);
@@ -136,6 +142,32 @@ public class SAMLUtilsTest {
 
 	protected static XMLObjectBuilderFactory getBuilderFactory() {
 		return XMLObjectProviderRegistrySupport.getBuilderFactory();
+	}
+	
+	private static void writeXmlDocumentToXmlFile(Document xmlDocument) {
+	    TransformerFactory tf = TransformerFactory.newInstance();
+	    Transformer transformer;
+	    
+	    try {
+	        transformer = tf.newTransformer();
+	         
+	        // Uncomment if you do not require XML declaration
+	        // transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+	         
+	        //A character stream that collects its output in a string buffer, 
+	        //which can then be used to construct a string.
+	        StringWriter writer = new StringWriter();
+	 
+	        //transform document to string 
+	        transformer.transform(new DOMSource(xmlDocument), new StreamResult(writer));
+	 
+	        String xmlString = writer.getBuffer().toString();   
+	        System.out.println(xmlString);
+	    } catch (TransformerException e)  {
+	        e.printStackTrace();
+	    } catch (Exception e)  {
+	        e.printStackTrace();
+	    }
 	}
 
 }

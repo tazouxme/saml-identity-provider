@@ -1,6 +1,7 @@
 package com.tazouxme.idp.bo;
 
 import java.util.Date;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -18,6 +19,11 @@ public class ActivationBo implements IActivationBo {
 	@Override
 	public Activation find(String orgExternalId, String userExternalId, String step) throws ActivationException {
 		return dao.find(orgExternalId, userExternalId, step);
+	}
+	
+	@Override
+	public Set<Activation> findByUser(String userExternalId, String organizationId) {
+		return dao.findByUser(userExternalId, organizationId);
 	}
 
 	@Override

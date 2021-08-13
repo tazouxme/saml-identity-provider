@@ -45,7 +45,8 @@ public class ValidateRequestValuesStage implements Stage {
 		}
 		
 		String protocolBinding = o.getAuthnRequest().getProtocolBinding();
-		Set<String> allowedProtocolBindings = Set.of(SAMLConstants.SAML2_REDIRECT_BINDING_URI, SAMLConstants.SAML2_POST_BINDING_URI, SAMLConstants.SAML2_POST_SIMPLE_SIGN_BINDING_URI);
+		Set<String> allowedProtocolBindings = Set.of(SAMLConstants.SAML2_REDIRECT_BINDING_URI, SAMLConstants.SAML2_POST_BINDING_URI, SAMLConstants.SAML2_POST_SIMPLE_SIGN_BINDING_URI/*, 
+				SAMLConstants.SAML2_SOAP11_BINDING_URI, SAMLConstants.SAML2_ARTIFACT_BINDING_URI*/);
 		
 		if (!allowedProtocolBindings.contains(protocolBinding)) {
 			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0208, o);
@@ -64,7 +65,7 @@ public class ValidateRequestValuesStage implements Stage {
 			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0214, o);
 		}
 		
-		Set<String> allowedNameIDPolicies = Set.of(NameIDType.EMAIL, NameIDType.PERSISTENT);
+		Set<String> allowedNameIDPolicies = Set.of(NameIDType.UNSPECIFIED, NameIDType.EMAIL, NameIDType.PERSISTENT, NameIDType.ENCRYPTED/*, NameIDType.ENTITY*/);
 		String nameIDPolicy = o.getAuthnRequest().getNameIDPolicy().getFormat();
 		
 		if (!allowedNameIDPolicies.contains(nameIDPolicy)) {
@@ -83,7 +84,7 @@ public class ValidateRequestValuesStage implements Stage {
 		}
 		
 		String authnContextClassRef = o.getAuthnRequest().getRequestedAuthnContext().getAuthnContextClassRefs().get(0).getURI();
-		Set<String> allowedAuthnContextClassRef = Set.of(AuthnContext.PASSWORD_AUTHN_CTX, AuthnContext.PPT_AUTHN_CTX);
+		Set<String> allowedAuthnContextClassRef = Set.of(AuthnContext.PASSWORD_AUTHN_CTX, AuthnContext.PPT_AUTHN_CTX/*, AuthnContext.TLS_CLIENT_AUTHN_CTX, AuthnContext.X509_AUTHN_CTX*/);
 		
 		if (!allowedAuthnContextClassRef.contains(authnContextClassRef)) {
 			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0219, o);

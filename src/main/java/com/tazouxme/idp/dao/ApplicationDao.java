@@ -19,7 +19,7 @@ public class ApplicationDao implements IApplicationDao {
 	@Override
 	public Set<Application> findAll(String organizationExternalId) {
 		return em.createNamedQuery(ApplicationQueries.NQ_FIND_ALL, Application.class).
-			setParameter(ApplicationQueries.PARAM_ID, organizationExternalId).
+			setParameter(ApplicationQueries.PARAM_ORGANIZATION_ID, organizationExternalId).
 			getResultStream().collect(Collectors.toSet());
 	}
 
@@ -28,7 +28,7 @@ public class ApplicationDao implements IApplicationDao {
 		try {
 			return em.createNamedQuery(ApplicationQueries.NQ_FIND_BY_URN, Application.class).
 				setParameter(ApplicationQueries.PARAM_URN, urn).
-				setParameter(ApplicationQueries.PARAM_ID, organizationExternalId).
+				setParameter(ApplicationQueries.PARAM_ORGANIZATION_ID, organizationExternalId).
 				getSingleResult();
 		} catch (Exception e) {
 			throw new ApplicationException("Cannot retrieve Application with given URN", e);
@@ -36,10 +36,11 @@ public class ApplicationDao implements IApplicationDao {
 	}
 
 	@Override
-	public Application findByExternalId(String externalId) throws ApplicationException {
+	public Application findByExternalId(String externalId, String organizationExternalId) throws ApplicationException {
 		try {
 			return em.createNamedQuery(ApplicationQueries.NQ_FIND_BY_EXTERNAL_ID, Application.class).
 				setParameter(ApplicationQueries.PARAM_ID, externalId).
+				setParameter(ApplicationQueries.PARAM_ORGANIZATION_ID, organizationExternalId).
 				getSingleResult();
 		} catch (Exception e) {
 			throw new ApplicationException("Cannot retrieve Application with given ID", e);

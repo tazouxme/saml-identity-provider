@@ -42,7 +42,7 @@ public class ClaimBo implements IClaimBo {
 		pClaim.setName(claim.getName());
 		pClaim.setDescription(claim.getDescription());
 		
-		return dao.update(claim);
+		return dao.update(pClaim);
 	}
 
 	@Override

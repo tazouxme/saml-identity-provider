@@ -18,6 +18,14 @@ import com.tazouxme.idp.model.User;
 public interface IIdentityProviderApplication {
 	
 	/**
+	 * Get all Activations for a specific User
+	 * @param userExternalId - User External ID
+	 * @param organizationId - External Organization ID
+	 * @return All found Activations
+	 */
+	public Set<Activation> findActivationsByUser(String userExternalId, String organizationId);
+	
+	/**
 	 * Create an Activation entry in the database
 	 * @param organizationId - External Organization ID
 	 * @param userId - External User ID
@@ -109,6 +117,17 @@ public interface IIdentityProviderApplication {
 	 * @throws OrganizationException - When the Organization with External ID or domain already exists
 	 */
 	public Organization createOrganization(String code, String domain) throws OrganizationException;
+	
+	/**
+	 * Update an Organization entry in the database
+	 * @param id - Organization External ID
+	 * @param name - Organization name
+	 * @param description - Organization description (may be null)
+	 * @param publicKey - Organization encoded PublicKey from Certificate (may be null)
+	 * @return The updated Organization
+	 * @throws OrganizationException - When the Organization with External ID or domain does not exist
+	 */
+	public Organization updateOrganization(String id, String name, String description, String publicKey) throws OrganizationException;
 	
 	/**
 	 * Create a Claim entry in the database

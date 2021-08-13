@@ -18,7 +18,8 @@ import com.tazouxme.idp.dao.query.ActivationQueries;
 @Table(name = "tz_activation")
 @NamedQueries({
 	@NamedQuery(name = ActivationQueries.NQ_FIND, query = ActivationQueries.FIND),
-	@NamedQuery(name = ActivationQueries.NQ_FIND_BY_ID, query = ActivationQueries.FIND_BY_ID)
+	@NamedQuery(name = ActivationQueries.NQ_FIND_BY_ID, query = ActivationQueries.FIND_BY_ID),
+	@NamedQuery(name = ActivationQueries.NQ_FIND_BY_USER, query = ActivationQueries.FIND_BY_USER)
 })
 public class Activation {
 

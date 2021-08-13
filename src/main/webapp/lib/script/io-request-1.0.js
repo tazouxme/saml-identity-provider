@@ -77,7 +77,20 @@ var Request = function(params) {
 	var _send = async function() {
 		_request.onload = async function() {
 			if (this.status == _successCode) {
-				_onSuccess({ status: _request.status, statusText: _request.statusText, data: _request.response });
+			    // Convert the header string into an array
+			    // of individual headers
+			    var arr = _request.getAllResponseHeaders().trim().split(/[\r\n]+/);
+			
+			    // Create a map of header names to values
+			    var headerMap = {};
+			    arr.forEach(function(line) {
+					var parts = line.split(': ');
+					var header = parts.shift();
+					var value = parts.join(': ');
+					headerMap[header] = value;
+			    });
+
+				_onSuccess({ status: _request.status, statusText: _request.statusText, headers: headerMap, data: _request.response });
 			} else {
 				_onError({ status: _request.status, statusText: _request.statusText, data: _request.response });
 			}

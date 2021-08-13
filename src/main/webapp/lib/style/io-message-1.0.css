@@ -6,7 +6,7 @@
 	height: 100%;
 	background-color: white;
 	opacity: 0.1;
-	z-index: 100;
+	z-index: 200;
 }
 
 .dauth-message {
@@ -17,7 +17,7 @@
 	width: 500px;
 	border: 1px solid black;
 	background-color: #fff;
-	z-index: 101;
+	z-index: 201;
 }
 
 .dauth-message-header {

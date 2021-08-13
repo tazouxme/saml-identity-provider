@@ -13,11 +13,13 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.encoders.Base64;
 import org.opensaml.saml.common.xml.SAMLConstants;
+import org.opensaml.saml.saml2.core.NameID;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.tazouxme.idp.bo.contract.ISessionBo;
@@ -46,6 +48,12 @@ public class ValidateSignaturesStage implements Stage {
 		}
 		
 		try {
+			if (NameID.ENCRYPTED.equals(o.getAuthnRequest().getNameIDPolicy().getFormat())) {
+				if (StringUtils.isBlank(o.getOrganization().getPublicKey())) {
+					throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0415, o);
+				}
+			}
+			
 			// verify SAML Signature
 			if ("POST".equals(o.getUrlMethod()) && SAMLConstants.SAML2_POST_SIMPLE_SIGN_BINDING_URI.equals(o.getAuthnRequest().getProtocolBinding())) {
 				if (!verifyRequestSignature(o)) {
@@ -83,6 +91,10 @@ public class ValidateSignaturesStage implements Stage {
 	}
 	
 	private boolean verifyRequestSignature(StageParameters o) {
+		if (StringUtils.isBlank(o.getOrganization().getPublicKey())) {
+			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0414, o);
+		}
+		
 		try {
 			URLBuilder incomingUrl = new URLBuilder(o.getUrlParam());
 			List<Pair<String, String>> incomingParams = incomingUrl.getQueryParams();

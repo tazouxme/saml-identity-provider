@@ -2,7 +2,7 @@ package com.tazouxme.idp.sanitizer;
 
 import com.tazouxme.idp.sanitizer.validation.SanitizerValidation;
 
-public interface Sanitizer {
+public interface Sanitizer<T> {
 	
 	public static final RegexSanitizerRule DOMAIN_REGEX = 
 			new RegexSanitizerRule("^([a-z0-9]+(-[a-z0-9]+)*\\.)+[a-z]{2,}$", "Domain not correctly formed");
@@ -14,6 +14,6 @@ public interface Sanitizer {
 	 * @param value
 	 * @return the validation result
 	 */
-	public SanitizerValidation sanitize(String value);
+	public SanitizerValidation sanitize(T value);
 
 }

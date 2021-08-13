@@ -24,6 +24,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.util.encoders.Base64;
+import org.opensaml.saml.common.xml.SAMLConstants;
+import org.opensaml.saml.saml2.core.NameID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
@@ -39,6 +41,7 @@ import com.tazouxme.idp.model.Application;
 import com.tazouxme.idp.model.Organization;
 import com.tazouxme.idp.model.User;
 import com.tazouxme.idp.security.filter.AbstractIdentityProviderFilter;
+import com.tazouxme.idp.security.stage.parameters.StageParameters;
 import com.tazouxme.idp.security.token.UserAuthenticationPhase;
 import com.tazouxme.idp.security.token.UserAuthenticationToken;
 import com.tazouxme.idp.security.token.UserAuthenticationType;
@@ -72,9 +75,10 @@ public class StartAuthenticateFilter extends AbstractIdentityProviderFilter {
 		}
 		
 		UserAuthenticationToken startAuthentication = (UserAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+		StageParameters parameters = startAuthentication.getDetails().getParameters();
 		
 		try {
-			if (startAuthentication == null || startAuthentication.getDetails().getParameters() == null ||
+			if (startAuthentication == null || parameters == null ||
 					!UserAuthenticationPhase.MUST_AUTHENTICATE.equals(startAuthentication.getDetails().getPhase())) {
 				logger.error("Authentication phase is not correct");
 				SecurityContextHolder.clearContext();
@@ -97,8 +101,16 @@ public class StartAuthenticateFilter extends AbstractIdentityProviderFilter {
 			Organization organization = organizationBo.findByDomain(username.split("@")[1]);
 			User user = userBo.findByEmail(username, organization.getExternalId());
 			
+			if (!user.isEnabled()) {
+				logger.error("User is not active");
+				response.setStatus(406);
+				response.setHeader(IdentityProviderConstants.AUTH_HEADER_CSRF, csrf);
+				response.setHeader(IdentityProviderConstants.AUTH_HEADER_ERROR, "User is not active");
+				return;
+			}
+			
 			UserAuthenticationToken inAuthentication = new UserAuthenticationToken(user.getExternalId(), user.getPassword());
-			inAuthentication.getDetails().setParameters(startAuthentication.getDetails().getParameters());
+			inAuthentication.getDetails().setParameters(parameters);
 			inAuthentication.getDetails().getParameters().setOrganization(organization);
 			inAuthentication.getDetails().getParameters().setUser(user);
 			inAuthentication.getDetails().getParameters().setSecretKey(generateSharedSecret(keys.getPrivate(), obtainPublicKey(publicKey)));
@@ -113,14 +125,32 @@ public class StartAuthenticateFilter extends AbstractIdentityProviderFilter {
 			inAuthentication.getDetails().getIdentity().setRole(user.isAdministrator() ? "ADMIN" : "USER");
 			
 			if (UserAuthenticationType.SAML.equals(startAuthentication.getDetails().getType())) {
+				if (StringUtils.isBlank(organization.getPublicKey())) {
+					if (NameID.ENCRYPTED.equals(parameters.getAuthnRequest().getNameIDPolicy().getFormat())) {
+						logger.error("Organization PublicKey is not set to encrypt NameID");
+						response.setStatus(406);
+						response.setHeader(IdentityProviderConstants.AUTH_HEADER_CSRF, csrf);
+						response.setHeader(IdentityProviderConstants.AUTH_HEADER_ERROR, "Organization PublicKey is not set to encrypt NameID");
+						return;
+					}
+					
+					if ("POST".equals(parameters.getUrlMethod()) && SAMLConstants.SAML2_POST_SIMPLE_SIGN_BINDING_URI.equals(parameters.getAuthnRequest().getProtocolBinding())) {
+						logger.error("Organization PublicKey is not set to verify Signature");
+						response.setStatus(406);
+						response.setHeader(IdentityProviderConstants.AUTH_HEADER_CSRF, csrf);
+						response.setHeader(IdentityProviderConstants.AUTH_HEADER_ERROR, "Organization PublicKey is not set to verify Signature");
+						return;
+					}
+				}
+				
 				// SP Initialized
 				Application application = inAuthentication.getDetails().getParameters().getApplication();
 				if (application == null) {
-					application = applicationBo.findByUrn(startAuthentication.getDetails().getParameters().getAuthnRequest().getIssuer().getValue(), organization.getExternalId());
+					application = applicationBo.findByUrn(parameters.getAuthnRequest().getIssuer().getValue(), organization.getExternalId());
 					inAuthentication.getDetails().getParameters().setApplication(application);
 				}
 				
-				if (!application.getAssertionUrl().equals(startAuthentication.getDetails().getParameters().getAuthnRequest().getAssertionConsumerServiceURL())) {
+				if (!application.getAssertionUrl().equals(parameters.getAuthnRequest().getAssertionConsumerServiceURL())) {
 					logger.error("Invalid Assertion Consumer Service URL in AuthnRequest");
 					response.setStatus(406);
 					response.setHeader(IdentityProviderConstants.AUTH_HEADER_CSRF, csrf);

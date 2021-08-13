@@ -41,7 +41,7 @@ public class RoleBo implements IRoleBo {
 		Role pRole = findByExternalId(role.getExternalId(), role.getOrganization().getExternalId());
 		pRole.setName(role.getName());
 		
-		return dao.update(role);
+		return dao.update(pRole);
 	}
 
 	@Override

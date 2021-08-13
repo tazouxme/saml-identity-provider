@@ -1,3 +1,24 @@
+document.addEventListener("DOMContentLoaded", (e) => {
+	
+var usernameField = document.getElementById('email');
+var passwordField = document.getElementById('password');
+var sumbitButton = document.getElementById('submit-username');
+
+var form = document.getElementsByTagName('form')[0];
+form.addEventListener('submit', async function(e) {
+	e.preventDefault();
+	
+	sumbitButton.classList.add("disabled");
+	sumbitButton.setAttribute("disabled", "disabled");
+	
+	if (await login(usernameField.value, passwordField.value)) {
+		form.submit();
+	}
+	
+	sumbitButton.classList.remove("disabled");
+	sumbitButton.removeAttribute("disabled");
+}, false);
+
 /**
  * Do an HTTP Request
  * @private
@@ -119,3 +140,5 @@ var login = async function(username, password) {
 	document.getElementById('password').value = JSON.stringify(await _getPassword(password, secretKey));
 	return true;
 }
+	
+});

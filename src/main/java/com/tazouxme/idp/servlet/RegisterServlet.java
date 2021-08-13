@@ -7,12 +7,14 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import com.tazouxme.idp.IdentityProviderConstants;
 import com.tazouxme.idp.activation.sender.ActivationSender;
-import com.tazouxme.idp.activation.sender.LinkActivationSender;
+import com.tazouxme.idp.activation.sender.LinkServletActivationSender;
+import com.tazouxme.idp.activation.sender.MailServletActivationSender;
 import com.tazouxme.idp.application.contract.IIdentityProviderApplication;
 import com.tazouxme.idp.exception.ActivationException;
 import com.tazouxme.idp.exception.ClaimException;
@@ -42,8 +44,8 @@ public class RegisterServlet extends HttpServlet {
 	}
 	
 	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		req.getRequestDispatcher("/register.jsp").forward(req, resp);
+	protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+		req.getRequestDispatcher("/register.jsp").forward(req, res);
 	}
 	
 	@Override
@@ -75,8 +77,8 @@ public class RegisterServlet extends HttpServlet {
 			User user = register(organizationCode, organizationDomain, username, password, true);
 			Activation activation = idpApplication.createActivation(user.getOrganization().getExternalId(), user.getExternalId(), IdentityProviderConstants.ACTIVATION_CONST_ACTIVATE);
 			
-			ActivationSender sender = new LinkActivationSender();
-			sender.send(req, res, generateActivationAccess(req, user, activation));
+			ActivationSender sender = findActivationSender(req, res, getServletContext().getInitParameter("mail-username"), getServletContext().getInitParameter("mail-password"));
+			sender.send(generateActivationAccess(req, user, activation), user);
 		} catch (OrganizationException | UserException | ClaimException | ActivationException e) {
 			req.setAttribute(IdentityProviderConstants.SERVLET_ERROR_REGISTER, "Unable to register");
 			req.getRequestDispatcher("/register.jsp").forward(req, res);
@@ -112,6 +114,14 @@ public class RegisterServlet extends HttpServlet {
 		url.append(activation.getExternalId());
 		
 		return url.toString().replace("register", "activate");
+	}
+	
+	private ActivationSender findActivationSender(HttpServletRequest req, HttpServletResponse res, String mailUsername, String mailPassword) {
+		if (StringUtils.isBlank(mailUsername) || StringUtils.isBlank(mailPassword)) {
+			return new LinkServletActivationSender(req, res); 
+		}
+		
+		return new MailServletActivationSender(req, res, mailUsername, mailPassword);
 	}
 
 }

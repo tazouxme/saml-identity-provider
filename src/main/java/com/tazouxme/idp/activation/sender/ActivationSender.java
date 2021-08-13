@@ -3,19 +3,18 @@ package com.tazouxme.idp.activation.sender;
 import java.io.IOException;
 
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+
+import com.tazouxme.idp.model.User;
 
 public interface ActivationSender {
 	
 	/**
 	 * Send the activation link
-	 * @param req
-	 * @param res
-	 * @param link
+	 * @param link - Then HTTP link to redirect the User for activation
+	 * @param user - The targeted User
 	 * @throws ServletException
 	 * @throws IOException
 	 */
-	public void send(HttpServletRequest req, HttpServletResponse res, String link) throws ServletException, IOException;
+	public boolean send(String link, User user) throws ServletException, IOException;
 
 }

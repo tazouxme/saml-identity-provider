@@ -1,6 +1,33 @@
 document.addEventListener('DOMContentLoaded', function() {
 
 var updateOrgBtn = new Button({ id: 'update-org-btn', text: 'Edit Org.', icon: './lib/img/edit.png' });
+updateOrgBtn.setAction(function() {
+	organizationSlide.setTitle("Update Organization");
+	organizationSlide.setValues({
+		id: orgIdField.getValue(),
+		code: orgCodeField.getValue(),
+		domain: orgDomainField.getValue(),
+		name: orgNameField.getValue(),
+		creationDate: orgCreationDateField.getValue(),
+		description: orgDescriptionField.getValue()
+	});
+	organizationSlide.show({ show : ["slide-org-save-btn", "slide-org-cancel-btn"], hide : [] });
+});
+
+var saveOrgBtn = new Button({ id: 'slide-org-save-btn', text: 'Save', icon: './lib/img/edit.png' });
+saveOrgBtn.setAction(function() {
+	if (organizationSlide.validate()) {
+		updateOrganization(organizationSlide.toObject());
+	}
+});
+var cancelOrgBtn = new Button({ id: 'slide-org-cancel-btn', text: 'Cancel', icon: './lib/img/cancel.png' });
+cancelOrgBtn.setAction(function() {
+	if (organizationSlide.isLoaded()) {
+		organizationSlide.clear();
+		organizationSlide.hide();
+	}
+});
+
 var claimsBtn = new Button({ id: 'claims-btn', text: 'Claims', icon: './lib/img/claims.png' });
 var rolesBtn = new Button({ id: 'roles-btn', text: 'Roles', icon: './lib/img/roles.png' });
 var keyBtn = new Button({ id: 'key-btn', text: 'Public Key', icon: './lib/img/key.png' });
@@ -32,14 +59,16 @@ orgCreationDateField.set(document.getElementById("org-main"));
 var addUserBtn = new Button({ id: 'add-user-btn', text: 'Add User', icon: './lib/img/add_user.png' });
 addUserBtn.setAction(function() {
 	userSlide.setTitle("Create User");
+	userSlide.setEnabled('slide-user-username-field', true);
 	userSlide.show({ show : ["slide-user-save-btn", "slide-user-cancel-btn"], hide : ["slide-user-update-btn"] });
 });
 
 var updateUserBtn = new Button({ id: 'update-user-btn', text: 'Edit User', icon: './lib/img/edit_user.png' });
 updateUserBtn.setEnabled(false);
 updateUserBtn.setAction(function() {
-	userSlide.setValues(usersTable.getSelectedData());
 	userSlide.setTitle("Edit User");
+	userSlide.setValues(usersTable.getSelectedData());
+	userSlide.setEnabled('slide-user-username-field', false);
 	userSlide.show({ show : ["slide-user-update-btn", "slide-user-cancel-btn"], hide : ["slide-user-save-btn"] });
 });
 
@@ -50,7 +79,7 @@ removeUserBtn.setAction(function() {
 	message.setText("Delete the User " + usersTable.getSelectedData().username + "?");
 	message.onValidate(function() {
 		var user = usersTable.getSelectedData();
-		console.log(user);
+		deleteUser(user);
 	});
 	
 	message.show();
@@ -65,8 +94,7 @@ saveUserBtn.setAction(function() {
 var modifyUserBtn = new Button({ id: 'slide-user-update-btn', text: 'Modify', icon: './lib/img/edit.png' });
 modifyUserBtn.setAction(function() {
 	if (userSlide.validate()) {
-		console.log(userSlide.toObject());
-		//updateUser(userSlide.toObject());
+		updateUser(userSlide.toObject());
 	}
 });
 var cancelUserBtn = new Button({ id: 'slide-user-cancel-btn', text: 'Cancel', icon: './lib/img/cancel.png' });
@@ -79,9 +107,39 @@ cancelUserBtn.setAction(function() {
 
 var activateUserBtn = new Button({ id: 'activate-user-btn', text: 'Unlock User', icon: './lib/img/unlock.png' });
 activateUserBtn.setEnabled(false);
+activateUserBtn.setAction(function() {
+	var message = new Message({ id: 'lock-user-message', type: 'question', title: 'Unlock User' });
+	message.setText("Unlock User " + usersTable.getSelectedData().username + "?");
+	message.onValidate(function() {
+		var user = usersTable.getSelectedData();
+		updateUser({
+			id: user.id,
+			username: user.username,
+			administrator: user.administrator,
+			enabled: !user.enabled
+		});
+	});
+	
+	message.show();
+});
 
 var deactivateUserBtn = new Button({ id: 'deactivate-user-btn', text: 'Lock User', icon: './lib/img/lock.png' });
 deactivateUserBtn.setEnabled(false);
+deactivateUserBtn.setAction(function() {
+	var message = new Message({ id: 'lock-user-message', type: 'question', title: 'Lock User' });
+	message.setText("Lock User " + usersTable.getSelectedData().username + "?");
+	message.onValidate(function() {
+		var user = usersTable.getSelectedData();
+		updateUser({
+			id: user.id,
+			username: user.username,
+			administrator: user.administrator,
+			enabled: !user.enabled
+		});
+	});
+	
+	message.show();
+});
 
 var settingsUserBtn = new Button({ id: 'settings-user-btn', text: 'Data', icon: './lib/img/claims_user.png' });
 settingsUserBtn.setEnabled(false);
@@ -103,7 +161,7 @@ updateAppBtn.setAction(function() {
 var removeAppBtn = new Button({ id: 'remove-app-btn', text: 'Remove App.', icon: './lib/img/delete_app.png' });
 removeAppBtn.setEnabled(false);
 removeAppBtn.setAction(function() {
-	var message = new Message({ id : 'remove-app-message', type : 'question', title : 'Delete Application' });
+	var message = new Message({ id: 'remove-app-message', type: 'question', title: 'Delete Application' });
 	message.setText("Delete the Application " + appsTable.getSelectedData().name + " ("+ appsTable.getSelectedData().urn +") ?");
 	message.onValidate(function() {
 		var app = appsTable.getSelectedData();
@@ -139,10 +197,10 @@ accessAppBtn.setEnabled(false);
 var lockUserAppBtn = new Button({ id: 'lock-user-app-btn', text: 'Lock Access', icon: './lib/img/lock_app.png' });
 lockUserAppBtn.setEnabled(false);
 lockUserAppBtn.setAction(function() {
-	var message = new Message({ id : 'lock-user-app-message', type : 'question', title : 'Lock User Access' });
-	message.setText("Lock access for User " + usersTable.getSelectedData().username + "?");
+	var message = new Message({ id: 'lock-user-app-message', type: 'question', title: 'Lock User Access' });
+	message.setText("Lock access for User " + appUsersTable.getSelectedData().username + "?");
 	message.onValidate(function() {
-		
+		console.log(appUsersTable.getSelectedData());
 	});
 	
 	message.show();
@@ -151,10 +209,10 @@ lockUserAppBtn.setAction(function() {
 var unlockUserAppBtn = new Button({ id: 'unlock-user-app-btn', text: 'Unlock Access', icon: './lib/img/unlock_app.png' });
 unlockUserAppBtn.setEnabled(false);
 unlockUserAppBtn.setAction(function() {
-	var message = new Message({ id : 'unlock-user-app-message', type : 'question', title : 'Unlock User Access' });
-	message.setText("Unlock access for User " + usersTable.getSelectedData().username + "?");
+	var message = new Message({ id: 'unlock-user-app-message', type: 'question', title: 'Unlock User Access' });
+	message.setText("Unlock access for User " + appUsersTable.getSelectedData().username + "?");
 	message.onValidate(function() {
-		
+		console.log(appUsersTable.getSelectedData());
 	});
 	
 	message.show();
@@ -163,10 +221,10 @@ unlockUserAppBtn.setAction(function() {
 var revokeUserAppBtn = new Button({ id: 'revoke-app-btn', text: 'Revoke', icon: './lib/img/revoke_app.png' });
 revokeUserAppBtn.setEnabled(false);
 revokeUserAppBtn.setAction(function() {
-	var message = new Message({ id : 'revoke-user-app-message', type : 'question', title : 'Revoke User Access' });
-	message.setText("Revoke access for User " + usersTable.getSelectedData().username + "?");
+	var message = new Message({ id: 'revoke-user-app-message', type: 'question', title: 'Revoke User Access' });
+	message.setText("Revoke access for User " + appUsersTable.getSelectedData().username + "?");
 	message.onValidate(function() {
-		
+		console.log(appUsersTable.getSelectedData());
 	});
 	
 	message.show();
@@ -177,39 +235,16 @@ ribbon.addMenu('dashboard-ribbon-organization', 'Organization', function() {
 	document.getElementById("org").style.display = 'block';
 	document.getElementById("users").style.display = 'none';
 	document.getElementById("apps").style.display = 'none';
-	
-	usersTable.clear();
-	userClaimsTable.clear();
-	appsTable.clear();
-	appUsersTable.clear();
-	appClaimsTable.clear();
-	
-	loadOrganization();
 });
 ribbon.addMenu('dashboard-ribbon-user', 'Users', function() {
 	document.getElementById("org").style.display = 'none';
 	document.getElementById("users").style.display = 'block';
 	document.getElementById("apps").style.display = 'none';
-	
-	claimsTable.clear();
-	rolesTable.clear();
-	appsTable.clear();
-	appUsersTable.clear();
-	appClaimsTable.clear();
-
-	loadUsers();
 });
 ribbon.addMenu('dashboard-ribbon-application', 'Applications', function() {
 	document.getElementById("org").style.display = 'none';
 	document.getElementById("users").style.display = 'none';
 	document.getElementById("apps").style.display = 'block';
-	
-	claimsTable.clear();
-	rolesTable.clear();
-	usersTable.clear();
-	userClaimsTable.clear();
-	
-	loadApplications();
 });
 
 ribbon.getMenu('dashboard-ribbon-organization').addSection('Data', [ updateOrgBtn ]);
@@ -223,9 +258,20 @@ ribbon.getMenu('dashboard-ribbon-application').addSection('Access', [ accessAppB
 ribbon.set(document.body);
 ribbon.setSelected('dashboard-ribbon-organization');
 
+var organizationSlide = new Slide({ id: 'organization-slide', title: 'Organization', size: 500 });
+organizationSlide.addComponent({ mapTo: 'id', component: new Field({ id: "slide-org-id-field", title: "ID", type: "text", icon: "", maxLength: "32", width: "250", enabled: false, mandatory: true }) });
+organizationSlide.addComponent({ mapTo: 'code', component: new Field({ id: "slide-org-code-field", title: "Code", type: "text", icon: "", maxLength: "16", width: "250", enabled: false, mandatory: true }) });
+organizationSlide.addComponent({ mapTo: 'domain', component: new Field({ id: "slide-org-domain-field", title: "Domain", type: "text", icon: "", maxLength: "128", width: "250", enabled: false, mandatory: true }) });
+organizationSlide.addComponent({ mapTo: 'name', component: new Field({ id: "slide-org-name-field", title: "Name", type: "text", icon: "", maxLength: "50", width: "250", enabled: true, mandatory: true }) });
+organizationSlide.addComponent({ mapTo: 'creationDate', component: new Field({ id: "slide-org-date-field", title: "Creation Date", type: "date", icon: "", maxLength: "200", width: "250", enabled: false, mandatory: true }) });
+organizationSlide.addComponent({ mapTo: 'description', component: new Field({ id: "slide-org-description-field", title: "Description", type: "text", icon: "", maxLength: "32", width: "450", enabled: true }) });
+organizationSlide.addComponent({ mapTo: '', component: saveOrgBtn });
+organizationSlide.addComponent({ mapTo: '', component: cancelOrgBtn });
+organizationSlide.set(document.body);
+
 var userSlide = new Slide({ id: 'user-slide', title: 'User', size: 500 });
-userSlide.addComponent({ mapTo: 'id', component: new Field({ id: "slide-user-id-field", title: "ID", type: "text", icon: "", maxLength: "32", width: "250", enabled: false }) });
-userSlide.addComponent({ mapTo: 'username', component: new Field({ id: "slide-user-username-field", title: "Username", type: "text", icon: "", maxLength: "32", width: "250" }) });
+userSlide.addComponent({ mapTo: 'id', component: new Field({ id: "slide-user-id-field", title: "ID", type: "text", icon: "", maxLength: "32", width: "250", enabled: false, mandatory: true }) });
+userSlide.addComponent({ mapTo: 'username', component: new Field({ id: "slide-user-username-field", title: "Username", type: "text", icon: "", maxLength: "32", width: "250", mandatory: true }) });
 userSlide.addComponent({ mapTo: 'administrator', component: new Checkbox({ id: "slide-user-admin-field", title: "Administrator" }) });
 userSlide.addComponent({ mapTo: '', component: saveUserBtn });
 userSlide.addComponent({ mapTo: '', component: modifyUserBtn });
@@ -233,11 +279,11 @@ userSlide.addComponent({ mapTo: '', component: cancelUserBtn });
 userSlide.set(document.body);
 
 var applicationSlide = new Slide({ id: 'app-slide', title: 'Application', size: 500 });
-applicationSlide.addComponent({ mapTo: 'id', component: new Field({ id: "slide-app-id-field", title: "ID", type: "text", icon: "", maxLength: "32", width: "250", enabled: false }) });
-applicationSlide.addComponent({ mapTo: 'urn', component: new Field({ id: "slide-app-urn-field", title: "URN", type: "text", icon: "", maxLength: "32", width: "250", mandatory: true }) });
-applicationSlide.addComponent({ mapTo: 'name', component: new Field({ id: "slide-app-name-field", title: "Name", type: "text", icon: "", maxLength: "32", width: "250", mandatory: true }) });
+applicationSlide.addComponent({ mapTo: 'id', component: new Field({ id: "slide-app-id-field", title: "ID", type: "text", icon: "", maxLength: "32", width: "250", enabled: false, mandatory: true }) });
+applicationSlide.addComponent({ mapTo: 'urn', component: new Field({ id: "slide-app-urn-field", title: "URN", type: "text", icon: "", maxLength: "32", width: "250", mandatory: true, mandatory: true }) });
+applicationSlide.addComponent({ mapTo: 'name', component: new Field({ id: "slide-app-name-field", title: "Name", type: "text", icon: "", maxLength: "32", width: "250", mandatory: true, mandatory: true }) });
 applicationSlide.addComponent({ mapTo: 'description', component: new Field({ id: "slide-app-description-field", title: "Description", type: "text", icon: "", maxLength: "32", width: "450" }) });
-applicationSlide.addComponent({ mapTo: 'acsUrl', component: new Field({ id: "slide-app-acs-field", title: "Assertion URL", type: "text", icon: "", maxLength: "32", width: "450", mandatory: true }) });
+applicationSlide.addComponent({ mapTo: 'acsUrl', component: new Field({ id: "slide-app-acs-field", title: "Assertion URL", type: "text", icon: "", maxLength: "32", width: "450", mandatory: true, mandatory: true }) });
 applicationSlide.addComponent({ mapTo: '', component: saveAppBtn });
 applicationSlide.addComponent({ mapTo: '', component: modifyAppBtn });
 applicationSlide.addComponent({ mapTo: '', component: cancelAppBtn });
@@ -299,7 +345,7 @@ usersTable.set(document.getElementById("user-main"));
 
 var userClaimsTable = new Table({
 	id : 'user-claims-table', 
-	columnPk : 1, 
+	columnPk : 0,
 	columns : ["URI", "Name", "Value", "Creation Date"], 
 	mimeTypes : [{ code: "TEXT", name: "Text" }, { code: "TEXT", name: "Text" }, { code: "TEXT", name: "Text" }, { code: "DATE", name: "Date" }], 
 	sizes : [25, 25, 25, 25]
@@ -308,8 +354,6 @@ userClaimsTable.setSort(function(a, b) {
 	return a[0].value.localeCompare(b[0].value);
 });
 userClaimsTable.set(document.getElementById("user-claims"));
-	
-loadOrganization();
 
 var appsTable = new Table({
 	id : 'apps-table', 
@@ -379,6 +423,10 @@ appClaimsTable.setSort(function(a, b) {
 	return a[0].value.localeCompare(b[0].value);
 });
 appClaimsTable.set(document.getElementById("app-claims"));
+	
+loadOrganization();
+loadUsers();
+loadApplications();
 
 // ---
 
@@ -424,6 +472,33 @@ function loadOrganization() {
 	}).send();
 }
 
+function updateOrganization(data) {
+	new Request({
+		method: "PATCH",
+		url: "./api/v1/organization",
+		successCode: 202,
+		data: data,
+		onSuccess: function(response) {
+			orgIdField.setValue(response.data.id);
+			orgCodeField.setValue(response.data.code);
+			orgDomainField.setValue(response.data.domain);
+			orgNameField.setValue(response.data.name);
+			orgDescriptionField.setValue(response.data.description);
+			orgCreationDateField.setValue(response.data.creationDate);
+			
+			if (organizationSlide.isLoaded()) {
+				organizationSlide.clear();
+				organizationSlide.hide();
+			}
+		},
+		onError: function(response) {
+			var message = new Message({ id : 'update-org-error-message', type : 'error', title : 'Upgrade Error' });
+			message.setText("Error: " + response.data.message);
+			message.show();
+		}
+	}).send();
+}
+
 function loadUsers() {
 	new Request({
 		method: "GET", 
@@ -462,10 +537,77 @@ function createUser(data) {
 			]);
 			usersTable.setSelectedLine(response.data.id);
 			
+			if (response.headers["x-activation-token"] != null) {
+				var message = new Message({ id : 'user-created-message', type : 'info', title : 'User Created' });
+				message.setText("User " + response.data.username + " succesfully created! <a href='" + response.headers["x-activation-token"] + "'>Activation link</a>");
+				message.show();
+			} else {
+				var message = new Message({ id : 'user-created-message', type : 'info', title : 'User Created' });
+				message.setText("User " + response.data.username + " succesfully created! An activation email has been sent.");
+				message.show();
+			}
+			
 			if (userSlide.isLoaded()) {
 				userSlide.clear();
 				userSlide.hide();
 			}
+		},
+		onError: function(response) {
+			var message = new Message({ id : 'create-user-error-message', type : 'error', title : 'User Creation Error' });
+			message.setText("Error: " + response.data.message);
+			message.show();
+		}
+	}).send();
+}
+
+function updateUser(data) {
+	new Request({
+		method: "PATCH", 
+		url: "./api/v1/user", 
+		successCode: 202,
+		data: data,
+		onSuccess: function(response) {
+			usersTable.updateLine([
+				{ column: 'username', value: response.data.username }, 
+				{ column: 'email', value: response.data.email }, 
+				{ column: 'enabled', value: response.data.enabled }, 
+				{ column: 'administrator', value: response.data.administrator }, 
+				{ column: 'id', value: response.data.id }
+			]);
+			
+			if (userSlide.isLoaded()) {
+				userSlide.clear();
+				userSlide.hide();
+			}
+		},
+		onError: function(response) {
+			var message = new Message({ id : 'update-user-error-message', type : 'error', title : 'User Edition Error' });
+			message.setText("Error: " + response.data.message);
+			message.show();
+		}
+	}).send();
+}
+
+function deleteUser(data) {
+	new Request({
+		method: "DELETE", 
+		url: "./api/v1/user", 
+		successCode: 204,
+		data: data,
+		onSuccess: function(response) {
+			usersTable.removeLine(data.id);
+			
+			updateUserBtn.setEnabled(false);
+			removeUserBtn.setEnabled(false);
+			activateUserBtn.setEnabled(false);
+			deactivateUserBtn.setEnabled(false);
+			
+			userClaimsTable.clear();
+		},
+		onError: function(response) {
+			var message = new Message({ id : 'delete-user-error-message', type : 'error', title : 'User Deletion Error' });
+			message.setText("Error: " + response.data.message);
+			message.show();
 		}
 	}).send();
 }
@@ -533,6 +675,11 @@ function createApplication(data) {
 				applicationSlide.clear();
 				applicationSlide.hide();
 			}
+		},
+		onError: function(response) {
+			var message = new Message({ id : 'create-app-error-message', type : 'error', title : 'Application Creation Error' });
+			message.setText("Error: " + response.data.message);
+			message.show();
 		}
 	}).send();
 }
@@ -556,6 +703,11 @@ function updateApplication(data) {
 				applicationSlide.clear();
 				applicationSlide.hide();
 			}
+		},
+		onError: function(response) {
+			var message = new Message({ id : 'update-app-error-message', type : 'error', title : 'Application Edition Error' });
+			message.setText("Error: " + response.data.message);
+			message.show();
 		}
 	}).send();
 }
@@ -568,6 +720,22 @@ function deleteApplication(data) {
 		data: data,
 		onSuccess: function(response) {
 			appsTable.removeLine(data.id);
+			
+			updateAppBtn.setEnabled(false);
+			removeAppBtn.setEnabled(false);
+			accessAppBtn.setEnabled(false);
+			
+			unlockUserAppBtn.setEnabled(false);
+			lockUserAppBtn.setEnabled(false);
+			revokeUserAppBtn.setEnabled(false);
+		
+		appUsersTable.clear();
+		appClaimsTable.clear();
+		},
+		onError: function(response) {
+			var message = new Message({ id : 'delete-app-error-message', type : 'error', title : 'Application Deletion Error' });
+			message.setText("Error: " + response.data.message);
+			message.show();
 		}
 	}).send();
 }
@@ -581,8 +749,8 @@ function loadApplication(urn) {
 			var accesses = [];
 			for (var i = 0; i < response.data.accesses.length; i++) {
 				accesses.push([
-					{ column: "email", value: response.data.accesses[i].email }, 
-					{ column: "role", value: response.data.accesses[i].role }, 
+					{ column: "email", value: response.data.accesses[i].user.email }, 
+					{ column: "role", value: response.data.accesses[i].role.name }, 
 					{ column: "enabled", value: response.data.accesses[i].enabled }, 
 					{ column: "id", value: response.data.accesses[i].id }
 				]);

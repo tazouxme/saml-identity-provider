@@ -185,6 +185,41 @@ header span {
 	width: 100%;
 }
 
+#slide-org-id-field {
+	top: 20px;
+	left: 20px;
+}
+#slide-org-code-field {
+	top: 100px;
+	left: 20px;
+}
+#slide-org-domain-field {
+	top: 180px;
+	left: 20px;
+}
+#slide-org-name-field {
+	top: 260px;
+	left: 20px;
+}
+#slide-org-date-field {
+	top: 340px;
+	left: 20px;
+}
+#slide-org-description-field {
+	top: 420px;
+	left: 20px;
+}
+#slide-org-save-btn {
+	position: absolute;
+	top: 510px;
+	left: 20px;
+}
+#slide-org-cancel-btn {
+	position: absolute;
+	top: 510px;
+	left: 100px;
+}
+
 #users {
 	position: absolute;
 	top: 205px;

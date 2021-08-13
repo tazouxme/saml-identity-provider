@@ -6,23 +6,6 @@
 <link rel="stylesheet" href="./style/authenticate.css" />
 <link rel="icon" type="image/png" href="img/gamma.png" sizes="16x16" />
 <script src="./script/authenticate.js"></script>
-<script>
-
-document.addEventListener("DOMContentLoaded", (e) => {
-	var usernameField = document.getElementById('email');
-	var passwordField = document.getElementById('password');
-	
-	var form = document.getElementsByTagName('form')[0];
-	form.addEventListener('submit', async function(e) {
-		e.preventDefault();
-		
-		if (await login(usernameField.value, passwordField.value)) {
-			form.submit();
-		}
-	}, false);
-})
-
-</script>
 
 </head>
 <body>

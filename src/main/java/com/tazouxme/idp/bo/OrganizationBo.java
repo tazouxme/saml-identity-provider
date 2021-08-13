@@ -2,6 +2,7 @@ package com.tazouxme.idp.bo;
 
 import java.util.Date;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.tazouxme.idp.bo.contract.IOrganizationBo;
@@ -35,12 +36,17 @@ public class OrganizationBo implements IOrganizationBo {
 	@Override
 	public Organization update(Organization org) throws OrganizationException {
 		Organization pOrg = findByExternalId(org.getExternalId());
-		pOrg.setEnabled(org.isEnabled());
 		pOrg.setName(org.getName());
-		pOrg.setDescription(org.getDescription());
-		pOrg.setPublicKey(org.getPublicKey());
 		
-		return dao.update(org);
+		if (!StringUtils.isBlank(org.getDescription())) {
+			pOrg.setDescription(org.getDescription());
+		}
+		
+		if (!StringUtils.isBlank(org.getPublicKey())) {
+			pOrg.setPublicKey(org.getPublicKey());
+		}
+		
+		return dao.update(pOrg);
 	}
 
 	@Override

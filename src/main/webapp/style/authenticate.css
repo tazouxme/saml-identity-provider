@@ -96,7 +96,7 @@
 	background-color: #454545;
 }
 
-#username-form form input[type="submit"] {
+#submit-username {
 	padding: 10px 20px;
 	width: 120px;
 	background-color: #5f7bde;
@@ -104,6 +104,13 @@
 	color: white;
 }
 
-#username-form form input[type="submit"]:hover {
+#submit-username:hover {
 	cursor: pointer;
+}
+
+#submit-username.disabled {
+	background-color: #ccc;
+	border: 1px solid #454545;
+	color: black;
+	cursor: wait;
 }

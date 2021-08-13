@@ -62,7 +62,7 @@ function Checkbox(params) {
 	 * @private
 	 */
 	var _isChecked = function() {
-		return _box.getAttribute("checked") == "checked" || _box.checked;
+		return _box.checked;
 	};
 	
 	/**
@@ -108,6 +108,14 @@ function Checkbox(params) {
 	 */
 	var _clear = function() {
 		_setChecked(false);
+	};
+	
+	/**
+	 * Get the component Id
+	 * @public
+	 */
+	this.getId = function() {
+		return _uid;
 	};
 	
 	/**

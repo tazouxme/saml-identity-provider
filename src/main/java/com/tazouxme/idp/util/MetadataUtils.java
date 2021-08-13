@@ -21,7 +21,9 @@ public class MetadataUtils {
 		idpDescription.setWantAuthnRequestsSigned(Boolean.FALSE);
 		idpDescription.getKeyDescriptors().add(buildKeyDescriptor(credential));
 		idpDescription.getNameIDFormats().add(buildNameIDFormat(NameID.EMAIL));
+		idpDescription.getNameIDFormats().add(buildNameIDFormat(NameID.ENCRYPTED));
 		idpDescription.getNameIDFormats().add(buildNameIDFormat(NameID.PERSISTENT));
+		idpDescription.getNameIDFormats().add(buildNameIDFormat(NameID.UNSPECIFIED));
 		idpDescription.getSingleSignOnServices().add(buildSingleSignOnService(SAMLConstants.SAML2_REDIRECT_BINDING_URI, context));
 		idpDescription.getSingleSignOnServices().add(buildSingleSignOnService(SAMLConstants.SAML2_POST_BINDING_URI, context));
 		idpDescription.getSingleSignOnServices().add(buildSingleSignOnService(SAMLConstants.SAML2_POST_SIMPLE_SIGN_BINDING_URI, context));

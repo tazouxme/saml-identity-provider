@@ -36,7 +36,11 @@ function Slide(params) {
 	 */
 	var _overlay = document.createElement("div");
 	_overlay.classList.add("dauth-slide-overlay");
+	_overlay.addEventListener('click', function() {
+		_hide();
+	});
 	document.body.appendChild(_overlay);
+	
 	
 	/**
 	 * Slider
@@ -137,6 +141,18 @@ function Slide(params) {
 	};
 	
 	/**
+	 * Set fields enabled or not
+	 * @private
+	 */
+	var _setEnabled = function(componentId, enabled) {
+		for (var i = 0; i < _components.length; i++) {
+			if (_components[i].component.getId() == componentId) {
+				_components[i].component.setEnabled(enabled);
+			}
+		}
+	};
+	
+	/**
 	 * Add a component to the Area template
 	 * @private
 	 */
@@ -201,6 +217,14 @@ function Slide(params) {
 	 */
 	this.setValues = function(data) {
 		_setValues(data);
+	};
+	
+	/**
+	 * Set fields enabled or not
+	 * @public
+	 */
+	this.setEnabled = function(componentId, enabled) {
+		_setEnabled(componentId, enabled);
 	};
 	
 	/**

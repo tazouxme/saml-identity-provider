@@ -12,6 +12,15 @@
 		<param-name>contextConfigLocation</param-name>
 		<param-value>classpath:spring/applicationContext-*.xml</param-value>
 	</context-param>
+	<context-param>
+		<param-name>mail-username</param-name>
+		<param-value>joel.tazzari@gmail.com</param-value>
+	</context-param>
+	<context-param>
+		<param-name>mail-password</param-name>
+		<param-value>tctvherzctpexjoz</param-value>
+	</context-param>
+	
 	<listener>
 		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
 	</listener>

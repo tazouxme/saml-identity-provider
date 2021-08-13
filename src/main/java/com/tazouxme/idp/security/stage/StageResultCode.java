@@ -29,7 +29,8 @@ public enum StageResultCode {
 //	FAT_0212 ("FAT-0212", "Unknown Application", StatusCode.RESOURCE_NOT_RECOGNIZED),
 //	FAT_0213 ("FAT-0213", "Unknown AssertionConsumerServiceURL", StatusCode.RESOURCE_NOT_RECOGNIZED),
 	FAT_0214 ("FAT-0214", "Unknown NameIDPolicy", StatusCode.INVALID_NAMEID_POLICY),
-	FAT_0215 ("FAT-0215", "Only " + NameIDType.EMAIL + " and " + NameIDType.PERSISTENT + " accepted as NameIDPolicy", StatusCode.INVALID_NAMEID_POLICY),
+	FAT_0215 ("FAT-0215", "Only " + NameIDType.UNSPECIFIED + ", " + NameIDType.EMAIL + ", " + NameIDType.ENCRYPTED
+			+ "and " + NameIDType.PERSISTENT + " accepted as NameIDPolicy", StatusCode.INVALID_NAMEID_POLICY),
 	FAT_0216 ("FAT-0216", "AllowCreate is not enabled", StatusCode.INVALID_NAMEID_POLICY),
 	FAT_0217 ("FAT-0217", "No AuthnContextClassRef found", StatusCode.NO_AUTHN_CONTEXT),
 	FAT_0218 ("FAT-0218", "No AuthnContextClassRef found", StatusCode.NO_AUTHN_CONTEXT),
@@ -59,6 +60,8 @@ public enum StageResultCode {
 	FAT_0411 ("FAT-0411", "NoSuchProviderException occured during Signature verification", StatusCode.RESPONDER),
 	FAT_0412 ("FAT-0412", "MalformedURLException occured during Signature verification", StatusCode.RESPONDER),
 	FAT_0413 ("FAT-0413", "Parameter not found in the request", StatusCode.REQUESTER),
+	FAT_0414 ("FAT-0414", "Organization must have a PublicKey to verify AuthnRequest signature", StatusCode.REQUESTER),
+	FAT_0415 ("FAT-0415", "Organization must have a PublicKey to encrypt NameID", StatusCode.REQUESTER),
 	AUT_0401 ("AUT-0401", "Cookie Signature does not correspond", StatusCode.REQUESTER),
 	AUT_0402 ("AUT-0402", "Token not found", StatusCode.REQUESTER),
 	
@@ -85,6 +88,7 @@ public enum StageResultCode {
 	FAT_0802 ("FAT-0802", "Unable to generate AuthnRequest from Request", StatusCode.RESPONDER),
 	FAT_0803 ("FAT-0803", "MarshallingException occured during Assertion signature", StatusCode.RESPONDER),
 	FAT_0804 ("FAT-0804", "SignatureException occured during Assertion signature", StatusCode.RESPONDER),
+	FAT_0805 ("FAT-0805", "Cannot handle Organization PublicKey", StatusCode.RESPONDER),
 	
 	// AuthenticateProvider
 	FAT_0901 ("FAT-0901", "Authentication phase not correctly set", StatusCode.RESPONDER),

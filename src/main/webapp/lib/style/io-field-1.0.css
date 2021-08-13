@@ -35,6 +35,7 @@
 
 .dauth-field-input[disabled="disabled"] {
 	background-color: white;
+	color: #888;
 }
 
 .dauth-field-label {

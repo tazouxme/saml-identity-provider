@@ -3,6 +3,11 @@ package com.tazouxme.idp.util;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
@@ -15,6 +20,7 @@ import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.bouncycastle.util.encoders.Base64;
 import org.opensaml.core.xml.XMLObjectBuilderFactory;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import org.opensaml.core.xml.io.MarshallingException;
@@ -22,6 +28,8 @@ import org.opensaml.core.xml.io.Unmarshaller;
 import org.opensaml.core.xml.io.UnmarshallingException;
 import org.opensaml.core.xml.schema.XSAny;
 import org.opensaml.core.xml.schema.impl.XSAnyBuilder;
+import org.opensaml.messaging.context.MessageContext;
+import org.opensaml.profile.context.ProfileRequestContext;
 import org.opensaml.saml.common.SAMLVersion;
 import org.opensaml.saml.common.xml.SAMLConstants;
 import org.opensaml.saml.saml2.core.Assertion;
@@ -47,7 +55,13 @@ import org.opensaml.saml.saml2.core.SubjectConfirmation;
 import org.opensaml.saml.saml2.core.SubjectConfirmationData;
 import org.opensaml.saml.saml2.metadata.Endpoint;
 import org.opensaml.saml.saml2.metadata.SingleSignOnService;
+import org.opensaml.saml.saml2.profile.context.EncryptionContext;
+import org.opensaml.saml.saml2.profile.impl.EncryptNameIDs;
+import org.opensaml.security.credential.BasicCredential;
 import org.opensaml.security.credential.Credential;
+import org.opensaml.xmlsec.EncryptionParameters;
+import org.opensaml.xmlsec.encryption.support.EncryptionConstants;
+import org.opensaml.xmlsec.keyinfo.impl.BasicKeyInfoGeneratorFactory;
 import org.opensaml.xmlsec.signature.Signature;
 import org.opensaml.xmlsec.signature.support.SignatureConstants;
 import org.opensaml.xmlsec.signature.support.SignatureException;
@@ -61,6 +75,7 @@ import com.tazouxme.idp.IdentityProviderConstants;
 import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.security.stage.exception.StageException;
 import com.tazouxme.idp.security.stage.exception.StageExceptionType;
+import com.tazouxme.idp.security.stage.parameters.StageParameters;
 import com.tazouxme.idp.security.token.UserIdentity;
 
 public class SAMLUtils {
@@ -98,7 +113,10 @@ public class SAMLUtils {
 		} 
 	}
 	
-	public static Response buildResponse(AuthnRequest authnRequest, UserIdentity identity, String role, String idp, StageResultCode stageCode, Credential credential) throws StageException {
+	public static Response buildResponse(StageParameters params, UserIdentity identity, String role, StageResultCode stageCode) throws StageException {
+		AuthnRequest authnRequest = params.getAuthnRequest();
+		String idp = params.getIdpUrn();
+
 		Response response = buildSAMLObject(Response.class);
 		response.setID(IDUtils.generateId("RES_", 4));
 		response.setVersion(SAMLVersion.VERSION_20);
@@ -108,7 +126,7 @@ public class SAMLUtils {
 		response.setStatus(buildStatus(stageCode));
 		
 		if (stageCode.equals(StageResultCode.OK)) {
-			response.getAssertions().add(buildAssertion(authnRequest, identity, role, idp, credential));
+			response.getAssertions().add(buildAssertion(params, identity, role));
 		}
 		
 		return response;
@@ -138,7 +156,10 @@ public class SAMLUtils {
 		return status;
 	}
 	
-	private static Assertion buildAssertion(AuthnRequest authnRequest, UserIdentity identity, String role, String idp, Credential credential) throws StageException {
+	private static Assertion buildAssertion(StageParameters stageParams, UserIdentity identity, String role) throws StageException {
+		AuthnRequest authnRequest = stageParams.getAuthnRequest();
+		String idp = stageParams.getIdpUrn();
+
 		Assertion assertion = buildSAMLObject(Assertion.class);
 		assertion.setID(UUID.randomUUID().toString());
 		assertion.setVersion(SAMLVersion.VERSION_20);
@@ -149,8 +170,34 @@ public class SAMLUtils {
 		assertion.getAuthnStatements().add(buildAuthnStatement(authnRequest.getRequestedAuthnContext().getAuthnContextClassRefs().get(0).getURI()));
 		assertion.getAttributeStatements().add(buildAttributeStatement(identity.getClaims(), role));
 		
+		if (NameIDType.ENCRYPTED.equals(authnRequest.getNameIDPolicy().getFormat())) {
+			// encrypt
+			BasicKeyInfoGeneratorFactory factory = new BasicKeyInfoGeneratorFactory();
+			
+			EncryptionParameters params = new EncryptionParameters();
+			params.setDataEncryptionAlgorithm(EncryptionConstants.ALGO_ID_BLOCKCIPHER_AES256);
+			params.setDataEncryptionCredential(new BasicCredential(stageParams.getSecretKey()));
+			params.setDataKeyInfoGenerator(factory.newInstance());
+			params.setKeyTransportEncryptionAlgorithm(EncryptionConstants.ALGO_ID_KEYTRANSPORT_RSA15);
+			params.setKeyTransportEncryptionCredential(obtainPublicCredential(stageParams.getOrganization().getPublicKey()));
+			params.setKeyTransportKeyInfoGenerator(factory.newInstance());
+			
+			EncryptionContext encryptCtx = new EncryptionContext();
+			encryptCtx.setIdentifierEncryptionParameters(params);
+			
+			MessageContext messageContext = new MessageContext();
+			messageContext.setMessage(assertion);
+			messageContext.addSubcontext(encryptCtx);
+			
+			ProfileRequestContext ctx = new ProfileRequestContext();
+			ctx.setOutboundMessageContext(messageContext);
+			
+			EncryptNameIDs encrypter = new EncryptNameIDs();
+			encrypter.execute(ctx);
+		}
+		
 		Signature signature = buildSAMLObject(Signature.class);
-		signature.setSigningCredential(credential);
+		signature.setSigningCredential(stageParams.getPrivateCredential());
 		signature.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA256);
 		signature.setCanonicalizationAlgorithm(SignatureConstants.ALGO_ID_C14N_EXCL_OMIT_COMMENTS);
 		
@@ -172,10 +219,10 @@ public class SAMLUtils {
 		NameID nameId = buildSAMLObject(NameID.class);
 		String nameIDPolicy = authnRequest.getNameIDPolicy().getFormat();
 		
-		if (NameIDType.EMAIL.equals(nameIDPolicy)) {
+		if (NameIDType.EMAIL.equals(nameIDPolicy) || NameIDType.ENCRYPTED.equals(nameIDPolicy)) {
 			nameId.setFormat(NameID.EMAIL);
 			nameId.setValue(identity.getEmail());
-		} else if (NameIDType.PERSISTENT.equals(nameIDPolicy)) {
+		} else if (NameIDType.PERSISTENT.equals(nameIDPolicy) || NameIDType.UNSPECIFIED.equals(nameIDPolicy)) {
 			nameId.setFormat(NameID.PERSISTENT);
 			nameId.setValue(identity.getUserId());
 		}
@@ -266,6 +313,14 @@ public class SAMLUtils {
 
 	protected static XMLObjectBuilderFactory getBuilderFactory() {
 		return XMLObjectProviderRegistrySupport.getBuilderFactory();
+	}
+	
+	private static Credential obtainPublicCredential(String publicKey) {
+		try {
+			return new BasicCredential(KeyFactory.getInstance("RSA", "BC").generatePublic(new X509EncodedKeySpec(Base64.decode(publicKey))));
+		} catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
+			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0805);
+		}
 	}
 
 }

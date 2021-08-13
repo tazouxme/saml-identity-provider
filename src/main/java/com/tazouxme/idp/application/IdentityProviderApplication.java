@@ -3,6 +3,7 @@ package com.tazouxme.idp.application;
 import java.util.Date;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 
@@ -57,6 +58,11 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 	private IUserBo userBo;
 	
 	@Override
+	public Set<Activation> findActivationsByUser(String userExternalId, String organizationId) {
+		return activationBo.findByUser(userExternalId, organizationId);
+	}
+	
+	@Override
 	public Activation createActivation(String organizationId, String userId, String step) throws ActivationException {
 		Activation activation = new Activation();
 		activation.setOrganizationExternalId(organizationId);
@@ -73,7 +79,7 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 	
 	@Override
 	public Application findApplicationByExternalId(String externalId, String organizationId) throws ApplicationException {
-		return applicationBo.findByExternalId(externalId);
+		return applicationBo.findByExternalId(externalId, organizationId);
 	}
 	
 	@Override
@@ -169,6 +175,20 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 	}
 	
 	@Override
+	public Organization updateOrganization(String id, String name, String description, String publicKey) throws OrganizationException {
+		Organization organization = new Organization();
+		organization.setExternalId(id);
+		organization.setName(name);
+		organization.setDescription(description);
+		
+		if (!StringUtils.isBlank(publicKey)) {
+			organization.setPublicKey(publicKey);
+		}
+		
+		return organizationBo.update(organization);
+	}
+	
+	@Override
 	public Claim createClaim(String uri, String name, String description, Organization o) throws ClaimException {
 		Claim claim = new Claim();
 		claim.setUri(uri);
@@ -218,19 +238,36 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 	public User updateUser(String externalId, String password, boolean administrator, boolean enabled, Organization organization) throws UserException {
 		User user = new User();
 		user.setExternalId(externalId);
-		user.setPassword(BCrypt.hashpw(password, BCrypt.gensalt(6)));
 		user.setAdministrator(administrator);
 		user.setEnabled(enabled);
 		user.setOrganization(organization);
+		
+		if (!StringUtils.isBlank(password)) {
+			user.setPassword(BCrypt.hashpw(password, BCrypt.gensalt(6)));
+		}
 		
 		return userBo.update(user);
 	}
 	
 	@Override
 	public void deleteUser(String externalId, Organization organization) throws UserException {
-		User user = new User();
-		user.setExternalId(externalId);
-		user.setOrganization(organization);
+		User user = findUserByExternalId(externalId, organization.getExternalId());
+		
+		for (Access access : user.getAccesses()) {
+			try {
+				accessBo.delete(access);
+			} catch (AccessException e) {
+				throw new UserException("Unable to delete Access for User", e);
+			}
+		}
+		
+		for (Activation activation : findActivationsByUser(organization.getExternalId(), externalId)) {
+			try {
+				activationBo.delete(activation);
+			} catch (ActivationException e) {
+				throw new UserException("Unable to delete Activation for User", e);
+			}
+		}
 		
 		userBo.delete(user);
 	}
@@ -240,7 +277,7 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 		details.setClaim(claimBo.findByURI(key, organizationId));
 		details.setClaimValue(value);
 		details.setCreationDate(new Date().getTime());
-		details.setUser(user);;
+		details.setUser(user);
 		
 		return details;
 	}

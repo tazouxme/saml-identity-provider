@@ -16,7 +16,7 @@ public interface IApplicationBo {
 	public Application findByUrn(String urn, String organizationExternalId) throws ApplicationException;
 	
 	@Transactional(readOnly = true)
-	public Application findByExternalId(String externalId) throws ApplicationException;
+	public Application findByExternalId(String externalId, String organizationExternalId) throws ApplicationException;
 	
 	@Transactional
 	public Application create(Application application) throws ApplicationException;

@@ -26,8 +26,8 @@ public class ApplicationBo implements IApplicationBo {
 	}
 
 	@Override
-	public Application findByExternalId(String externalId) throws ApplicationException {
-		return dao.findByExternalId(externalId);
+	public Application findByExternalId(String externalId, String organizationExternalId) throws ApplicationException {
+		return dao.findByExternalId(externalId, organizationExternalId);
 	}
 
 	@Override
@@ -38,7 +38,7 @@ public class ApplicationBo implements IApplicationBo {
 
 	@Override
 	public Application update(Application application) throws ApplicationException {
-		Application pApplication = findByExternalId(application.getExternalId());
+		Application pApplication = findByExternalId(application.getExternalId(), application.getOrganization().getExternalId());
 		pApplication.setName(application.getName());
 		pApplication.setDescription(application.getDescription());
 		pApplication.setAssertionUrl(application.getAssertionUrl());
@@ -48,7 +48,7 @@ public class ApplicationBo implements IApplicationBo {
 
 	@Override
 	public void delete(Application application) throws ApplicationException {
-		dao.delete(findByExternalId(application.getExternalId()));
+		dao.delete(findByExternalId(application.getExternalId(), application.getOrganization().getExternalId()));
 	}
 
 }

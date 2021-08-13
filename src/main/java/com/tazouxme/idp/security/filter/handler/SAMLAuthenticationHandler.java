@@ -1,8 +1,11 @@
 package com.tazouxme.idp.security.filter.handler;
 
 import java.io.IOException;
+import java.util.Random;
 import java.util.Set;
 
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -73,6 +76,8 @@ public class SAMLAuthenticationHandler extends AbstractAuthenticationHandler {
 		}
 		
 		if (!UserAuthenticationPhase.SSO_FAILED.equals(authentication.getDetails().getPhase())) {
+			authentication.getDetails().getParameters().setSecretKey(generateSecretKey());
+			
 			Set<Claim> claims = authentication.getDetails().getParameters().getApplication().getClaims();
 			Set<UserDetails> details = authentication.getDetails().getParameters().getUser().getDetails();
 			
@@ -89,12 +94,10 @@ public class SAMLAuthenticationHandler extends AbstractAuthenticationHandler {
 		
 		// handle status
 		Response samlResponse = SAMLUtils.buildResponse(
-				authentication.getDetails().getParameters().getAuthnRequest(),
+				authentication.getDetails().getParameters(),
 				authentication.getDetails().getIdentity(),
 				authentication.getRole(),
-				authentication.getDetails().getParameters().getIdpUrn(),
-				authentication.getDetails().getResultCode(),
-				authentication.getDetails().getParameters().getPrivateCredential());
+				authentication.getDetails().getResultCode());
 		
 		MessageContext messageContext = new MessageContext();
 		messageContext.setMessage(samlResponse);
@@ -133,6 +136,18 @@ public class SAMLAuthenticationHandler extends AbstractAuthenticationHandler {
 			
 			request.getRequestDispatcher("/error.jsp").forward(request, response);
 		}
+	}
+
+	private SecretKey generateSecretKey() {
+		return new SecretKeySpec(generateRandomBytes(32), "AES");
+	}
+	
+	private byte[] generateRandomBytes(int length) {
+		byte[] bytes = new byte[length];
+		Random r = new Random();
+		r.nextBytes(bytes);
+		
+		return bytes;
 	}
 
 }

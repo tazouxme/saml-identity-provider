@@ -66,6 +66,10 @@ public class User {
 	@JsonIgnoreProperties("user")
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
 	private Set<UserDetails> details = new HashSet<>();
+	
+	@JsonIgnoreProperties("user")
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+	private Set<Access> accesses = new HashSet<>();
 
 	public long getId() {
 		return id;
@@ -145,6 +149,14 @@ public class User {
 	
 	public void setDetails(Set<UserDetails> details) {
 		this.details = details;
+	}
+	
+	public Set<Access> getAccesses() {
+		return accesses;
+	}
+	
+	public void setAccesses(Set<Access> accesses) {
+		this.accesses = accesses;
 	}
 	
 	@Override
