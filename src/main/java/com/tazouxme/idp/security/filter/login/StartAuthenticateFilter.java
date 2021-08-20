@@ -32,12 +32,15 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import com.tazouxme.idp.IdentityProviderConstants;
 import com.tazouxme.idp.bo.contract.IApplicationBo;
+import com.tazouxme.idp.bo.contract.IFederationBo;
 import com.tazouxme.idp.bo.contract.IOrganizationBo;
 import com.tazouxme.idp.bo.contract.IUserBo;
 import com.tazouxme.idp.exception.ApplicationException;
+import com.tazouxme.idp.exception.FederationException;
 import com.tazouxme.idp.exception.OrganizationException;
 import com.tazouxme.idp.exception.UserException;
 import com.tazouxme.idp.model.Application;
+import com.tazouxme.idp.model.Federation;
 import com.tazouxme.idp.model.Organization;
 import com.tazouxme.idp.model.User;
 import com.tazouxme.idp.security.filter.AbstractIdentityProviderFilter;
@@ -53,6 +56,9 @@ public class StartAuthenticateFilter extends AbstractIdentityProviderFilter {
 	
 	@Autowired
 	private IUserBo userBo;
+	
+	@Autowired
+	private IFederationBo federationBo;
 	
 	@Autowired
 	private IApplicationBo applicationBo;
@@ -125,9 +131,9 @@ public class StartAuthenticateFilter extends AbstractIdentityProviderFilter {
 			inAuthentication.getDetails().getIdentity().setRole(user.isAdministrator() ? "ADMIN" : "USER");
 			
 			if (UserAuthenticationType.SAML.equals(startAuthentication.getDetails().getType())) {
-				if (StringUtils.isBlank(organization.getPublicKey())) {
+				if (StringUtils.isBlank(organization.getCertificate())) {
 					if (NameID.ENCRYPTED.equals(parameters.getAuthnRequest().getNameIDPolicy().getFormat())) {
-						logger.error("Organization PublicKey is not set to encrypt NameID");
+						logger.error("Organization Certificate is not set to encrypt NameID");
 						response.setStatus(406);
 						response.setHeader(IdentityProviderConstants.AUTH_HEADER_CSRF, csrf);
 						response.setHeader(IdentityProviderConstants.AUTH_HEADER_ERROR, "Organization PublicKey is not set to encrypt NameID");
@@ -135,7 +141,7 @@ public class StartAuthenticateFilter extends AbstractIdentityProviderFilter {
 					}
 					
 					if ("POST".equals(parameters.getUrlMethod()) && SAMLConstants.SAML2_POST_SIMPLE_SIGN_BINDING_URI.equals(parameters.getAuthnRequest().getProtocolBinding())) {
-						logger.error("Organization PublicKey is not set to verify Signature");
+						logger.error("Organization Certificate is not set to verify Signature");
 						response.setStatus(406);
 						response.setHeader(IdentityProviderConstants.AUTH_HEADER_CSRF, csrf);
 						response.setHeader(IdentityProviderConstants.AUTH_HEADER_ERROR, "Organization PublicKey is not set to verify Signature");
@@ -156,6 +162,28 @@ public class StartAuthenticateFilter extends AbstractIdentityProviderFilter {
 					response.setHeader(IdentityProviderConstants.AUTH_HEADER_CSRF, csrf);
 					response.setHeader(IdentityProviderConstants.AUTH_HEADER_ERROR, "Invalid Assertion Consumer Service URL in AuthnRequest");
 					return;
+				}
+				
+				if (NameID.PERSISTENT.equals(parameters.getAuthnRequest().getNameIDPolicy().getFormat())) {
+					logger.info("Federated User requested");
+					try {
+						Federation federation = federationBo.findByUserAndURN(user.getExternalId(), application.getUrn(), organization.getExternalId());
+						if (!federation.isEnabled()) {
+							logger.error("Federation not enabled");
+							response.setStatus(406);
+							response.setHeader(IdentityProviderConstants.AUTH_HEADER_CSRF, csrf);
+							response.setHeader(IdentityProviderConstants.AUTH_HEADER_ERROR, "Federation not enabled");
+							return;
+						}
+						
+						inAuthentication.getDetails().getIdentity().setFederatedUserId(federation.getExternalId());
+					} catch (FederationException e) {
+						logger.error("Federation not found");
+						response.setStatus(406);
+						response.setHeader(IdentityProviderConstants.AUTH_HEADER_CSRF, csrf);
+						response.setHeader(IdentityProviderConstants.AUTH_HEADER_ERROR, "Federation not found");
+						return;
+					}
 				}
 			}
 			

@@ -1,33 +1,30 @@
-package com.tazouxme.idp.security.stage;
+package com.tazouxme.idp.security.stage.http;
 
 import java.util.Date;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.opensaml.saml.common.xml.SAMLConstants;
 import org.opensaml.saml.saml2.core.AuthnContext;
 import org.opensaml.saml.saml2.core.NameIDType;
 
 import com.tazouxme.idp.IdentityProviderConstants;
+import com.tazouxme.idp.security.stage.AbstractStage;
+import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.security.stage.exception.StageException;
 import com.tazouxme.idp.security.stage.exception.StageExceptionType;
 import com.tazouxme.idp.security.stage.parameters.StageParameters;
 import com.tazouxme.idp.security.token.UserAuthenticationPhase;
 import com.tazouxme.idp.security.token.UserAuthenticationToken;
 
-public class ValidateRequestValuesStage implements Stage {
+public class ValidateRequestValuesStage extends AbstractStage {
 
-	protected final Log logger = LogFactory.getLog(getClass());
+	public ValidateRequestValuesStage() {
+		super(UserAuthenticationPhase.REQUEST_PARAMETERS_VALID, UserAuthenticationPhase.REQUEST_VALUES_VALID);
+	}
 	
 	@Override
-	public UserAuthenticationToken execute(UserAuthenticationToken authentication, 
-			StageParameters o) throws StageException {
-		if (!UserAuthenticationPhase.REQUEST_PARAMETERS_VALID.equals(authentication.getDetails().getPhase())) {
-			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0201, o);
-		}
-		
+	public UserAuthenticationToken executeInternal(UserAuthenticationToken authentication,  StageParameters o) throws StageException {
 		if (StringUtils.isEmpty(o.getAuthnRequest().getID())) {
 			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0203, o);
 		}
@@ -45,8 +42,8 @@ public class ValidateRequestValuesStage implements Stage {
 		}
 		
 		String protocolBinding = o.getAuthnRequest().getProtocolBinding();
-		Set<String> allowedProtocolBindings = Set.of(SAMLConstants.SAML2_REDIRECT_BINDING_URI, SAMLConstants.SAML2_POST_BINDING_URI, SAMLConstants.SAML2_POST_SIMPLE_SIGN_BINDING_URI/*, 
-				SAMLConstants.SAML2_SOAP11_BINDING_URI, SAMLConstants.SAML2_ARTIFACT_BINDING_URI*/);
+		Set<String> allowedProtocolBindings = Set.of(SAMLConstants.SAML2_REDIRECT_BINDING_URI, SAMLConstants.SAML2_POST_BINDING_URI, SAMLConstants.SAML2_POST_SIMPLE_SIGN_BINDING_URI, 
+				SAMLConstants.SAML2_ARTIFACT_BINDING_URI/*, SAMLConstants.SAML2_SOAP11_BINDING_URI*/);
 		
 		if (!allowedProtocolBindings.contains(protocolBinding)) {
 			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0208, o);
@@ -65,7 +62,7 @@ public class ValidateRequestValuesStage implements Stage {
 			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0214, o);
 		}
 		
-		Set<String> allowedNameIDPolicies = Set.of(NameIDType.UNSPECIFIED, NameIDType.EMAIL, NameIDType.PERSISTENT, NameIDType.ENCRYPTED/*, NameIDType.ENTITY*/);
+		Set<String> allowedNameIDPolicies = Set.of(NameIDType.UNSPECIFIED, NameIDType.EMAIL, NameIDType.TRANSIENT, NameIDType.ENCRYPTED, NameIDType.PERSISTENT, NameIDType.ENTITY);
 		String nameIDPolicy = o.getAuthnRequest().getNameIDPolicy().getFormat();
 		
 		if (!allowedNameIDPolicies.contains(nameIDPolicy)) {
@@ -95,9 +92,12 @@ public class ValidateRequestValuesStage implements Stage {
 		}
 		
 		logger.info("Request values valid");
-		
-		authentication.getDetails().setPhase(UserAuthenticationPhase.REQUEST_VALUES_VALID);
 		return authentication;
+	}
+	
+	@Override
+	protected boolean requireEntryPhase() {
+		return true;
 	}
 
 }

@@ -1,7 +1,9 @@
 package com.tazouxme.idp.security.stage.parameters;
 
 import javax.crypto.SecretKey;
+import javax.servlet.http.HttpServletRequest;
 
+import org.opensaml.saml.saml2.core.ArtifactResolve;
 import org.opensaml.saml.saml2.core.AuthnRequest;
 import org.opensaml.security.credential.Credential;
 import org.opensaml.security.x509.BasicX509Credential;
@@ -18,6 +20,7 @@ public class StageParameters {
 	private StageCookieParameters cookieParameters;
 	
 	private AuthnRequest authnRequest;
+	private ArtifactResolve artifactResolve;
 	private SecretKey secretKey;
 	
 	private Organization organization;
@@ -31,6 +34,13 @@ public class StageParameters {
 	}
 	
 	public StageParameters(IdentityProviderConfiguration configuration, 
+			HttpServletRequest request, String organization, String user, String signature) {
+		this.configuration = configuration;
+		this.requestParameters = new StageRequestParameters(request);
+		this.cookieParameters = new StageCookieParameters(organization, user, signature);
+	}
+	
+	public StageParameters(IdentityProviderConfiguration configuration, 
 			String urlMethod, String urlParam, String samlRequestParam, String relayStateParam, String organization, String user, String signature) {
 		this.configuration = configuration;
 		this.requestParameters = new StageRequestParameters(urlMethod, urlParam, samlRequestParam, relayStateParam);
@@ -39,6 +49,10 @@ public class StageParameters {
 	
 	public String getRedirectUrl() {
 		return redirectUrl;
+	}
+	
+	public HttpServletRequest getRequest() {
+		return requestParameters.getRequest();
 	}
 	
 	public String getUrlMethod() {
@@ -69,6 +83,10 @@ public class StageParameters {
 		return cookieParameters.getSignature();
 	}
 	
+	public IdentityProviderConfiguration getConfiguration() {
+		return configuration;
+	}
+	
 	public String getIdpDomain() {
 		return configuration.getDomain();
 	}
@@ -95,6 +113,14 @@ public class StageParameters {
 	
 	public void setAuthnRequest(AuthnRequest authnRequest) {
 		this.authnRequest = authnRequest;
+	}
+	
+	public ArtifactResolve getArtifactResolve() {
+		return artifactResolve;
+	}
+	
+	public void setArtifactResolve(ArtifactResolve artifactResolve) {
+		this.artifactResolve = artifactResolve;
 	}
 	
 	public SecretKey getSecretKey() {

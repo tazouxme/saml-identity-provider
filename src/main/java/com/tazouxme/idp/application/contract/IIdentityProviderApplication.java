@@ -5,12 +5,14 @@ import java.util.Set;
 import com.tazouxme.idp.exception.ActivationException;
 import com.tazouxme.idp.exception.ApplicationException;
 import com.tazouxme.idp.exception.ClaimException;
+import com.tazouxme.idp.exception.FederationException;
 import com.tazouxme.idp.exception.OrganizationException;
 import com.tazouxme.idp.exception.RoleException;
 import com.tazouxme.idp.exception.UserException;
 import com.tazouxme.idp.model.Activation;
 import com.tazouxme.idp.model.Application;
 import com.tazouxme.idp.model.Claim;
+import com.tazouxme.idp.model.Federation;
 import com.tazouxme.idp.model.Organization;
 import com.tazouxme.idp.model.Role;
 import com.tazouxme.idp.model.User;
@@ -94,6 +96,24 @@ public interface IIdentityProviderApplication {
 	public void deleteApplication(String externalId, Organization organization) throws ApplicationException;
 	
 	/**
+	 * 
+	 * @param userExternalId - User External ID
+	 * @param organizationExternalId - Organization External IDOrganization External ID
+	 * @return All existing Federations for the User 
+	 */
+	public Set<Federation> findFederationsByUser(String userExternalId, String organizationExternalId);
+	
+	/**
+	 * Find a Federation identity for User
+	 * @param userExternalId - User External ID
+	 * @param urn - Application's URN
+	 * @param organizationExternalId - Organization External IDOrganization External ID
+	 * @return The Federation identity for the User
+	 * @throws FederationException - When a Federation does not exist
+	 */
+	public Federation findFederationByUserAndURN(String userExternalId, String urn, String organizationExternalId) throws FederationException;
+	
+	/**
 	 * Get an Organization via its External ID
 	 * @param externalId - Organization External ID
 	 * @return The Organization
@@ -123,11 +143,27 @@ public interface IIdentityProviderApplication {
 	 * @param id - Organization External ID
 	 * @param name - Organization name
 	 * @param description - Organization description (may be null)
-	 * @param publicKey - Organization encoded PublicKey from Certificate (may be null)
 	 * @return The updated Organization
 	 * @throws OrganizationException - When the Organization with External ID or domain does not exist
 	 */
-	public Organization updateOrganization(String id, String name, String description, String publicKey) throws OrganizationException;
+	public Organization updateOrganization(String id, String name, String description) throws OrganizationException;
+	
+	/**
+	 * Update an Organization entry in the database
+	 * @param id - Organization External ID
+	 * @param certificate - Organization encoded Certificate
+	 * @return The updated Organization
+	 * @throws OrganizationException - When the Organization with External ID or domain does not exist
+	 */
+	public Organization setCertificate(String id, String certificate) throws OrganizationException;
+	
+	/**
+	 * Update an Organization entry in the database
+	 * @param id - Organization External ID
+	 * @return The updated Organization
+	 * @throws OrganizationException - When the Organization with External ID or domain does not exist
+	 */
+	public Organization deleteCertificate(String id) throws OrganizationException;
 	
 	/**
 	 * Create a Claim entry in the database

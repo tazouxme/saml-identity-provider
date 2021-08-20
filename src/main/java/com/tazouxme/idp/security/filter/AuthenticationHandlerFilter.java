@@ -21,7 +21,6 @@ import com.tazouxme.idp.security.filter.handler.AbstractAuthenticationHandler;
 import com.tazouxme.idp.security.filter.handler.AuthenticationHandlerFactory;
 import com.tazouxme.idp.security.stage.parameters.StageParameters;
 import com.tazouxme.idp.security.token.UserAuthenticationToken;
-import com.tazouxme.idp.security.token.UserAuthenticationType;
 
 public class AuthenticationHandlerFilter extends GenericFilterBean {
 	
@@ -40,20 +39,15 @@ public class AuthenticationHandlerFilter extends GenericFilterBean {
 			return;
 		}
 		
+		AbstractAuthenticationHandler handler = AuthenticationHandlerFactory.get(endAuthentication.getDetails().getType(), context);
+		
 		StageParameters parameters = endAuthentication.getDetails().getParameters();
 		if (parameters == null) {
-			req.setAttribute("code", endAuthentication.getDetails().getResultCode().getCode());
-			req.setAttribute("reason", endAuthentication.getDetails().getResultCode().getReason());
-			req.setAttribute("status", endAuthentication.getDetails().getResultCode().getStatus());
-			
-			req.getRequestDispatcher("/error.jsp").forward(req, res);
+			handler.fault((HttpServletRequest) req, (HttpServletResponse) res, endAuthentication);
 			return;
 		}
 		
 		logger.info("Finalizing authentication");
-		
-		AbstractAuthenticationHandler handler = AuthenticationHandlerFactory.get(
-				UserAuthenticationType.SAML.equals(endAuthentication.getDetails().getType()), context);
 		handler.handle((HttpServletRequest) req, (HttpServletResponse) res, endAuthentication);
 	}
 

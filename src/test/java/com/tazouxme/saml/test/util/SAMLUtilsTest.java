@@ -2,13 +2,8 @@ package com.tazouxme.saml.test.util;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
 import java.time.Instant;
-import java.util.zip.Inflater;
-import java.util.zip.InflaterInputStream;
 
 import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -25,13 +20,11 @@ import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import org.opensaml.core.xml.io.Unmarshaller;
 import org.opensaml.core.xml.io.UnmarshallingException;
 import org.opensaml.saml.common.SAMLVersion;
-import org.opensaml.saml.common.xml.SAMLConstants;
 import org.opensaml.saml.saml2.core.AuthnContextClassRef;
 import org.opensaml.saml.saml2.core.AuthnContextComparisonTypeEnumeration;
 import org.opensaml.saml.saml2.core.AuthnRequest;
 import org.opensaml.saml.saml2.core.Issuer;
 import org.opensaml.saml.saml2.core.NameIDPolicy;
-import org.opensaml.saml.saml2.core.NameIDType;
 import org.opensaml.saml.saml2.core.RequestedAuthnContext;
 import org.opensaml.saml.saml2.core.Response;
 import org.w3c.dom.Document;
@@ -43,18 +36,18 @@ import com.tazouxme.idp.util.IDUtils;
 
 public class SAMLUtilsTest {
 	
-	public static AuthnRequest buildHttpAuthnRequest(String idpUrn, String idpAcs, String application, String authnContext) throws Exception {
+	public static AuthnRequest buildHttpAuthnRequest(String idpUrn, String idpAcs, String application, String authnContext, String binding, String nameIDFormat) throws Exception {
 		AuthnRequest auth = buildSAMLObject(AuthnRequest.class);
 		auth.setID(IDUtils.generateId("ID_", 4));
 		auth.setVersion(SAMLVersion.VERSION_20);
 		auth.setIssueInstant(Instant.now());
 		auth.setForceAuthn(false);
 		auth.setIsPassive(false);
-		auth.setProtocolBinding(SAMLConstants.SAML2_REDIRECT_BINDING_URI);
+		auth.setProtocolBinding(binding);
 		auth.setDestination(idpUrn);
 		auth.setAssertionConsumerServiceURL(idpAcs);
 		auth.setIssuer(buildIssuer(application));
-		auth.setNameIDPolicy(buildNameIDPolicy());
+		auth.setNameIDPolicy(buildNameIDPolicy(nameIDFormat));
 		auth.setRequestedAuthnContext(buildRequestedAuthnContext(authnContext));
 		
 		return auth;
@@ -67,9 +60,9 @@ public class SAMLUtilsTest {
 		return issuer;
 	}
 
-	private static NameIDPolicy buildNameIDPolicy() {
+	private static NameIDPolicy buildNameIDPolicy(String nameIDFormat) {
 		NameIDPolicy nameIDPolicy = buildSAMLObject(NameIDPolicy.class);
-		nameIDPolicy.setFormat(NameIDType.EMAIL);
+		nameIDPolicy.setFormat(nameIDFormat);
 		nameIDPolicy.setAllowCreate(false);
 
 		return nameIDPolicy;
@@ -80,19 +73,19 @@ public class SAMLUtilsTest {
 		XMLObject responseXmlObj = null;
 		
 		ByteArrayInputStream is = new ByteArrayInputStream(samlResponse);
-		InflaterInputStream inf = new InflaterInputStream(is, new Inflater(true));
+//		InflaterInputStream inf = new InflaterInputStream(is, new Inflater(true));
 		
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         documentBuilderFactory.setNamespaceAware(true);
         
-        Reader reader = null;
-		try {
-			reader = new InputStreamReader(inf, "UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			throw new RuntimeException("Cannot read the Input Stream", e);
-		}
+//        Reader reader = null;
+//		try {
+//			reader = new InputStreamReader(inf, "UTF-8");
+//		} catch (UnsupportedEncodingException e) {
+//			throw new RuntimeException("Cannot read the Input Stream", e);
+//		}
 		
-        InputSource input = new InputSource(reader);
+        InputSource input = new InputSource(is);
         input.setEncoding("UTF-8");
         
 		try {

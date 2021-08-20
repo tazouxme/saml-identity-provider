@@ -76,7 +76,7 @@ public class IdentityProviderService {
 			entity.setDomain(organization.getDomain());
 			entity.setName(organization.getName());
 			entity.setDescription(organization.getDescription());
-			entity.setPublicKey(organization.getPublicKey());
+			entity.setCertificate(organization.getCertificate());
 			entity.setCreationDate(organization.getCreationDate());
 			
 			for (Claim claim : organization.getClaims()) {
@@ -104,18 +104,19 @@ public class IdentityProviderService {
 		}
 	}
 	
-	@PUT
+	@PATCH
 	@Path("/organization")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response updateOrganizationPublicKey(OrganizationEntity entity) {
-		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getId(), entity.getPublicKey());
+	public Response updateOrganization(OrganizationEntity entity) {
+		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getId(), entity.getName());
+		validationResult.getValidations().addAll(SanitizerUtils.sanitizeEquals(entity.getId(), findUserIdentity().getOrganizationId()).getValidations());
 		if (validationResult.hasError()) {
 			return Response.status(406).entity(validationResult.getFirstError()).build();
 		}
 		
 		try {
-			idpApplication.updateOrganization(entity.getId(), entity.getName(), entity.getDescription(), entity.getPublicKey());
+			idpApplication.updateOrganization(entity.getId(), entity.getName(), entity.getDescription());
 		} catch (OrganizationException e) {
 			return Response.status(500).build();
 		}
@@ -123,23 +124,44 @@ public class IdentityProviderService {
 		return Response.status(202).entity(entity).build();
 	}
 	
-	@PATCH
-	@Path("/organization")
+	@PUT
+	@Path("/certificate")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response updateOrganization(OrganizationEntity entity) {
-		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getId(), entity.getName());
+	public Response setCertificate(OrganizationEntity entity) {
+		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonEmptyCertificate(entity.getCertificate());
+		validationResult.getValidations().addAll(SanitizerUtils.sanitizeEquals(entity.getId(), findUserIdentity().getOrganizationId()).getValidations());
 		if (validationResult.hasError()) {
 			return Response.status(406).entity(validationResult.getFirstError()).build();
 		}
 		
 		try {
-			idpApplication.updateOrganization(entity.getId(), entity.getName(), entity.getDescription(), null);
+			idpApplication.setCertificate(findUserIdentity().getOrganizationId(), entity.getCertificate());
 		} catch (OrganizationException e) {
 			return Response.status(500).build();
 		}
 		
 		return Response.status(202).entity(entity).build();
+	}
+	
+	@DELETE
+	@Path("/certificate")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response deleteCertificate(OrganizationEntity entity) {
+		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeEmpty(entity.getCertificate());
+		validationResult.getValidations().addAll(SanitizerUtils.sanitizeEquals(entity.getId(), findUserIdentity().getOrganizationId()).getValidations());
+		if (validationResult.hasError()) {
+			return Response.status(406).entity(validationResult.getFirstError()).build();
+		}
+		
+		try {
+			idpApplication.deleteCertificate(findUserIdentity().getOrganizationId());
+		} catch (OrganizationException e) {
+			return Response.status(500).build();
+		}
+		
+		return Response.status(204).entity(entity).build();
 	}
 	
 	@GET

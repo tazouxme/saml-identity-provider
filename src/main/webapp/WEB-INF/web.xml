@@ -18,7 +18,7 @@
 	</context-param>
 	<context-param>
 		<param-name>mail-password</param-name>
-		<param-value>tctvherzctpexjoz</param-value>
+		<param-value></param-value>
 	</context-param>
 	
 	<listener>

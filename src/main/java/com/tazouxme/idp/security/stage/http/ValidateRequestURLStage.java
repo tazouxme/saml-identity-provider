@@ -1,14 +1,14 @@
-package com.tazouxme.idp.security.stage;
+package com.tazouxme.idp.security.stage.http;
 
 import java.net.MalformedURLException;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.opensaml.saml.common.xml.SAMLConstants;
 import org.opensaml.saml.saml2.core.AuthnContext;
 
+import com.tazouxme.idp.security.stage.AbstractStage;
+import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.security.stage.exception.StageException;
 import com.tazouxme.idp.security.stage.exception.StageExceptionType;
 import com.tazouxme.idp.security.stage.parameters.StageParameters;
@@ -18,23 +18,21 @@ import com.tazouxme.idp.security.token.UserAuthenticationToken;
 import net.shibboleth.utilities.java.support.collection.Pair;
 import net.shibboleth.utilities.java.support.net.URLBuilder;
 
-public class ValidateRequestURLStage implements Stage {
+public class ValidateRequestURLStage extends AbstractStage {
 
-	protected final Log logger = LogFactory.getLog(getClass());
+	public ValidateRequestURLStage() {
+		super(UserAuthenticationPhase.REQUEST_VALUES_VALID, UserAuthenticationPhase.REQUEST_URL_VALID);
+	}
 	
 	@Override
-	public UserAuthenticationToken execute(UserAuthenticationToken authentication, 
-			StageParameters o) throws StageException {
-		if (!UserAuthenticationPhase.REQUEST_VALUES_VALID.equals(authentication.getDetails().getPhase())) {
-			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_1201, o);
-		}
-		
+	public UserAuthenticationToken executeInternal(UserAuthenticationToken authentication,  StageParameters o) throws StageException {
 		if (o.getAuthnRequest() == null) {
 			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_1202, o);
 		}
 		
 		String protocolBinding = o.getAuthnRequest().getProtocolBinding();
-		if ("GET".equals(o.getUrlMethod()) && !SAMLConstants.SAML2_REDIRECT_BINDING_URI.equals(protocolBinding)) {
+		if ("GET".equals(o.getUrlMethod()) && 
+				(!SAMLConstants.SAML2_REDIRECT_BINDING_URI.equals(protocolBinding) && !SAMLConstants.SAML2_ARTIFACT_BINDING_URI.equals(protocolBinding))) {
 			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_1203, o);
 		}
 		if ("POST".equals(o.getUrlMethod())) {
@@ -66,9 +64,12 @@ public class ValidateRequestURLStage implements Stage {
 		}
 		
 		logger.info("Request URL valid");
-		
-		authentication.getDetails().setPhase(UserAuthenticationPhase.REQUEST_URL_VALID);
 		return authentication;
+	}
+	
+	@Override
+	protected boolean requireEntryPhase() {
+		return true;
 	}
 
 }

@@ -5,7 +5,7 @@
     xsi:schemaLocation="
         http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
         http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd">
-
+        
 	<jaxrs:server id="serviceRest" address="/v1">
 		<jaxrs:serviceBeans>
 			<bean class="com.tazouxme.idp.service.IdentityProviderService" />
@@ -13,6 +13,9 @@
 		<jaxrs:providers>
 			<bean class="com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider" />
 		</jaxrs:providers>
+		<jaxrs:features>
+            <bean id="openApiFeature" class="org.apache.cxf.jaxrs.openapi.OpenApiFeature" />
+        </jaxrs:features>
 	</jaxrs:server>
 	
 </beans>

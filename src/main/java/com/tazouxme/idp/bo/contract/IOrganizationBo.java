@@ -20,6 +20,9 @@ public interface IOrganizationBo {
 	public Organization update(Organization org) throws OrganizationException;
 	
 	@Transactional
+	public Organization updateCertificate(Organization org) throws OrganizationException;
+	
+	@Transactional
 	public void delete(Organization org) throws OrganizationException;
 
 }

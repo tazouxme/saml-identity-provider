@@ -25,6 +25,7 @@
 					securityContextPersistenceFilter,
 					getSingleSignOnFilter,
 					postSingleSignOnFilter,
+					soapSingleSignOnFilter,
 					loginAuthenticateFilter,
 					startAuthenticateFilter,
 					finishAuthenticateFilter,
@@ -37,25 +38,41 @@
 
 	<bean id="securityContextPersistenceFilter" class="org.springframework.security.web.context.SecurityContextPersistenceFilter" />
 	
-	<bean id="ssoStages" class="com.tazouxme.idp.security.stage.chain.StageChain">
+	<bean id="ssoHttpStages" class="com.tazouxme.idp.security.stage.chain.StageChain">
 		<property name="stages">
 			<list>
-				<bean class="com.tazouxme.idp.security.stage.ValidateRequestParametersStage" />
-				<bean class="com.tazouxme.idp.security.stage.ValidateRequestValuesStage" />
-				<bean class="com.tazouxme.idp.security.stage.ValidateRequestURLStage" />
-				<bean class="com.tazouxme.idp.security.stage.ValidateCookiesStage" />
-				<bean class="com.tazouxme.idp.security.stage.ValidateSignaturesStage" />
-				<bean class="com.tazouxme.idp.security.stage.ValidateOrganizationAccessStage" />
-				<bean class="com.tazouxme.idp.security.stage.ValidateUserAccessStage" />
+				<bean class="com.tazouxme.idp.security.stage.http.ValidateRequestParametersStage" />
+				<bean class="com.tazouxme.idp.security.stage.http.ValidateRequestValuesStage" />
+				<bean class="com.tazouxme.idp.security.stage.http.ValidateRequestURLStage" />
+				<bean class="com.tazouxme.idp.security.stage.http.ValidateCookiesStage" />
+				<bean class="com.tazouxme.idp.security.stage.http.ValidateSignaturesStage" />
+				<bean class="com.tazouxme.idp.security.stage.http.ValidateOrganizationAccessStage" />
+				<bean class="com.tazouxme.idp.security.stage.http.ValidateUserAccessStage" />
 			</list>
 		</property>
 	</bean>
 	
-	<bean id="getSingleSignOnFilter" class="com.tazouxme.idp.security.filter.sso.GetSingleSignOnFilter">
-		<property name="stages" ref="ssoStages" />
+	<bean id="ssoSoapStages" class="com.tazouxme.idp.security.stage.chain.StageChain">
+		<property name="stages">
+			<list>
+				<bean class="com.tazouxme.idp.security.stage.soap.ValidateRequestParametersStage" />
+				<bean class="com.tazouxme.idp.security.stage.soap.ValidateRequestValuesStage" />
+				<bean class="com.tazouxme.idp.security.stage.soap.ValidateCookiesStage" />
+				<bean class="com.tazouxme.idp.security.stage.soap.ValidateSignaturesStage" />
+				<bean class="com.tazouxme.idp.security.stage.soap.ValidateOrganizationAccessStage" />
+				<bean class="com.tazouxme.idp.security.stage.soap.ValidateUserAccessStage" />
+			</list>
+		</property>
 	</bean>
-	<bean id="postSingleSignOnFilter" class="com.tazouxme.idp.security.filter.sso.PostSingleSignOnFilter">
-		<property name="stages" ref="ssoStages" />
+	
+	<bean id="getSingleSignOnFilter" class="com.tazouxme.idp.security.filter.sso.http.GetSingleSignOnFilter">
+		<property name="stages" ref="ssoHttpStages" />
+	</bean>
+	<bean id="postSingleSignOnFilter" class="com.tazouxme.idp.security.filter.sso.http.PostSingleSignOnFilter">
+		<property name="stages" ref="ssoHttpStages" />
+	</bean>
+	<bean id="soapSingleSignOnFilter" class="com.tazouxme.idp.security.filter.sso.soap.SoapSingleSignOnFilter">
+		<property name="stages" ref="ssoSoapStages" />
 	</bean>
 	<bean id="loginAuthenticateFilter" class="com.tazouxme.idp.security.filter.login.LoginAuthenticationFilter" />
 	<bean id="startAuthenticateFilter" class="com.tazouxme.idp.security.filter.login.StartAuthenticateFilter" />

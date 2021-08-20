@@ -17,7 +17,7 @@ To change the KeyStore and Certificate (src/main/resources/cert), you can execut
 
 ##### Request type handled:
 - [x] AuthnRequest -> Responds with an SAML Response
-- [ ] ArtifactResolve
+- [x] ArtifactResolve -> Responds with an SAML ArtifactResponse
 
 ##### Supported initializations: 
 - [x] SP-Initialization
@@ -27,8 +27,8 @@ To change the KeyStore and Certificate (src/main/resources/cert), you can execut
 - [x] urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect (Signature not evaluated)
 - [x] urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST (Signature not evaluated)
 - [x] urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign (Signature is mandatory)
-- [ ] urn:oasis:names:tc:SAML:2.0:bindings:SOAP
-- [ ] urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact
+- [x] urn:oasis:names:tc:SAML:2.0:bindings:SOAP [with ArtifactResolve] (Signature not evaluated)
+- [x] urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact (Signature not evaluated)
 
 ##### Supported AuthnContextClassRef:
 - [x] urn:oasis:names:tc:SAML:2.0:ac:classes:Password (username / password over HTTP)
@@ -39,18 +39,18 @@ To change the KeyStore and Certificate (src/main/resources/cert), you can execut
 ##### Accepted NameIDPolicy:
 - [x] urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress
 - [x] urn:oasis:names:tc:SAML:2.0:nameid-format:encrypted
-- [ ] urn:oasis:names:tc:SAML:2.0:nameid-format:entity
+- [x] urn:oasis:names:tc:SAML:2.0:nameid-format:entity
 - [x] urn:oasis:names:tc:SAML:2.0:nameid-format:persistent
+- [x] urn:oasis:names:tc:SAML:2.0:nameid-format:transient
 - [x] urn:oasis:names:tc:SAML:2.0:nameid-format:unspecified
 
 ##### Services implemented
-- [x] Reads, validates and rejects AuthnRequests
-- [x] Single Sign On and POST Response to SP's assertion URL
+- [x] Single Sign On
 - [ ] Single Log Out
 - [x] Claim based attributes
 - [x] Create and activate an account from zero
 - [x] Manage the account through a web UI (Ongoing...)
-- [ ] Federation support
+- [x] Federation support (defined for NameIDPolicy urn:oasis:names:tc:SAML:2.0:nameid-format:persistent)
 - [x] Trust support (Ongoing...)
 - [ ] Internationalization
 - [x] Automatic Metadata generation

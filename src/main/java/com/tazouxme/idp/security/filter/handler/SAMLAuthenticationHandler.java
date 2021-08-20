@@ -12,17 +12,24 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.opensaml.messaging.context.MessageContext;
 import org.opensaml.messaging.encoder.MessageEncodingException;
+import org.opensaml.messaging.encoder.servlet.BaseHttpServletResponseXMLMessageEncoder;
+import org.opensaml.saml.common.messaging.context.SAMLArtifactContext;
 import org.opensaml.saml.common.messaging.context.SAMLBindingContext;
 import org.opensaml.saml.common.messaging.context.SAMLEndpointContext;
 import org.opensaml.saml.common.messaging.context.SAMLPeerEntityContext;
+import org.opensaml.saml.common.messaging.context.SAMLSelfEntityContext;
+import org.opensaml.saml.common.xml.SAMLConstants;
 import org.opensaml.saml.saml2.core.AuthnContext;
+import org.opensaml.saml.saml2.core.AuthnRequest;
 import org.opensaml.saml.saml2.core.Response;
+import org.opensaml.xmlsec.SignatureSigningParameters;
+import org.opensaml.xmlsec.context.SecurityParametersContext;
+import org.opensaml.xmlsec.signature.support.SignatureConstants;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.tazouxme.idp.model.Claim;
 import com.tazouxme.idp.model.UserDetails;
-import com.tazouxme.idp.security.encoder.IdpHTTPPostSignEncoder;
 import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.security.stage.parameters.StageParameters;
 import com.tazouxme.idp.security.token.UserAuthenticationPhase;
@@ -38,11 +45,11 @@ public class SAMLAuthenticationHandler extends AbstractAuthenticationHandler {
 	}
 
 	@Override
-	public void handle(HttpServletRequest request, HttpServletResponse response, UserAuthenticationToken authentication)
-			throws IOException, ServletException {
+	public void handle(HttpServletRequest request, HttpServletResponse response, UserAuthenticationToken authentication) throws IOException, ServletException {
 		StageParameters parameters = authentication.getDetails().getParameters();
+		AuthnRequest authnRequest = parameters.getAuthnRequest();
 		
-		if (parameters.getAuthnRequest() == null) {
+		if (authnRequest == null) {
 			request.setAttribute("code", authentication.getDetails().getResultCode().getCode());
 			request.setAttribute("reason", authentication.getDetails().getResultCode().getReason());
 			request.setAttribute("status", authentication.getDetails().getResultCode().getStatus());
@@ -54,14 +61,14 @@ public class SAMLAuthenticationHandler extends AbstractAuthenticationHandler {
 		if (UserAuthenticationPhase.MUST_AUTHENTICATE.equals(authentication.getDetails().getPhase())) {
 			// Handle Unsecured User / Password Authentication
 			if (AuthnContext.PASSWORD_AUTHN_CTX.equals(
-					parameters.getAuthnRequest().getRequestedAuthnContext().getAuthnContextClassRefs().get(0).getURI())) {
+					authnRequest.getRequestedAuthnContext().getAuthnContextClassRefs().get(0).getURI())) {
 				response.sendRedirect("./login");
 				return;
 			}
 			
 			// Handle Secured User / Password Authentication
 			else if ("https".equals(request.getScheme()) && AuthnContext.PPT_AUTHN_CTX.equals(
-					parameters.getAuthnRequest().getRequestedAuthnContext().getAuthnContextClassRefs().get(0).getURI())) {
+					authnRequest.getRequestedAuthnContext().getAuthnContextClassRefs().get(0).getURI())) {
 				response.sendRedirect("./login");
 				return;
 			}
@@ -75,11 +82,12 @@ public class SAMLAuthenticationHandler extends AbstractAuthenticationHandler {
 			authentication.getDetails().setResultCode(StageResultCode.FAT_1305);
 		}
 		
-		if (!UserAuthenticationPhase.SSO_FAILED.equals(authentication.getDetails().getPhase())) {
-			authentication.getDetails().getParameters().setSecretKey(generateSecretKey());
+		boolean success = !UserAuthenticationPhase.SSO_FAILED.equals(authentication.getDetails().getPhase());
+		if (success) {
+			parameters.setSecretKey(generateSecretKey());
 			
-			Set<Claim> claims = authentication.getDetails().getParameters().getApplication().getClaims();
-			Set<UserDetails> details = authentication.getDetails().getParameters().getUser().getDetails();
+			Set<Claim> claims = parameters.getApplication().getClaims();
+			Set<UserDetails> details = parameters.getUser().getDetails();
 			
 			for (UserDetails detail : details) {
 				if (claims.contains(detail.getClaim())) {
@@ -101,19 +109,26 @@ public class SAMLAuthenticationHandler extends AbstractAuthenticationHandler {
 		
 		MessageContext messageContext = new MessageContext();
 		messageContext.setMessage(samlResponse);
-		messageContext.getSubcontext(SAMLBindingContext.class, true).setRelayState(authentication.getDetails().getParameters().getRelayStateParam());
 
-		SAMLPeerEntityContext peerEntityContext = messageContext.getSubcontext(SAMLPeerEntityContext.class, true);
-		SAMLEndpointContext endpointContext = peerEntityContext.getSubcontext(SAMLEndpointContext.class, true);
-		endpointContext.setEndpoint(SAMLUtils.getEndpoint(authentication.getDetails().getParameters().getAuthnRequest().getAssertionConsumerServiceURL()));
+		messageContext.getSubcontext(SAMLBindingContext.class, true).setRelayState(parameters.getRelayStateParam());
+		messageContext.getSubcontext(SAMLPeerEntityContext.class, true).getSubcontext(SAMLEndpointContext.class, true).setEndpoint(SAMLUtils.getEndpoint(authnRequest.getAssertionConsumerServiceURL()));
+		messageContext.getSubcontext(SAMLPeerEntityContext.class, true).setEntityId(authnRequest.getIssuer().getValue());
+		messageContext.getSubcontext(SAMLSelfEntityContext.class, true).setEntityId(samlResponse.getIssuer().getValue());
+		messageContext.getSubcontext(SAMLArtifactContext.class, true).setSourceArtifactResolutionServiceEndpointIndex(0);
 		
-		SecurityContextHolder.clearContext();
+		if (SAMLConstants.SAML2_POST_SIMPLE_SIGN_BINDING_URI.equals(authnRequest.getProtocolBinding())) {
+			SignatureSigningParameters signatureSigningParameters = new SignatureSigningParameters();
+			signatureSigningParameters.setSigningCredential(getConfiguration().getPrivateCredential());
+			signatureSigningParameters.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA256);
+			
+			messageContext.getSubcontext(SecurityParametersContext.class, true).setSignatureSigningParameters(signatureSigningParameters);
+		}
 
-		IdpHTTPPostSignEncoder encoder = getAuthenticationContext().getBean("httpEncoder", IdpHTTPPostSignEncoder.class);
-		encoder.setMessageContext(messageContext);
-		encoder.setHttpServletResponse(response);
-		
 		try {
+			BaseHttpServletResponseXMLMessageEncoder encoder = SAMLAuthenticationEncoderFactory.getEncoder(success, authnRequest, getContext());
+			
+			encoder.setMessageContext(messageContext);
+			encoder.setHttpServletResponse(response);
 			encoder.prepareContext();
 			encoder.initialize();
 			encoder.encode();
@@ -136,6 +151,17 @@ public class SAMLAuthenticationHandler extends AbstractAuthenticationHandler {
 			
 			request.getRequestDispatcher("/error.jsp").forward(request, response);
 		}
+		
+		SecurityContextHolder.clearContext();
+	}
+	
+	@Override
+	public void fault(HttpServletRequest request, HttpServletResponse response, UserAuthenticationToken authentication) throws IOException, ServletException {
+		request.setAttribute("code", authentication.getDetails().getResultCode().getCode());
+		request.setAttribute("reason", authentication.getDetails().getResultCode().getReason());
+		request.setAttribute("status", authentication.getDetails().getResultCode().getStatus());
+		
+		request.getRequestDispatcher("/error.jsp").forward(request, response);
 	}
 
 	private SecretKey generateSecretKey() {

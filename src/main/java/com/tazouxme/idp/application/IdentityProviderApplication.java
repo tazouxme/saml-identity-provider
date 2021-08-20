@@ -13,6 +13,7 @@ import com.tazouxme.idp.bo.contract.IAccessBo;
 import com.tazouxme.idp.bo.contract.IActivationBo;
 import com.tazouxme.idp.bo.contract.IApplicationBo;
 import com.tazouxme.idp.bo.contract.IClaimBo;
+import com.tazouxme.idp.bo.contract.IFederationBo;
 import com.tazouxme.idp.bo.contract.IOrganizationBo;
 import com.tazouxme.idp.bo.contract.IRoleBo;
 import com.tazouxme.idp.bo.contract.IUserBo;
@@ -20,6 +21,7 @@ import com.tazouxme.idp.exception.AccessException;
 import com.tazouxme.idp.exception.ActivationException;
 import com.tazouxme.idp.exception.ApplicationException;
 import com.tazouxme.idp.exception.ClaimException;
+import com.tazouxme.idp.exception.FederationException;
 import com.tazouxme.idp.exception.OrganizationException;
 import com.tazouxme.idp.exception.RoleException;
 import com.tazouxme.idp.exception.UserException;
@@ -27,6 +29,7 @@ import com.tazouxme.idp.model.Access;
 import com.tazouxme.idp.model.Activation;
 import com.tazouxme.idp.model.Application;
 import com.tazouxme.idp.model.Claim;
+import com.tazouxme.idp.model.Federation;
 import com.tazouxme.idp.model.Organization;
 import com.tazouxme.idp.model.Role;
 import com.tazouxme.idp.model.User;
@@ -44,6 +47,9 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 	
 	@Autowired
 	private IApplicationBo applicationBo;
+	
+	@Autowired
+	private IFederationBo federationBo;
 	
 	@Autowired
 	private IOrganizationBo organizationBo;
@@ -136,6 +142,16 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 	}
 	
 	@Override
+	public Set<Federation> findFederationsByUser(String userExternalId, String organizationExternalId) {
+		return federationBo.findByUser(userExternalId, organizationExternalId);
+	}
+	
+	@Override
+	public Federation findFederationByUserAndURN(String userExternalId, String urn, String organizationExternalId) throws FederationException {
+		return federationBo.findByUserAndURN(userExternalId, urn, organizationExternalId);
+	}
+	
+	@Override
 	public Organization findOrganizationByExternalId(String externalId) throws OrganizationException {
 		return organizationBo.findByExternalId(externalId);
 	}
@@ -151,7 +167,7 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 		organization.setCode(code);
 		organization.setName(code);
 		organization.setDomain(domain);
-		organization.setPublicKey("");
+		organization.setCertificate("");
 		organization.setEnabled(false);
 		organization = organizationBo.create(organization);
 		
@@ -175,17 +191,28 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 	}
 	
 	@Override
-	public Organization updateOrganization(String id, String name, String description, String publicKey) throws OrganizationException {
-		Organization organization = new Organization();
-		organization.setExternalId(id);
+	public Organization updateOrganization(String id, String name, String description) throws OrganizationException {
+		Organization organization = findOrganizationByExternalId(id);
 		organization.setName(name);
 		organization.setDescription(description);
 		
-		if (!StringUtils.isBlank(publicKey)) {
-			organization.setPublicKey(publicKey);
-		}
-		
 		return organizationBo.update(organization);
+	}
+	
+	@Override
+	public Organization setCertificate(String id, String certificate) throws OrganizationException {
+		Organization organization = findOrganizationByExternalId(id);
+		organization.setCertificate(certificate);
+		
+		return organizationBo.updateCertificate(organization);
+	}
+	
+	@Override
+	public Organization deleteCertificate(String id) throws OrganizationException {
+		Organization organization = findOrganizationByExternalId(id);
+		organization.setCertificate("");
+		
+		return organizationBo.updateCertificate(organization);
 	}
 	
 	@Override
@@ -266,6 +293,14 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 				activationBo.delete(activation);
 			} catch (ActivationException e) {
 				throw new UserException("Unable to delete Activation for User", e);
+			}
+		}
+		
+		for (Federation federation : findFederationsByUser(externalId, organization.getExternalId())) {
+			try {
+				federationBo.delete(federation);
+			} catch (FederationException e) {
+				throw new UserException("Unable to delete Federation for User", e);
 			}
 		}
 		

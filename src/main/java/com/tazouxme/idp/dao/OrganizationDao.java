@@ -3,12 +3,17 @@ package com.tazouxme.idp.dao;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.tazouxme.idp.dao.contract.IOrganizationDao;
 import com.tazouxme.idp.dao.query.OrganizationQueries;
 import com.tazouxme.idp.exception.OrganizationException;
 import com.tazouxme.idp.model.Organization;
 
 public class OrganizationDao implements IOrganizationDao {
+	
+	protected final Log logger = LogFactory.getLog(getClass());
 	
 	@PersistenceContext
 	private EntityManager em;

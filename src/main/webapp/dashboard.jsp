@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="./lib/style/io-ribbon-1.0.css" />
 <link rel="stylesheet" href="./lib/style/io-slide-1.0.css" />
 <link rel="stylesheet" href="./lib/style/io-table-1.0.css" />
+<link rel="stylesheet" href="./lib/style/io-upload-1.0.css" />
 
 <script src="./lib/script/io-button-1.0.js"></script>
 <script src="./lib/script/io-checkbox-1.0.js"></script>
@@ -21,6 +22,8 @@
 <script src="./lib/script/io-ribbon-1.0.js"></script>
 <script src="./lib/script/io-slide-1.0.js"></script>
 <script src="./lib/script/io-table-1.0.js"></script>
+<script src="./lib/script/io-upload-1.0.js"></script>
+<script src="./lib/script/io-utils-1.0.js"></script>
 
 <link rel="stylesheet" href="./style/dashboard.css" />
 <script src="./script/dashboard.js"></script>
@@ -43,10 +46,6 @@
 	</div>
 	<div id="org-claims">
 		<span>Organization's Claims</span>
-	</div>
-	<div id="org-public-key">
-		<span>Organization's Public Key</span>
-		<p></p>
 	</div>
 	<div id="org-roles">
 		<span>Organization's Roles</span>

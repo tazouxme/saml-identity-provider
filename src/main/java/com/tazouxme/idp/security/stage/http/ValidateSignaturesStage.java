@@ -1,5 +1,7 @@
-package com.tazouxme.idp.security.stage;
+package com.tazouxme.idp.security.stage.http;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.security.InvalidKeyException;
@@ -9,13 +11,14 @@ import java.security.NoSuchProviderException;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.encoders.Base64;
 import org.opensaml.saml.common.xml.SAMLConstants;
@@ -24,6 +27,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.tazouxme.idp.bo.contract.ISessionBo;
 import com.tazouxme.idp.exception.SessionException;
+import com.tazouxme.idp.security.stage.AbstractStage;
+import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.security.stage.exception.StageException;
 import com.tazouxme.idp.security.stage.exception.StageExceptionType;
 import com.tazouxme.idp.security.stage.parameters.StageParameters;
@@ -33,23 +38,20 @@ import com.tazouxme.idp.security.token.UserAuthenticationToken;
 import net.shibboleth.utilities.java.support.collection.Pair;
 import net.shibboleth.utilities.java.support.net.URLBuilder;
 
-public class ValidateSignaturesStage implements Stage {
+public class ValidateSignaturesStage extends AbstractStage {
 
-	protected final Log logger = LogFactory.getLog(getClass());
-	
+	public ValidateSignaturesStage() {
+		super(UserAuthenticationPhase.COOKIES_VALID, UserAuthenticationPhase.SIGNATURES_VALID);
+	}
+
 	@Autowired
 	private ISessionBo bo;
 	
 	@Override
-	public UserAuthenticationToken execute(UserAuthenticationToken authentication, 
-			StageParameters o) throws StageException {
-		if (!UserAuthenticationPhase.COOKIES_VALID.equals(authentication.getDetails().getPhase())) {
-			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0401, o);
-		}
-		
+	public UserAuthenticationToken executeInternal(UserAuthenticationToken authentication, StageParameters o) throws StageException {
 		try {
 			if (NameID.ENCRYPTED.equals(o.getAuthnRequest().getNameIDPolicy().getFormat())) {
-				if (StringUtils.isBlank(o.getOrganization().getPublicKey())) {
+				if (StringUtils.isBlank(o.getOrganization().getCertificate())) {
 					throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0415, o);
 				}
 			}
@@ -68,8 +70,6 @@ public class ValidateSignaturesStage implements Stage {
 			}
 			
 			logger.info("Signatures valid");
-			
-			authentication.getDetails().setPhase(UserAuthenticationPhase.SIGNATURES_VALID);
 			return authentication;
 		} catch (SessionException e) {
 			throw new StageException(StageExceptionType.AUTHENTICATION, StageResultCode.AUT_0402, o);
@@ -82,6 +82,11 @@ public class ValidateSignaturesStage implements Stage {
 		}
 	}
 	
+	@Override
+	protected boolean requireEntryPhase() {
+		return true;
+	}
+	
 	private boolean verifyCookieSignature(byte[] text, byte[] digitalSignature, PublicKey key) throws InvalidKeyException, SignatureException, NoSuchAlgorithmException {
 		Signature signature = generateSignature();
 		signature.initVerify(key);
@@ -91,7 +96,7 @@ public class ValidateSignaturesStage implements Stage {
 	}
 	
 	private boolean verifyRequestSignature(StageParameters o) {
-		if (StringUtils.isBlank(o.getOrganization().getPublicKey())) {
+		if (StringUtils.isBlank(o.getOrganization().getCertificate())) {
 			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0414, o);
 		}
 		
@@ -109,7 +114,7 @@ public class ValidateSignaturesStage implements Stage {
 			byte[] signaturesBytes = Base64.decode(obtainQueryParam("Signature", incomingParams, o));
 		
 			Signature sig = Signature.getInstance("SHA256withRSA");
-			sig.initVerify(obtainPublicKey(o.getOrganization().getPublicKey()));
+			sig.initVerify(obtainPublicKey(o.getOrganization().getCertificate()));
 			sig.update(verifierUrl.buildQueryString().getBytes("UTF-8"));
 			return sig.verify(signaturesBytes);
 		} catch (SignatureException e) {
@@ -126,6 +131,8 @@ public class ValidateSignaturesStage implements Stage {
 			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0411, o);
 		} catch (MalformedURLException e) {
 			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0412, o);
+		} catch (CertificateException e) {
+			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0416, o);
 		}
 	}
 	
@@ -139,9 +146,12 @@ public class ValidateSignaturesStage implements Stage {
 		throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0413, o);
 	}
 	
-	private PublicKey obtainPublicKey(String publicKey) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+	private PublicKey obtainPublicKey(String certificate) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException, CertificateException {
+		InputStream in = new ByteArrayInputStream(Base64.decode(certificate));
+		
+		X509Certificate cert = (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(in);
 		return KeyFactory.getInstance("RSA", "BC").
-			generatePublic(new X509EncodedKeySpec(Base64.decode(publicKey)));
+				generatePublic(new X509EncodedKeySpec(Base64.decode(Base64.decode(cert.getPublicKey().getEncoded()))));
 	}
 	
 	private Signature generateSignature() throws NoSuchAlgorithmException {

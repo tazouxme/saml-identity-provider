@@ -2,10 +2,14 @@ package com.tazouxme.idp.util;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.time.Instant;
@@ -32,6 +36,8 @@ import org.opensaml.messaging.context.MessageContext;
 import org.opensaml.profile.context.ProfileRequestContext;
 import org.opensaml.saml.common.SAMLVersion;
 import org.opensaml.saml.common.xml.SAMLConstants;
+import org.opensaml.saml.saml2.core.ArtifactResolve;
+import org.opensaml.saml.saml2.core.ArtifactResponse;
 import org.opensaml.saml.saml2.core.Assertion;
 import org.opensaml.saml.saml2.core.Attribute;
 import org.opensaml.saml.saml2.core.AttributeStatement;
@@ -88,15 +94,20 @@ public class SAMLUtils {
 		return endpoint;
 	}
 	
-	public static AuthnRequest unmarshallAuthnRequest(byte[] saml) throws StageException {
+	public static AuthnRequest unmarshallAuthnRequest(byte[] saml, boolean inflate) throws StageException {
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         documentBuilderFactory.setNamespaceAware(true);
         
         InputSource input = null;
         Document document = null;
 		try {
-			input = new InputSource(new InputStreamReader(
-				new InflaterInputStream(new ByteArrayInputStream(saml), new Inflater(true)), "UTF-8"));
+			if (inflate) {
+				input = new InputSource(new InputStreamReader(
+					new InflaterInputStream(new ByteArrayInputStream(saml), new Inflater(true)), "UTF-8"));
+			} else {
+				input = new InputSource(new ByteArrayInputStream(saml));
+			}
+			
 			input.setEncoding("UTF-8");
 			document = documentBuilderFactory.newDocumentBuilder().parse(input);
 		} catch (IOException | SAXException | ParserConfigurationException e) {
@@ -111,6 +122,21 @@ public class SAMLUtils {
 		} catch (UnmarshallingException e) {
 			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0802);
 		} 
+	}
+	
+	public static ArtifactResponse buildArtifactResponse(StageParameters params, StageResultCode stageCode) {
+		ArtifactResolve artifactResolve = params.getArtifactResolve();
+		String idp = params.getIdpUrn();
+
+		ArtifactResponse response = buildSAMLObject(ArtifactResponse.class);
+		response.setID(IDUtils.generateId("RES_", 4));
+		response.setVersion(SAMLVersion.VERSION_20);
+		response.setIssueInstant(Instant.now());
+		response.setInResponseTo(artifactResolve.getID());
+		response.setIssuer(buildIssuer(idp));
+		response.setStatus(buildStatus(stageCode));
+		
+		return response;
 	}
 	
 	public static Response buildResponse(StageParameters params, UserIdentity identity, String role, StageResultCode stageCode) throws StageException {
@@ -165,7 +191,7 @@ public class SAMLUtils {
 		assertion.setVersion(SAMLVersion.VERSION_20);
 		assertion.setIssueInstant(Instant.now());
 		assertion.setIssuer(buildIssuer(idp));
-		assertion.setSubject(buildSubject(authnRequest, identity));
+		assertion.setSubject(buildSubject(authnRequest, identity, stageParams.getApplication().getUrn()));
 		assertion.setConditions(buildConditions(authnRequest.getIssuer().getValue()));
 		assertion.getAuthnStatements().add(buildAuthnStatement(authnRequest.getRequestedAuthnContext().getAuthnContextClassRefs().get(0).getURI()));
 		assertion.getAttributeStatements().add(buildAttributeStatement(identity.getClaims(), role));
@@ -179,7 +205,7 @@ public class SAMLUtils {
 			params.setDataEncryptionCredential(new BasicCredential(stageParams.getSecretKey()));
 			params.setDataKeyInfoGenerator(factory.newInstance());
 			params.setKeyTransportEncryptionAlgorithm(EncryptionConstants.ALGO_ID_KEYTRANSPORT_RSA15);
-			params.setKeyTransportEncryptionCredential(obtainPublicCredential(stageParams.getOrganization().getPublicKey()));
+			params.setKeyTransportEncryptionCredential(obtainPublicCredential(stageParams.getOrganization().getCertificate()));
 			params.setKeyTransportKeyInfoGenerator(factory.newInstance());
 			
 			EncryptionContext encryptCtx = new EncryptionContext();
@@ -196,35 +222,43 @@ public class SAMLUtils {
 			encrypter.execute(ctx);
 		}
 		
-		Signature signature = buildSAMLObject(Signature.class);
-		signature.setSigningCredential(stageParams.getPrivateCredential());
-		signature.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA256);
-		signature.setCanonicalizationAlgorithm(SignatureConstants.ALGO_ID_C14N_EXCL_OMIT_COMMENTS);
-		
-		assertion.setSignature(signature);
-		
-		try {
-			XMLObjectProviderRegistrySupport.getMarshallerFactory().getMarshaller(assertion).marshall(assertion);
-			Signer.signObject(signature);
-		} catch (MarshallingException e) {
-			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0803);
-		} catch (SignatureException e) {
-			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0804);
+		if (!SAMLConstants.SAML2_POST_SIMPLE_SIGN_BINDING_URI.equals(authnRequest.getProtocolBinding())) {
+			Signature signature = buildSAMLObject(Signature.class);
+			signature.setSigningCredential(stageParams.getPrivateCredential());
+			signature.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA256);
+			signature.setCanonicalizationAlgorithm(SignatureConstants.ALGO_ID_C14N_EXCL_OMIT_COMMENTS);
+			
+			assertion.setSignature(signature);
+			
+			try {
+				XMLObjectProviderRegistrySupport.getMarshallerFactory().getMarshaller(assertion).marshall(assertion);
+				Signer.signObject(signature);
+			} catch (MarshallingException e) {
+				throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0803);
+			} catch (SignatureException e) {
+				throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0804);
+			}
 		}
 		
 		return assertion;
 	}
 	
-	private static Subject buildSubject(AuthnRequest authnRequest, UserIdentity identity) {
+	private static Subject buildSubject(AuthnRequest authnRequest, UserIdentity identity, String applicationUrn) {
 		NameID nameId = buildSAMLObject(NameID.class);
 		String nameIDPolicy = authnRequest.getNameIDPolicy().getFormat();
 		
-		if (NameIDType.EMAIL.equals(nameIDPolicy) || NameIDType.ENCRYPTED.equals(nameIDPolicy)) {
+		if (NameIDType.EMAIL.equals(nameIDPolicy) || NameIDType.ENCRYPTED.equals(nameIDPolicy) || NameIDType.UNSPECIFIED.equals(nameIDPolicy)) {
 			nameId.setFormat(NameID.EMAIL);
 			nameId.setValue(identity.getEmail());
-		} else if (NameIDType.PERSISTENT.equals(nameIDPolicy) || NameIDType.UNSPECIFIED.equals(nameIDPolicy)) {
-			nameId.setFormat(NameID.PERSISTENT);
+		} else if (NameIDType.TRANSIENT.equals(nameIDPolicy)) {
+			nameId.setFormat(NameID.TRANSIENT);
 			nameId.setValue(identity.getUserId());
+		} else if (NameIDType.PERSISTENT.equals(nameIDPolicy)) {
+			nameId.setFormat(NameID.PERSISTENT);
+			nameId.setValue(identity.getFederatedUserId());
+		} else if (NameIDType.ENTITY.equals(nameIDPolicy)) {
+			nameId.setFormat(NameID.ENTITY);
+			nameId.setValue(applicationUrn);
 		}
 		
 		SubjectConfirmationData subjectConfirmationData = buildSAMLObject(SubjectConfirmationData.class);
@@ -315,10 +349,13 @@ public class SAMLUtils {
 		return XMLObjectProviderRegistrySupport.getBuilderFactory();
 	}
 	
-	private static Credential obtainPublicCredential(String publicKey) {
+	private static Credential obtainPublicCredential(String certificate) {
+		InputStream in = new ByteArrayInputStream(Base64.decode(certificate));
+		
 		try {
-			return new BasicCredential(KeyFactory.getInstance("RSA", "BC").generatePublic(new X509EncodedKeySpec(Base64.decode(publicKey))));
-		} catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
+			X509Certificate cert = (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(in);
+			return new BasicCredential(KeyFactory.getInstance("RSA", "BC").generatePublic(new X509EncodedKeySpec(Base64.decode(cert.getPublicKey().getEncoded()))));
+		} catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException | CertificateException e) {
 			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0805);
 		}
 	}

@@ -42,9 +42,13 @@ public class OrganizationBo implements IOrganizationBo {
 			pOrg.setDescription(org.getDescription());
 		}
 		
-		if (!StringUtils.isBlank(org.getPublicKey())) {
-			pOrg.setPublicKey(org.getPublicKey());
-		}
+		return dao.update(pOrg);
+	}
+	
+	@Override
+	public Organization updateCertificate(Organization org) throws OrganizationException {
+		Organization pOrg = findByExternalId(org.getExternalId());
+		pOrg.setCertificate(org.getCertificate());
 		
 		return dao.update(pOrg);
 	}

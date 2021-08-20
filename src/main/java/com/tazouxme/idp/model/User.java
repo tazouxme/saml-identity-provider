@@ -70,6 +70,10 @@ public class User {
 	@JsonIgnoreProperties("user")
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
 	private Set<Access> accesses = new HashSet<>();
+	
+	@JsonIgnoreProperties("user")
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+	private Set<Federation> federations = new HashSet<>();
 
 	public long getId() {
 		return id;
@@ -157,6 +161,14 @@ public class User {
 	
 	public void setAccesses(Set<Access> accesses) {
 		this.accesses = accesses;
+	}
+	
+	public Set<Federation> getFederations() {
+		return federations;
+	}
+	
+	public void setFederations(Set<Federation> federations) {
+		this.federations = federations;
 	}
 	
 	@Override

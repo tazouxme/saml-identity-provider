@@ -31,9 +31,6 @@ import com.tazouxme.idp.util.MetadataUtils;
 
 public class MetadataServlet extends HttpServlet {
 	
-	private static final String ENTITY_ID = "https://www.tazouxme.com/saml-identity-provider";
-	private static final String ENTITY_CONTEXT = ENTITY_ID + "/sso";
-	
 	private ApplicationContext context;
 	
 	@Override
@@ -48,7 +45,18 @@ public class MetadataServlet extends HttpServlet {
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		IdentityProviderConfiguration configuration = context.getBean(IdentityProviderConfiguration.class);
-		EntityDescriptor entityDescriptor = MetadataUtils.buildMetadata(ENTITY_ID, ENTITY_CONTEXT, configuration.getPublicCredential());
+		StringBuilder portBuilder = new StringBuilder();
+		if (req.getServerPort() != 80 && req.getServerPort() != 443) {
+			portBuilder.append(":");
+			portBuilder.append(req.getServerPort());
+		}
+		
+		String entityId = req.getScheme() + "://" + configuration.getDomain() + portBuilder.toString() + configuration.getPath();
+		String entitySsoContext = entityId + configuration.getSsoPath();
+		String entitySsoSoapContext = entityId + configuration.getSsoSoapPath();
+		
+		EntityDescriptor entityDescriptor = MetadataUtils.buildMetadata(
+				configuration.getUrn(), entitySsoContext, entitySsoSoapContext, configuration.getPublicCredential());
 		
 		try {
 			DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();

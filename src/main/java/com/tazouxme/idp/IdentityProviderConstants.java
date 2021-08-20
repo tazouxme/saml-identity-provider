@@ -2,6 +2,9 @@ package com.tazouxme.idp;
 
 public class IdentityProviderConstants {
 	
+	public static final String CERT_START = "-----BEGIN CERTIFICATE-----";
+	public static final String CERT_END = "-----END CERTIFICATE-----\r\n";
+	
 	public static final String SAML_CLAIM_ORGANIZATION = "http://schemas.tazouxme.com/identity/claims/organization";
 	public static final String SAML_CLAIM_EMAIL = "http://schemas.tazouxme.com/identity/claims/email";
 	public static final String SAML_CLAIM_ROLE = "http://schemas.tazouxme.com/identity/claims/role";

@@ -6,12 +6,17 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.tazouxme.idp.dao.contract.IRoleDao;
 import com.tazouxme.idp.dao.query.RoleQueries;
 import com.tazouxme.idp.exception.RoleException;
 import com.tazouxme.idp.model.Role;
 
 public class RoleDao implements IRoleDao {
+	
+	protected final Log logger = LogFactory.getLog(getClass());
 	
 	@PersistenceContext
 	private EntityManager em;

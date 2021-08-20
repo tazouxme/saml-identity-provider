@@ -1,33 +1,30 @@
-package com.tazouxme.idp.security.stage;
+package com.tazouxme.idp.security.stage.http;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.tazouxme.idp.bo.contract.IApplicationBo;
 import com.tazouxme.idp.exception.ApplicationException;
 import com.tazouxme.idp.model.Application;
 import com.tazouxme.idp.model.Organization;
+import com.tazouxme.idp.security.stage.AbstractStage;
+import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.security.stage.exception.StageException;
 import com.tazouxme.idp.security.stage.exception.StageExceptionType;
 import com.tazouxme.idp.security.stage.parameters.StageParameters;
 import com.tazouxme.idp.security.token.UserAuthenticationPhase;
 import com.tazouxme.idp.security.token.UserAuthenticationToken;
 
-public class ValidateOrganizationAccessStage implements Stage {
+public class ValidateOrganizationAccessStage extends AbstractStage {
 
-	protected final Log logger = LogFactory.getLog(getClass());
-	
+	public ValidateOrganizationAccessStage() {
+		super(UserAuthenticationPhase.SIGNATURES_VALID, UserAuthenticationPhase.ORGANIZATION_ACCESS_VALID);
+	}
+
 	@Autowired
 	private IApplicationBo applicationBo;
 	
 	@Override
-	public UserAuthenticationToken execute(UserAuthenticationToken authentication, 
-			StageParameters o) throws StageException {
-		if (!UserAuthenticationPhase.SIGNATURES_VALID.equals(authentication.getDetails().getPhase())) {
-			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0501, o);
-		}
-		
+	public UserAuthenticationToken executeInternal(UserAuthenticationToken authentication, StageParameters o) throws StageException {
 		try {
 			Application application = applicationBo.findByUrn(o.getAuthnRequest().getIssuer().getValue(), o.getOrganizationId());
 			if (!o.getAuthnRequest().getAssertionConsumerServiceURL().equals(application.getAssertionUrl())) {
@@ -44,9 +41,12 @@ public class ValidateOrganizationAccessStage implements Stage {
 		Organization organization = o.getOrganization();
 		authentication.getDetails().getIdentity().setOrganizationId(organization.getExternalId());
 		authentication.getDetails().getIdentity().setOrganization(organization.getCode());
-		authentication.getDetails().setPhase(UserAuthenticationPhase.ORGANIZATION_ACCESS_VALID);
-		
 		return authentication;
+	}
+	
+	@Override
+	protected boolean requireEntryPhase() {
+		return true;
 	}
 
 }

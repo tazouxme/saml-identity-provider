@@ -6,12 +6,17 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.tazouxme.idp.dao.contract.IAccessDao;
 import com.tazouxme.idp.dao.query.AccessQueries;
 import com.tazouxme.idp.exception.AccessException;
 import com.tazouxme.idp.model.Access;
 
 public class AccessDao implements IAccessDao {
+	
+	protected final Log logger = LogFactory.getLog(getClass());
 	
 	@PersistenceContext
 	private EntityManager em;

@@ -135,6 +135,38 @@ var Request = function(params) {
 	};
 	
 	/**
+	 * Set Request's HTTP method'
+	 * @public
+	 */
+	this.setMethod = function(method) {
+		_method = method;
+	};
+	
+	/**
+	 * Set Request's URL
+	 * @public
+	 */
+	this.setUrl = function(url) {
+		_url = url;
+	};
+	
+	/**
+	 * Set Request's data to be sent
+	 * @public
+	 */
+	this.setData = function(data) {
+		_data = data;
+	};
+	
+	/**
+	 * Set Response's accepted HTTP Code'
+	 * @public
+	 */
+	this.setSuccessCode = function(successCode) {
+		_successCode = successCode;
+	};
+	
+	/**
 	 * Send the request
 	 * @public
 	 */

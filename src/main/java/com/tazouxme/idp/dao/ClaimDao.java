@@ -6,12 +6,17 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.tazouxme.idp.dao.contract.IClaimDao;
 import com.tazouxme.idp.dao.query.ClaimQueries;
 import com.tazouxme.idp.exception.ClaimException;
 import com.tazouxme.idp.model.Claim;
 
 public class ClaimDao implements IClaimDao {
+	
+	protected final Log logger = LogFactory.getLog(getClass());
 	
 	@PersistenceContext
 	private EntityManager em;

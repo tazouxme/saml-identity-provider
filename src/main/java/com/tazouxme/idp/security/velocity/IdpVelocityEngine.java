@@ -1,4 +1,4 @@
-package com.tazouxme.idp.security.encoder.velocity;
+package com.tazouxme.idp.security.velocity;
 
 import java.util.Properties;
 

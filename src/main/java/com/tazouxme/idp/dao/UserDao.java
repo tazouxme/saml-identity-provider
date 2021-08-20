@@ -3,12 +3,17 @@ package com.tazouxme.idp.dao;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.tazouxme.idp.dao.contract.IUserDao;
 import com.tazouxme.idp.dao.query.UserQueries;
 import com.tazouxme.idp.exception.UserException;
 import com.tazouxme.idp.model.User;
 
 public class UserDao implements IUserDao {
+	
+	protected final Log logger = LogFactory.getLog(getClass());
 	
 	@PersistenceContext
 	private EntityManager em;

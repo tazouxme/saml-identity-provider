@@ -53,8 +53,8 @@ public class Organization {
 	private boolean enabled;
 	
 	@Lob
-	@Column(name = "public_key", updatable = true, nullable = true)
-	private String publicKey;
+	@Column(name = "certificate", updatable = true, nullable = true)
+	private String certificate;
 	
 	@Column(name = "creation_date", length = 16, updatable = false, nullable = false)
 	private long creationDate;
@@ -131,12 +131,12 @@ public class Organization {
 		this.enabled = enabled;
 	}
 	
-	public String getPublicKey() {
-		return publicKey;
+	public String getCertificate() {
+		return certificate;
 	}
 	
-	public void setPublicKey(String publicKey) {
-		this.publicKey = publicKey;
+	public void setCertificate(String certificate) {
+		this.certificate = certificate;
 	}
 
 	public long getCreationDate() {

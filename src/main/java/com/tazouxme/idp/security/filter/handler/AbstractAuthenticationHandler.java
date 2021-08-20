@@ -16,6 +16,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.encoders.Base64;
 import org.springframework.context.ApplicationContext;
 
+import com.tazouxme.idp.IdentityProviderConfiguration;
 import com.tazouxme.idp.IdentityProviderConstants;
 import com.tazouxme.idp.bo.contract.ISessionBo;
 import com.tazouxme.idp.exception.SessionException;
@@ -30,17 +31,18 @@ public abstract class AbstractAuthenticationHandler {
 	protected final Log logger = LogFactory.getLog(getClass());
 	
 	private ApplicationContext context;
+	private IdentityProviderConfiguration configuration;
 	
 	public AbstractAuthenticationHandler(ApplicationContext context) {
+		super();
 		this.context = context;
 	}
 	
 	public abstract void handle(HttpServletRequest request, HttpServletResponse response, UserAuthenticationToken authentication)
 			throws IOException, ServletException;
 	
-	protected ApplicationContext getAuthenticationContext() {
-		return context;
-	}
+	public abstract void fault(HttpServletRequest request, HttpServletResponse response, UserAuthenticationToken authentication)
+			throws IOException, ServletException;
 	
 	protected boolean isSuccessfullyLoggedIn(HttpServletRequest request, HttpServletResponse response, UserAuthenticationToken authentication) throws ServletException, IOException {
 		if (isKeepAlive(request)) {
@@ -74,6 +76,18 @@ public abstract class AbstractAuthenticationHandler {
 		}
 		
 		return true;
+	}
+	
+	protected IdentityProviderConfiguration getConfiguration() {
+		if (configuration == null) {
+			configuration = context.getBean(IdentityProviderConfiguration.class);
+		}
+		
+		return configuration;
+	}
+	
+	protected ApplicationContext getContext() {
+		return context;
 	}
 	
 	private void setUserCookie(String domain, String path, String name, String value, HttpServletResponse response) {

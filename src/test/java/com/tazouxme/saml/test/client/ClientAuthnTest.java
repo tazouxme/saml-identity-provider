@@ -20,7 +20,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.Security;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
@@ -56,18 +55,13 @@ import org.apache.http.protocol.HttpContext;
 import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.encoders.Base64;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.webapp.WebAppContext;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
-import org.opensaml.core.config.InitializationService;
 import org.opensaml.core.xml.util.XMLObjectSupport;
 import org.opensaml.messaging.encoder.MessageEncodingException;
+import org.opensaml.saml.common.xml.SAMLConstants;
 import org.opensaml.saml.saml2.core.AuthnContext;
+import org.opensaml.saml.saml2.core.NameIDType;
 import org.opensaml.saml.saml2.core.Response;
 
 import com.tazouxme.idp.IdentityProviderConstants;
@@ -80,8 +74,7 @@ import net.shibboleth.utilities.java.support.collection.Pair;
 import net.shibboleth.utilities.java.support.net.URLBuilder;
 import net.shibboleth.utilities.java.support.xml.SerializeSupport;
 
-@TestMethodOrder(OrderAnnotation.class)
-public class ClientTest {
+public class ClientAuthnTest extends AbstractClientTest {
 
 	private static final String SSO_URL = "http://localhost:20126/saml-identity-provider/sso";
 	private static final String SSO_URN = "urn:com:tazouxme:idp";
@@ -92,25 +85,6 @@ public class ClientTest {
 	private static final String SSO_RELAY_STATE = UUID.randomUUID().toString();
 
 	private static final String LOGIN_URL = "http://localhost:20126/saml-identity-provider/login";
-	private static final String REGISTER_URL = "http://localhost:20126/saml-identity-provider/register";
-
-	private static Server server;
-
-	@BeforeAll
-	public static void start() throws Exception {
-		InitializationService.initialize();
-		Security.addProvider(new BouncyCastleProvider());
-
-		WebAppContext context = new WebAppContext();
-		context.setDescriptor("src/test/resources/web.xml");
-		context.setResourceBase("src/main/webapp");
-		context.setContextPath("/saml-identity-provider");
-		context.setParentLoaderPriority(true);
-
-		server = new Server(20126);
-		server.setHandler(context);
-		server.start();
-	}
 
 	@Test
 	@Order(1)
@@ -138,7 +112,7 @@ public class ClientTest {
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 
 		try {
-			HttpGet get = new HttpGet(buildQueryParams("", SSO_URN, SSO_ACS1, SSO_APP1));
+			HttpGet get = new HttpGet(buildQueryParams("", SSO_URN, SSO_ACS1, SSO_APP1, SAMLConstants.SAML2_REDIRECT_BINDING_URI));
 			CloseableHttpResponse response = httpClient.execute(get);
 			assertEquals(200, response.getStatusLine().getStatusCode());
 
@@ -158,7 +132,7 @@ public class ClientTest {
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 
 		try {
-			HttpGet get = new HttpGet(buildQueryParams(SSO_RELAY_STATE, "urn", SSO_ACS1, "1"));
+			HttpGet get = new HttpGet(buildQueryParams(SSO_RELAY_STATE, "urn", SSO_ACS1, "1", SAMLConstants.SAML2_REDIRECT_BINDING_URI));
 			CloseableHttpResponse res = httpClient.execute(get);
 			assertEquals(200, res.getStatusLine().getStatusCode());
 
@@ -183,7 +157,7 @@ public class ClientTest {
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 
 		try {
-			HttpGet get = new HttpGet(buildQueryParams(SSO_RELAY_STATE, SSO_URN, SSO_ACS1, "1"));
+			HttpGet get = new HttpGet(buildQueryParams(SSO_RELAY_STATE, SSO_URN, SSO_ACS1, "1", SAMLConstants.SAML2_REDIRECT_BINDING_URI));
 			CloseableHttpResponse loginPage = httpClient.execute(get); // -- User is redirected to Login page
 			assertEquals(200, loginPage.getStatusLine().getStatusCode());
 
@@ -220,7 +194,7 @@ public class ClientTest {
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 
 		try {
-			HttpGet get = new HttpGet(buildQueryParams(SSO_RELAY_STATE, SSO_URN, "acs", SSO_APP1));
+			HttpGet get = new HttpGet(buildQueryParams(SSO_RELAY_STATE, SSO_URN, "acs", SSO_APP1, SAMLConstants.SAML2_REDIRECT_BINDING_URI));
 			CloseableHttpResponse loginPage = httpClient.execute(get); // -- User is redirected to Login page
 			assertEquals(200, loginPage.getStatusLine().getStatusCode());
 
@@ -257,7 +231,7 @@ public class ClientTest {
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 
 		try {
-			HttpGet get = new HttpGet(buildQueryParams(SSO_RELAY_STATE, SSO_URN, SSO_ACS1, SSO_APP1));
+			HttpGet get = new HttpGet(buildQueryParams(SSO_RELAY_STATE, SSO_URN, SSO_ACS1, SSO_APP1, SAMLConstants.SAML2_REDIRECT_BINDING_URI));
 			CloseableHttpResponse loginPage = httpClient.execute(get); // -- User is redirected to Login page
 			assertEquals(200, loginPage.getStatusLine().getStatusCode());
 
@@ -332,7 +306,7 @@ public class ClientTest {
 		    HttpContext localContext = new BasicHttpContext();
 		    localContext.setAttribute(HttpClientContext.COOKIE_STORE, cookieStore);
 
-			HttpGet getWithCookies = new HttpGet(buildQueryParams(SSO_RELAY_STATE, SSO_URN, SSO_ACS2, SSO_APP2));
+			HttpGet getWithCookies = new HttpGet(buildQueryParams(SSO_RELAY_STATE, SSO_URN, SSO_ACS2, SSO_APP2, SAMLConstants.SAML2_REDIRECT_BINDING_URI));
 			HttpResponse res = httpClient.execute(getWithCookies, localContext); // -- User wants to access another app and is already logged in
 			assertEquals(200, res.getStatusLine().getStatusCode());
 
@@ -351,203 +325,9 @@ public class ClientTest {
 		}
 	}
 
-	@Test
-	@Order(7)
-	public void testRegisterEmptyValue() {
-		CloseableHttpClient httpClient = HttpClients.createDefault();
-
-		try {
-			HttpGet get = new HttpGet(REGISTER_URL);
-			CloseableHttpResponse registerPage = httpClient.execute(get);
-			assertEquals(200, registerPage.getStatusLine().getStatusCode());
-
-			String text = new BufferedReader(
-					new InputStreamReader(registerPage.getEntity().getContent(), StandardCharsets.UTF_8)).lines()
-							.collect(Collectors.joining("\n"));
-
-			assertTrue(text.contains("Register to SSO"));
-
-			List<NameValuePair> params = new ArrayList<>();
-			params.add(new BasicNameValuePair("organization", ""));
-			params.add(new BasicNameValuePair("domain", "xx.com"));
-			params.add(new BasicNameValuePair("username", "helloworld"));
-			params.add(new BasicNameValuePair("password", "pass1234"));
-
-			HttpPost post = new HttpPost(REGISTER_URL);
-			post.setEntity(new UrlEncodedFormEntity(params));
-
-			CloseableHttpResponse registeredUser = httpClient.execute(post);
-			assertEquals(200, registeredUser.getStatusLine().getStatusCode());
-			
-			text = new BufferedReader(
-					new InputStreamReader(registeredUser.getEntity().getContent(), StandardCharsets.UTF_8)).lines()
-					.collect(Collectors.joining("\n"));
-
-			assertTrue(text.contains("Value cannot be empty"));
-			
-			params = new ArrayList<>();
-			params.add(new BasicNameValuePair("organization", "my_org"));
-			params.add(new BasicNameValuePair("domain", ""));
-			params.add(new BasicNameValuePair("username", "helloworld"));
-			params.add(new BasicNameValuePair("password", "pass1234"));
-
-			post = new HttpPost(REGISTER_URL);
-			post.setEntity(new UrlEncodedFormEntity(params));
-
-			registeredUser = httpClient.execute(post);
-			assertEquals(200, registeredUser.getStatusLine().getStatusCode());
-			
-			text = new BufferedReader(
-					new InputStreamReader(registeredUser.getEntity().getContent(), StandardCharsets.UTF_8)).lines()
-					.collect(Collectors.joining("\n"));
-
-			assertTrue(text.contains("Value cannot be empty"));
-			
-			params = new ArrayList<>();
-			params.add(new BasicNameValuePair("organization", "my_org"));
-			params.add(new BasicNameValuePair("domain", "xx.com"));
-			params.add(new BasicNameValuePair("username", ""));
-			params.add(new BasicNameValuePair("password", "pass1234"));
-
-			post = new HttpPost(REGISTER_URL);
-			post.setEntity(new UrlEncodedFormEntity(params));
-
-			registeredUser = httpClient.execute(post);
-			assertEquals(200, registeredUser.getStatusLine().getStatusCode());
-			
-			text = new BufferedReader(
-					new InputStreamReader(registeredUser.getEntity().getContent(), StandardCharsets.UTF_8)).lines()
-					.collect(Collectors.joining("\n"));
-
-			assertTrue(text.contains("Value cannot be empty"));
-		} catch (Exception e) {
-			fail(e);
-		}
-	}
-
-	@Test
-	@Order(8)
-	public void testRegisterWrongDomain() {
-		CloseableHttpClient httpClient = HttpClients.createDefault();
-
-		try {
-			HttpGet get = new HttpGet(REGISTER_URL);
-			CloseableHttpResponse registerPage = httpClient.execute(get);
-			assertEquals(200, registerPage.getStatusLine().getStatusCode());
-
-			String text = new BufferedReader(
-					new InputStreamReader(registerPage.getEntity().getContent(), StandardCharsets.UTF_8)).lines()
-							.collect(Collectors.joining("\n"));
-
-			assertTrue(text.contains("Register to SSO"));
-
-			List<NameValuePair> params = new ArrayList<>();
-			params.add(new BasicNameValuePair("organization", "my_org"));
-			params.add(new BasicNameValuePair("domain", "xx"));
-			params.add(new BasicNameValuePair("username", "helloworld"));
-			params.add(new BasicNameValuePair("password", "pass1234"));
-
-			HttpPost post = new HttpPost(REGISTER_URL);
-			post.setEntity(new UrlEncodedFormEntity(params));
-
-			CloseableHttpResponse registeredUser = httpClient.execute(post);
-			assertEquals(200, registeredUser.getStatusLine().getStatusCode());
-			
-			text = new BufferedReader(
-					new InputStreamReader(registeredUser.getEntity().getContent(), StandardCharsets.UTF_8)).lines()
-					.collect(Collectors.joining("\n"));
-
-			assertTrue(text.contains("Domain not correctly formed"));
-		} catch (Exception e) {
-			fail(e);
-		}
-	}
-
-	@Test
-	@Order(9)
-	public void testRegisterWrongPassword() {
-		CloseableHttpClient httpClient = HttpClients.createDefault();
-
-		try {
-			HttpGet get = new HttpGet(REGISTER_URL);
-			CloseableHttpResponse registerPage = httpClient.execute(get);
-			assertEquals(200, registerPage.getStatusLine().getStatusCode());
-
-			String text = new BufferedReader(
-					new InputStreamReader(registerPage.getEntity().getContent(), StandardCharsets.UTF_8)).lines()
-							.collect(Collectors.joining("\n"));
-
-			assertTrue(text.contains("Register to SSO"));
-
-			List<NameValuePair> params = new ArrayList<>();
-			params.add(new BasicNameValuePair("organization", "my_org"));
-			params.add(new BasicNameValuePair("domain", "xx.com"));
-			params.add(new BasicNameValuePair("username", "helloworld"));
-			params.add(new BasicNameValuePair("password", "pass"));
-
-			HttpPost post = new HttpPost(REGISTER_URL);
-			post.setEntity(new UrlEncodedFormEntity(params));
-
-			CloseableHttpResponse registeredUser = httpClient.execute(post);
-			assertEquals(200, registeredUser.getStatusLine().getStatusCode());
-			
-			text = new BufferedReader(
-					new InputStreamReader(registeredUser.getEntity().getContent(), StandardCharsets.UTF_8)).lines()
-					.collect(Collectors.joining("\n"));
-
-			assertTrue(text.contains("Password length must be min. 8 and must contain 1 letter and 1 number"));
-		} catch (Exception e) {
-			fail(e);
-		}
-	}
-
-	@Test
-	@Order(10)
-	public void testRegister() {
-		CloseableHttpClient httpClient = HttpClients.createDefault();
-
-		try {
-			HttpGet get = new HttpGet(REGISTER_URL);
-			CloseableHttpResponse registerPage = httpClient.execute(get);
-			assertEquals(200, registerPage.getStatusLine().getStatusCode());
-
-			String text = new BufferedReader(
-					new InputStreamReader(registerPage.getEntity().getContent(), StandardCharsets.UTF_8)).lines()
-							.collect(Collectors.joining("\n"));
-
-			assertTrue(text.contains("Register to SSO"));
-
-			List<NameValuePair> params = new ArrayList<>();
-			params.add(new BasicNameValuePair("organization", "my_org"));
-			params.add(new BasicNameValuePair("domain", "xx.com"));
-			params.add(new BasicNameValuePair("username", "helloworld"));
-			params.add(new BasicNameValuePair("password", "pass1234"));
-
-			HttpPost post = new HttpPost(REGISTER_URL);
-			post.setEntity(new UrlEncodedFormEntity(params));
-
-			CloseableHttpResponse registeredUser = httpClient.execute(post);
-			assertEquals(200, registeredUser.getStatusLine().getStatusCode());
-			
-			text = new BufferedReader(
-					new InputStreamReader(registeredUser.getEntity().getContent(), StandardCharsets.UTF_8)).lines()
-					.collect(Collectors.joining("\n"));
-
-			assertTrue(text.contains("Validate your instance"));
-		} catch (Exception e) {
-			fail(e);
-		}
-	}
-
-	@AfterAll
-	public static void stop() throws Exception {
-		server.stop();
-		server.destroy();
-	}
-
-	private String buildQueryParams(String relayState, String ssoUrn, String ssoAcs, String application) throws Exception {
+	private String buildQueryParams(String relayState, String ssoUrn, String ssoAcs, String application, String binding) throws Exception {
 		final String messageStr = SerializeSupport.nodeToString(
-				XMLObjectSupport.marshall(SAMLUtilsTest.buildHttpAuthnRequest(ssoUrn, ssoAcs, application, AuthnContext.PASSWORD_AUTHN_CTX)));
+				XMLObjectSupport.marshall(SAMLUtilsTest.buildHttpAuthnRequest(ssoUrn, ssoAcs, application, AuthnContext.PASSWORD_AUTHN_CTX, binding, NameIDType.EMAIL)));
 
 		try (final ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
 				final DeflaterOutputStream deflaterStream = new NoWrapAutoEndDeflaterOutputStream(bytesOut,

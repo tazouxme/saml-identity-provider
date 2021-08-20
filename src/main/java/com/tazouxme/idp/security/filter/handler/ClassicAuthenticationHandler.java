@@ -51,5 +51,14 @@ public class ClassicAuthenticationHandler extends AbstractAuthenticationHandler 
 			response.sendRedirect(authentication.getDetails().getParameters().getRedirectUrl());
 		}
 	}
+	
+	@Override
+	public void fault(HttpServletRequest request, HttpServletResponse response, UserAuthenticationToken authentication) throws IOException, ServletException {
+		request.setAttribute("code", authentication.getDetails().getResultCode().getCode());
+		request.setAttribute("reason", authentication.getDetails().getResultCode().getReason());
+		request.setAttribute("status", authentication.getDetails().getResultCode().getStatus());
+		
+		request.getRequestDispatcher("/error.jsp").forward(request, response);
+	}
 
 }

@@ -7,6 +7,7 @@ public class UserIdentity {
 	
 	private String organizationId;
 	private String organization;
+	private String federatedUserId;
 	private String userId;
 	private String email;
 	private String role;
@@ -27,6 +28,14 @@ public class UserIdentity {
 
 	public void setOrganization(String organization) {
 		this.organization = organization;
+	}
+	
+	public String getFederatedUserId() {
+		return federatedUserId;
+	}
+	
+	public void setFederatedUserId(String federatedUserId) {
+		this.federatedUserId = federatedUserId;
 	}
 
 	public String getUserId() {

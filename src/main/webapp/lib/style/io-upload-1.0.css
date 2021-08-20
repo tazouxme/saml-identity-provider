@@ -1,0 +1,112 @@
+/*
+ * ---------------------------
+ * -- DAuth Uploader styles --
+ * ---------------------------
+ */
+#dauth-uploader-overlay {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	width: 100%;
+	height: 100%;
+	background-color: white;
+	opacity: 0.1;
+	z-index: 200;
+}
+
+.dauth-uploader {
+	position: absolute;
+	left: 50%;
+	top: 300px;
+	margin-left: -289px;
+	width: 578px;
+	height: 343px;
+	padding: 10px;
+    border: 1px solid #ccc;
+    box-shadow: 0px 0px 10px 0px #ccc;
+    background-color: white;
+    display: none;
+	z-index: 201;
+}
+
+.dauth-uploader-files {
+    height: 210px;
+    margin-top: 88px;
+    border: 1px solid #bbbbbb;
+    overflow: auto;
+}
+
+.dauth-uploader-dragenter {
+	border: 1px dashed #bbbbbb;
+}
+
+.dauth-uploader > input {
+	display: none;
+}
+
+.dauth-uploader > img {
+	position: absolute;
+	top: 7px;
+	left: 258px;
+	width: 64px;
+	padding: 10px;
+}
+
+.dauth-uploader > img:hover {
+	cursor: pointer;
+	box-shadow: 0px 0px 5px #bbbbbb;
+}
+
+.dauth-uploader-loader {
+	position: relative;
+	left: 1px;
+	top: 1px;
+	padding: 10px;
+	height: 20px;
+	width: calc(100% - 22px);
+	margin-bottom: 1px;
+	background-color: #205E9B;
+}
+
+.dauth-uploader-loader > span {
+	color: white;
+}
+
+.dauth-uploader-loader > i {
+	position: absolute;
+	right: 13px;
+	top: 13px;
+	cursor: pointer;
+	filter: invert(100%);
+}
+
+.dauth-uploader-loader > .dauth-uploader-waiter {
+	position: absolute;
+	right: 40px;
+	top: 12px;
+	width: 104px;
+	height: 14px;
+	background-color: white;
+}
+
+.dauth-uploader-loader > .dauth-uploader-waiter > .dauth-uploader-waiter-bar {
+	position: absolute;
+	left: 2px;
+	top: 2px;
+	width: 0px;
+	height: 10px;
+	background-color: #205E9B;
+}
+
+.dauth-uploader-buttons {
+	position: relative;
+	top: 10px;
+	left: 0px;
+	width: 100%;
+	height: 40px;
+	text-align: center;
+}
+
+.dauth-uploader-buttons > button:first-child {
+	margin-right: 10px;
+}

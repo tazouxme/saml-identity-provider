@@ -11,7 +11,6 @@
 .dauth-checkbox input {
 	position: absolute;
 	opacity: 0;
-	cursor: pointer;
 	height: 0px;
 	width: 0px;
 }
@@ -28,8 +27,14 @@
 .dauth-checkbox:hover input ~ .checkmark {
 	background-color: #ccc;
 }
+.dauth-checkbox:hover input[disabled="disabled"] ~ .checkmark {
+	background-color: #eee;
+}
 
 .dauth-checkbox input:checked ~ .checkmark {
+	background-color: #205E9B;
+}
+.dauth-checkbox input[disabled="disabled"]:checked ~ .checkmark {
 	background-color: #205E9B;
 }
 
@@ -53,7 +58,5 @@
 	height: 10px;
 	border: solid white;
 	border-width: 0px 3px 3px 0px;
-	-webkit-transform: rotate(45deg);
-	-ms-transform: rotate(45deg);
 	transform: rotate(45deg);
 }

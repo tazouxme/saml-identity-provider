@@ -30,7 +30,20 @@ cancelOrgBtn.setAction(function() {
 
 var claimsBtn = new Button({ id: 'claims-btn', text: 'Claims', icon: './lib/img/claims.png' });
 var rolesBtn = new Button({ id: 'roles-btn', text: 'Roles', icon: './lib/img/roles.png' });
-var keyBtn = new Button({ id: 'key-btn', text: 'Public Key', icon: './lib/img/key.png' });
+var addKeyBtn = new Button({ id: 'key-btn', text: 'Add', icon: './lib/img/add_key.png' });
+addKeyBtn.setAction(function() {
+	uploader.show();
+});
+var removeKeyBtn = new Button({ id: 'key-btn', text: 'Remove', icon: './lib/img/remove_key.png' });
+removeKeyBtn.setAction(function() {
+	var message = new Message({ id : 'remove-certificate-message', type : 'question', title : 'Remove Certificate' });
+	message.setText("Remove the Certificate for the Organization?");
+	message.onValidate(function() {
+		deleteCertificate(orgIdField.getValue());
+	});
+	
+	message.show();
+});
 
 var orgIdField = new Field({ id: "org-id-field", title: "ID", name: "org-id", type: "text", icon: "", maxLength: "16", width: "250" });
 orgIdField.setEnabled(false);
@@ -55,6 +68,10 @@ orgDescriptionField.set(document.getElementById("org-main"));
 var orgCreationDateField = new Field({ id: "org-date-field", title: "Creation Date", name: "org-date", type: "date", icon: "", maxLength: "16", width: "250" });
 orgCreationDateField.setEnabled(false);
 orgCreationDateField.set(document.getElementById("org-main"));
+
+var orgCertificateField = new Checkbox({ id: "org-certificate-field", title: "Certificate" });
+orgCertificateField.setEnabled(false);
+orgCertificateField.set(document.getElementById("org-main"));
 
 var addUserBtn = new Button({ id: 'add-user-btn', text: 'Add User', icon: './lib/img/add_user.png' });
 addUserBtn.setAction(function() {
@@ -248,7 +265,8 @@ ribbon.addMenu('dashboard-ribbon-application', 'Applications', function() {
 });
 
 ribbon.getMenu('dashboard-ribbon-organization').addSection('Data', [ updateOrgBtn ]);
-ribbon.getMenu('dashboard-ribbon-organization').addSection('Globals', [ claimsBtn, rolesBtn, keyBtn ]);
+ribbon.getMenu('dashboard-ribbon-organization').addSection('Certificate', [ addKeyBtn, removeKeyBtn ]);
+ribbon.getMenu('dashboard-ribbon-organization').addSection('Globals', [ claimsBtn, rolesBtn ]);
 ribbon.getMenu('dashboard-ribbon-user').addSection('Data', [ addUserBtn, updateUserBtn, removeUserBtn ]);
 ribbon.getMenu('dashboard-ribbon-user').addSection('Actions', [ activateUserBtn, deactivateUserBtn ]);
 ribbon.getMenu('dashboard-ribbon-user').addSection('Settings', [ settingsUserBtn ]);
@@ -257,6 +275,22 @@ ribbon.getMenu('dashboard-ribbon-application').addSection('Access', [ accessAppB
 
 ribbon.set(document.body);
 ribbon.setSelected('dashboard-ribbon-organization');
+
+var uploader = new Uploader({ id: 'org-certificate-uploader', accept: 'application/x-x509-ca-cert', url: './api/v1/certificate' });
+uploader.setTransform(function(file) {
+	var org = {};
+	org['id'] = orgIdField.getValue();
+	org['certificate'] = file.data;
+	
+	return org;
+});
+uploader.onUploadEnd(function(uploaded) {
+	orgCertificateField.setValue(uploaded[0].hasCertificate);
+			
+	addKeyBtn.setEnabled(!uploaded[0].hasCertificate);
+	removeKeyBtn.setEnabled(uploaded[0].hasCertificate);
+});
+uploader.set(document.body);
 
 var organizationSlide = new Slide({ id: 'organization-slide', title: 'Organization', size: 500 });
 organizationSlide.addComponent({ mapTo: 'id', component: new Field({ id: "slide-org-id-field", title: "ID", type: "text", icon: "", maxLength: "32", width: "250", enabled: false, mandatory: true }) });
@@ -442,9 +476,10 @@ function loadOrganization() {
 			orgNameField.setValue(response.data.name);
 			orgDescriptionField.setValue(response.data.description);
 			orgCreationDateField.setValue(response.data.creationDate);
+			orgCertificateField.setValue(response.data.hasCertificate);
 			
-			var p = document.getElementById("org-public-key").getElementsByTagName("p")[0];
-			p.innerHTML = response.data.publicKey;
+			addKeyBtn.setEnabled(!response.data.hasCertificate);
+			removeKeyBtn.setEnabled(response.data.hasCertificate);
 			
 			var claims = [];
 			for (var i = 0; i < response.data.claims.length; i++) {
@@ -493,6 +528,25 @@ function updateOrganization(data) {
 		},
 		onError: function(response) {
 			var message = new Message({ id : 'update-org-error-message', type : 'error', title : 'Upgrade Error' });
+			message.setText("Error: " + response.data.message);
+			message.show();
+		}
+	}).send();
+}
+
+function deleteCertificate(organizationId) {
+	new Request({
+		method: "DELETE", 
+		url: "./api/v1/certificate", 
+		successCode: 204,
+		data: { id: organizationId },
+		onSuccess: function() {
+			orgCertificateField.setValue(false);
+			addKeyBtn.setEnabled(true);
+			removeKeyBtn.setEnabled(false);
+		},
+		onError: function(response) {
+			var message = new Message({ id : 'delete-certificate-error-message', type : 'error', title : 'Certificate Deletion Error' });
 			message.setText("Error: " + response.data.message);
 			message.show();
 		}
@@ -729,8 +783,8 @@ function deleteApplication(data) {
 			lockUserAppBtn.setEnabled(false);
 			revokeUserAppBtn.setEnabled(false);
 		
-		appUsersTable.clear();
-		appClaimsTable.clear();
+			appUsersTable.clear();
+			appClaimsTable.clear();
 		},
 		onError: function(response) {
 			var message = new Message({ id : 'delete-app-error-message', type : 'error', title : 'Application Deletion Error' });

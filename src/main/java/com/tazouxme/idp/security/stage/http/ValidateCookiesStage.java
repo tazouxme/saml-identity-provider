@@ -1,33 +1,30 @@
-package com.tazouxme.idp.security.stage;
+package com.tazouxme.idp.security.stage.http;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.tazouxme.idp.bo.contract.IUserBo;
 import com.tazouxme.idp.exception.UserException;
 import com.tazouxme.idp.model.User;
+import com.tazouxme.idp.security.stage.AbstractStage;
+import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.security.stage.exception.StageException;
 import com.tazouxme.idp.security.stage.exception.StageExceptionType;
 import com.tazouxme.idp.security.stage.parameters.StageParameters;
 import com.tazouxme.idp.security.token.UserAuthenticationPhase;
 import com.tazouxme.idp.security.token.UserAuthenticationToken;
 
-public class ValidateCookiesStage implements Stage {
+public class ValidateCookiesStage extends AbstractStage {
 
-	protected final Log logger = LogFactory.getLog(getClass());
-	
+	public ValidateCookiesStage() {
+		super(UserAuthenticationPhase.REQUEST_URL_VALID, UserAuthenticationPhase.COOKIES_VALID);
+	}
+
 	@Autowired
 	private IUserBo bo;
 	
 	@Override
-	public UserAuthenticationToken execute(UserAuthenticationToken authentication, 
-			StageParameters o) throws StageException {
-		if (!UserAuthenticationPhase.REQUEST_URL_VALID.equals(authentication.getDetails().getPhase())) {
-			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0301, o);
-		}
-		
+	public UserAuthenticationToken executeInternal(UserAuthenticationToken authentication,  StageParameters o) throws StageException {
 		if (StringUtils.isEmpty(o.getOrganizationId())) {
 			throw new StageException(StageExceptionType.AUTHENTICATION, StageResultCode.AUT_0301, o);
 		}
@@ -54,9 +51,12 @@ public class ValidateCookiesStage implements Stage {
 		}
 		
 		logger.info("Cookies valid");
-		
-		authentication.getDetails().setPhase(UserAuthenticationPhase.COOKIES_VALID);
 		return authentication;
+	}
+	
+	@Override
+	protected boolean requireEntryPhase() {
+		return true;
 	}
 
 }
