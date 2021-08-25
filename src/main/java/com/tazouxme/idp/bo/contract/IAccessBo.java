@@ -10,7 +10,7 @@ import com.tazouxme.idp.model.Access;
 public interface IAccessBo {
 	
 	@Transactional(readOnly = true)
-	public Access findByExternalId(String externalId) throws AccessException;
+	public Access findByExternalId(String externalId, String organizationExternalId) throws AccessException;
 	
 	@Transactional(readOnly = true)
 	public Set<Access> findByURN(String urn, String organizationExternalId);

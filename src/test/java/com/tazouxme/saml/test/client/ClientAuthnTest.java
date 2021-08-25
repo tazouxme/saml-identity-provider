@@ -77,6 +77,7 @@ import net.shibboleth.utilities.java.support.xml.SerializeSupport;
 public class ClientAuthnTest extends AbstractClientTest {
 
 	private static final String SSO_URL = "http://localhost:20126/saml-identity-provider/sso";
+	private static final String SLO_URL = "http://localhost:20126/saml-identity-provider/slo";
 	private static final String SSO_URN = "urn:com:tazouxme:idp";
 	private static final String SSO_ACS1 = "http://localhost/test1/acs";
 	private static final String SSO_ACS2 = "http://localhost/test2/acs";
@@ -112,7 +113,7 @@ public class ClientAuthnTest extends AbstractClientTest {
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 
 		try {
-			HttpGet get = new HttpGet(buildQueryParams("", SSO_URN, SSO_ACS1, SSO_APP1, SAMLConstants.SAML2_REDIRECT_BINDING_URI));
+			HttpGet get = new HttpGet(buildAuthnQueryParams("", SSO_URN, SSO_ACS1, SSO_APP1, SAMLConstants.SAML2_REDIRECT_BINDING_URI));
 			CloseableHttpResponse response = httpClient.execute(get);
 			assertEquals(200, response.getStatusLine().getStatusCode());
 
@@ -132,7 +133,7 @@ public class ClientAuthnTest extends AbstractClientTest {
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 
 		try {
-			HttpGet get = new HttpGet(buildQueryParams(SSO_RELAY_STATE, "urn", SSO_ACS1, "1", SAMLConstants.SAML2_REDIRECT_BINDING_URI));
+			HttpGet get = new HttpGet(buildAuthnQueryParams(SSO_RELAY_STATE, "urn", SSO_ACS1, "1", SAMLConstants.SAML2_REDIRECT_BINDING_URI));
 			CloseableHttpResponse res = httpClient.execute(get);
 			assertEquals(200, res.getStatusLine().getStatusCode());
 
@@ -157,7 +158,7 @@ public class ClientAuthnTest extends AbstractClientTest {
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 
 		try {
-			HttpGet get = new HttpGet(buildQueryParams(SSO_RELAY_STATE, SSO_URN, SSO_ACS1, "1", SAMLConstants.SAML2_REDIRECT_BINDING_URI));
+			HttpGet get = new HttpGet(buildAuthnQueryParams(SSO_RELAY_STATE, SSO_URN, SSO_ACS1, "1", SAMLConstants.SAML2_REDIRECT_BINDING_URI));
 			CloseableHttpResponse loginPage = httpClient.execute(get); // -- User is redirected to Login page
 			assertEquals(200, loginPage.getStatusLine().getStatusCode());
 
@@ -194,7 +195,7 @@ public class ClientAuthnTest extends AbstractClientTest {
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 
 		try {
-			HttpGet get = new HttpGet(buildQueryParams(SSO_RELAY_STATE, SSO_URN, "acs", SSO_APP1, SAMLConstants.SAML2_REDIRECT_BINDING_URI));
+			HttpGet get = new HttpGet(buildAuthnQueryParams(SSO_RELAY_STATE, SSO_URN, "acs", SSO_APP1, SAMLConstants.SAML2_REDIRECT_BINDING_URI));
 			CloseableHttpResponse loginPage = httpClient.execute(get); // -- User is redirected to Login page
 			assertEquals(200, loginPage.getStatusLine().getStatusCode());
 
@@ -231,7 +232,7 @@ public class ClientAuthnTest extends AbstractClientTest {
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 
 		try {
-			HttpGet get = new HttpGet(buildQueryParams(SSO_RELAY_STATE, SSO_URN, SSO_ACS1, SSO_APP1, SAMLConstants.SAML2_REDIRECT_BINDING_URI));
+			HttpGet get = new HttpGet(buildAuthnQueryParams(SSO_RELAY_STATE, SSO_URN, SSO_ACS1, SSO_APP1, SAMLConstants.SAML2_REDIRECT_BINDING_URI));
 			CloseableHttpResponse loginPage = httpClient.execute(get); // -- User is redirected to Login page
 			assertEquals(200, loginPage.getStatusLine().getStatusCode());
 
@@ -306,7 +307,7 @@ public class ClientAuthnTest extends AbstractClientTest {
 		    HttpContext localContext = new BasicHttpContext();
 		    localContext.setAttribute(HttpClientContext.COOKIE_STORE, cookieStore);
 
-			HttpGet getWithCookies = new HttpGet(buildQueryParams(SSO_RELAY_STATE, SSO_URN, SSO_ACS2, SSO_APP2, SAMLConstants.SAML2_REDIRECT_BINDING_URI));
+			HttpGet getWithCookies = new HttpGet(buildAuthnQueryParams(SSO_RELAY_STATE, SSO_URN, SSO_ACS2, SSO_APP2, SAMLConstants.SAML2_REDIRECT_BINDING_URI));
 			HttpResponse res = httpClient.execute(getWithCookies, localContext); // -- User wants to access another app and is already logged in
 			assertEquals(200, res.getStatusLine().getStatusCode());
 
@@ -325,7 +326,107 @@ public class ClientAuthnTest extends AbstractClientTest {
 		}
 	}
 
-	private String buildQueryParams(String relayState, String ssoUrn, String ssoAcs, String application, String binding) throws Exception {
+	@Test
+	@Order(7)
+	public void testAccessLogout() {
+		CloseableHttpClient httpClient = HttpClients.createDefault();
+
+		try {
+			HttpGet get = new HttpGet(buildAuthnQueryParams(SSO_RELAY_STATE, SSO_URN, SSO_ACS1, SSO_APP1, SAMLConstants.SAML2_REDIRECT_BINDING_URI));
+			CloseableHttpResponse loginPage = httpClient.execute(get); // -- User is redirected to Login page
+			assertEquals(200, loginPage.getStatusLine().getStatusCode());
+	
+			String text = new BufferedReader(
+					new InputStreamReader(loginPage.getEntity().getContent(), StandardCharsets.UTF_8)).lines()
+							.collect(Collectors.joining("\n"));
+	
+			assertTrue(text.contains("Login"));
+	
+			KeyPair keys = generateKeys();
+	
+			HttpHead head = new HttpHead(LOGIN_URL);
+			head.setHeader(IdentityProviderConstants.AUTH_HEADER_USERNAME, "user1@test.com");
+			head.setHeader(IdentityProviderConstants.AUTH_HEADER_CSRF, "csrf");
+			head.setHeader(IdentityProviderConstants.AUTH_HEADER_PUBLIC_KEY,
+					new String(Base64.encode(keys.getPublic().getEncoded())));
+	
+			CloseableHttpResponse loginUser = httpClient.execute(head); // -- User gets Organization, User and PublicKey information for login
+			assertEquals(202, loginUser.getStatusLine().getStatusCode());
+	
+			String orgId = loginUser.getFirstHeader(IdentityProviderConstants.AUTH_HEADER_ORGANIZATION).getValue();
+			String userId = loginUser.getFirstHeader(IdentityProviderConstants.AUTH_HEADER_USERNAME).getValue();
+			String csrf = loginUser.getFirstHeader(IdentityProviderConstants.AUTH_HEADER_CSRF).getValue();
+			String publicKey = loginUser.getFirstHeader(IdentityProviderConstants.AUTH_HEADER_PUBLIC_KEY).getValue();
+	
+			assertEquals("csrf", csrf);
+	
+			SecretKey secretKey = generateSharedSecret(keys.getPrivate(), obtainPublicKey(publicKey));
+			PasswordEntity password = encryptPassword(secretKey, "pass");
+	
+			List<NameValuePair> params = new ArrayList<>();
+			params.add(new BasicNameValuePair("organization", orgId));
+			params.add(new BasicNameValuePair("username", userId));
+			params.add(new BasicNameValuePair("keepalive", "on"));
+			params.add(new BasicNameValuePair("password", "{\"password\":" + "\"" + password.getPassword() + "\","
+					+ "\"iv\":" + "\"" + password.getIv() + "\"}"));
+	
+			HttpPost post = new HttpPost(LOGIN_URL);
+			post.setEntity(new UrlEncodedFormEntity(params));
+	
+			CloseableHttpResponse loggedinUser = httpClient.execute(post); // -- User is now logged in
+			assertEquals(200, loggedinUser.getStatusLine().getStatusCode());
+	
+			Set<String> cookieHeaders = Arrays.asList(loggedinUser.getAllHeaders()).stream()
+					.filter(header -> header.getName().equals("Set-Cookie")).map(header -> header.getValue())
+					.collect(Collectors.toSet());
+	
+			assertTrue(cookieHeaders.size() == 3);
+			
+			String signature = null;
+			for (String cookieHeader : cookieHeaders) {
+				if (cookieHeader.contains("signature")) {
+					signature = cookieHeader.split(";")[0].trim().replace(IdentityProviderConstants.COOKIE_SIGNATURE + "=", "");
+				}
+			}
+	
+			text = new BufferedReader(new InputStreamReader(loggedinUser.getEntity().getContent(), StandardCharsets.UTF_8))
+					.lines().collect(Collectors.joining("\n"));
+	
+			assertTrue(text.contains("RelayState"));
+			assertEquals(SSO_RELAY_STATE, findInputValue(text, "RelayState"));
+			
+			assertTrue(text.contains("SAMLResponse"));
+			Response response = SAMLUtilsTest.getResponse(Base64.decode(findInputValue(text, "SAMLResponse")));
+			assertEquals(StageResultCode.OK.getStatus(), response.getStatus().getStatusCode().getValue());
+			
+			BasicCookieStore cookieStore = new BasicCookieStore();
+		    cookieStore.addCookie(obtainCookie(IdentityProviderConstants.COOKIE_ORGANIZATION, "ORG_test"));
+		    cookieStore.addCookie(obtainCookie(IdentityProviderConstants.COOKIE_USER, "USE_user1"));
+		    cookieStore.addCookie(obtainCookie(IdentityProviderConstants.COOKIE_SIGNATURE, signature));
+		    
+		    HttpContext localContext = new BasicHttpContext();
+		    localContext.setAttribute(HttpClientContext.COOKIE_STORE, cookieStore);
+	    
+			get = new HttpGet(buildLogoutQueryParams(SSO_RELAY_STATE, SSO_URN, SSO_APP1, "USE_user1"));
+			loginPage = httpClient.execute(get, localContext); // -- User logs out
+			assertEquals(200, loginUser.getStatusLine().getStatusCode());
+
+			text = new BufferedReader(
+					new InputStreamReader(loginPage.getEntity().getContent(), StandardCharsets.UTF_8)).lines()
+							.collect(Collectors.joining("\n"));
+			
+			assertTrue(text.contains("RelayState"));
+			assertEquals(SSO_RELAY_STATE, findInputValue(text, "RelayState"));
+			
+			assertTrue(text.contains("SAMLResponse"));
+			response = SAMLUtilsTest.getResponse(Base64.decode(findInputValue(text, "SAMLResponse")));
+			assertEquals(StageResultCode.FAT_1501.getStatus(), response.getStatus().getStatusCode().getValue());
+		} catch (Exception e) {
+			fail(e);
+		}
+	}
+
+	private String buildAuthnQueryParams(String relayState, String ssoUrn, String ssoAcs, String application, String binding) throws Exception {
 		final String messageStr = SerializeSupport.nodeToString(
 				XMLObjectSupport.marshall(SAMLUtilsTest.buildHttpAuthnRequest(ssoUrn, ssoAcs, application, AuthnContext.PASSWORD_AUTHN_CTX, binding, NameIDType.EMAIL)));
 
@@ -343,6 +444,34 @@ public class ClientAuthnTest extends AbstractClientTest {
 				urlBuilder = new URLBuilder(SSO_URL);
 			} catch (final MalformedURLException e) {
 				throw new MessageEncodingException("Endpoint URL " + SSO_URL + " is not a valid URL", e);
+			}
+
+			final List<Pair<String, String>> queryParams = urlBuilder.getQueryParams();
+			queryParams.add(new Pair<>("SAMLRequest", deflatedAuthnRequest));
+			queryParams.add(new Pair<>("RelayState", relayState));
+
+			return urlBuilder.buildURL();
+		}
+	}
+
+	private String buildLogoutQueryParams(String relayState, String ssoUrn, String application, String nameId) throws Exception {
+		final String messageStr = SerializeSupport.nodeToString(
+				XMLObjectSupport.marshall(SAMLUtilsTest.buildHttpLogoutRequest(ssoUrn, application, NameIDType.TRANSIENT, nameId)));
+
+		try (final ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+				final DeflaterOutputStream deflaterStream = new NoWrapAutoEndDeflaterOutputStream(bytesOut,
+						Deflater.DEFLATED)) {
+
+			deflaterStream.write(messageStr.getBytes("UTF-8"));
+			deflaterStream.finish();
+
+			String deflatedAuthnRequest = Base64Support.encode(bytesOut.toByteArray(), Base64Support.UNCHUNKED);
+
+			URLBuilder urlBuilder = null;
+			try {
+				urlBuilder = new URLBuilder(SLO_URL);
+			} catch (final MalformedURLException e) {
+				throw new MessageEncodingException("Endpoint URL " + SLO_URL + " is not a valid URL", e);
 			}
 
 			final List<Pair<String, String>> queryParams = urlBuilder.getQueryParams();

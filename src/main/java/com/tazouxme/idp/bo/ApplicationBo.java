@@ -42,6 +42,18 @@ public class ApplicationBo implements IApplicationBo {
 		pApplication.setName(application.getName());
 		pApplication.setDescription(application.getDescription());
 		pApplication.setAssertionUrl(application.getAssertionUrl());
+		pApplication.setLogoutUrl(application.getLogoutUrl());
+		
+		return dao.update(pApplication);
+	}
+
+	@Override
+	public Application updateClaims(Application application) throws ApplicationException {
+		Application pApplication = findByExternalId(application.getExternalId(), application.getOrganization().getExternalId());
+		if (pApplication.getClaims().size() != application.getClaims().size() || !pApplication.getClaims().containsAll(application.getClaims())) {
+			pApplication.getClaims().clear();
+			pApplication.getClaims().addAll(application.getClaims());
+		}
 		
 		return dao.update(pApplication);
 	}

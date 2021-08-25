@@ -43,6 +43,7 @@ public class IdentityProviderConfiguration implements InitializingBean {
 	private String path;
 	private String ssoPath;
 	private String ssoSoapPath;
+	private String sloPath;
 	private String urn;
 	private String keystorePath;
 	private String keystorePassword;
@@ -86,6 +87,14 @@ public class IdentityProviderConfiguration implements InitializingBean {
 	
 	public void setSsoSoapPath(String ssoSoapPath) {
 		this.ssoSoapPath = ssoSoapPath;
+	}
+	
+	public String getSloPath() {
+		return sloPath;
+	}
+	
+	public void setSloPath(String sloPath) {
+		this.sloPath = sloPath;
 	}
 
 	public String getUrn() {

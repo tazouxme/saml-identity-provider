@@ -5,6 +5,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.opensaml.saml.saml2.core.ArtifactResolve;
 import org.opensaml.saml.saml2.core.AuthnRequest;
+import org.opensaml.saml.saml2.core.LogoutRequest;
 import org.opensaml.security.credential.Credential;
 import org.opensaml.security.x509.BasicX509Credential;
 
@@ -20,6 +21,7 @@ public class StageParameters {
 	private StageCookieParameters cookieParameters;
 	
 	private AuthnRequest authnRequest;
+	private LogoutRequest logoutRequest;
 	private ArtifactResolve artifactResolve;
 	private SecretKey secretKey;
 	
@@ -113,6 +115,14 @@ public class StageParameters {
 	
 	public void setAuthnRequest(AuthnRequest authnRequest) {
 		this.authnRequest = authnRequest;
+	}
+	
+	public LogoutRequest getLogoutRequest() {
+		return logoutRequest;
+	}
+
+	public void setLogoutRequest(LogoutRequest logoutRequest) {
+		this.logoutRequest = logoutRequest;
 	}
 	
 	public ArtifactResolve getArtifactResolve() {

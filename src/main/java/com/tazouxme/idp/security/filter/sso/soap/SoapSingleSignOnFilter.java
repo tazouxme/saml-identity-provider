@@ -25,21 +25,19 @@ public class SoapSingleSignOnFilter extends AbstractSingleSignOnFilter {
 	public SoapSingleSignOnFilter() {
 		super("/sso/soap", "POST");
 	}
-
+	
 	@Override
-	protected UserAuthenticationToken obtainAuthenticationAfterCheck(HttpServletRequest request) {
+	protected StageParameters obtainStageParameters(HttpServletRequest request) {
 		Cookie organizationCookie = CookieUtils.find(request, IdentityProviderConstants.COOKIE_ORGANIZATION);
 		Cookie userCookie = CookieUtils.find(request, IdentityProviderConstants.COOKIE_USER);
 		Cookie signatureCookie = CookieUtils.find(request, IdentityProviderConstants.COOKIE_SIGNATURE);
 		
-		return stages.execute(
-			new UserAuthenticationToken(),
-			new StageParameters(
-				configuration,
-				request,
-				organizationCookie != null ? organizationCookie.getValue() : null,
-				userCookie != null ? userCookie.getValue() : null,
-				signatureCookie != null ? signatureCookie.getValue() : null));
+		return new StageParameters(
+			configuration,
+			request,
+			organizationCookie != null ? organizationCookie.getValue() : null,
+			userCookie != null ? userCookie.getValue() : null,
+			signatureCookie != null ? signatureCookie.getValue() : null);
 	}
 
 	@Override

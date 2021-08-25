@@ -20,10 +20,19 @@ function Message(params) {
 	var _type = params.type;
 	
 	/**
+	 * Translatable labels
+	 * @private
+	 */
+	var _translatable = !!params.translatable;
+	
+	/**
 	 * Model for the Popup
 	 * @private
 	 */
 	var _title = params.title;
+	if (_translatable) {
+		_title = Utils.translate(_title);
+	}
 	
 	/**
 	 * Text for the Popup
@@ -85,39 +94,45 @@ function Message(params) {
 		buttons.classList.add("dauth-message-buttons");
 		
 		if (TYPES.info.label == _type) {
-			var ok = new Button({ text : "Ok", uuid : "software-popup-ok-btn" });
+			var okLabel = _translatable ? Utils.translate("defaults.btn.ok") : "Ok";
+			var ok = new Button({ text : okLabel, uuid : "software-popup-ok-btn" });
 			ok.setAction(function() {
 				_close();
 			});
 			buttons.appendChild(ok.get());
 		} else if (TYPES.question.label == _type) {
-			var ok = new Button({ text : "Yes", uuid : "software-popup-ok-btn" });
+			var yesLabel = _translatable ? Utils.translate("defaults.btn.yes") : "Yes";
+			var ok = new Button({ text : yesLabel, uuid : "software-popup-ok-btn" });
 			ok.setAction(function() {
 				_onValidate();
 				_close();
 			});
 			buttons.appendChild(ok.get());
 			
-			var cancel = new Button({ text : "No", uuid : "software-popup-cancel-btn" });
+			var noLabel = _translatable ? Utils.translate("defaults.btn.no") : "No";
+			var cancel = new Button({ text : noLabel, uuid : "software-popup-cancel-btn" });
 			cancel.setAction(function() {
 				_close();
 			});
 			buttons.appendChild(cancel.get());
 		} else if (TYPES.warning.label == _type) {
-			var ok = new Button({ text : "Ok", uuid : "software-popup-ok-btn" });
+			var okLabel = _translatable ? Utils.translate("defaults.btn.ok") : "Ok";
+			var ok = new Button({ text : okLabel, uuid : "software-popup-ok-btn" });
 			ok.setAction(function() {
 				_onValidate();
 				_close();
 			});
 			buttons.appendChild(ok.get());
 			
+			var cancelLabel = _translatable ? Utils.translate("defaults.btn.cancel") : "Cancel";
 			var cancel = new Button({ text : "Cancel", uuid : "software-popup-cancel-btn" });
 			cancel.setAction(function() {
 				_close();
 			});
 			buttons.appendChild(cancel.get());
 		} else if (TYPES.error.label == _type) {
-			var ok = new Button({ text : "Ok", uuid : "software-popup-ok-btn" });
+			var okLabel = _translatable ? Utils.translate("defaults.btn.ok") : "Ok";
+			var ok = new Button({ text : okLabel, uuid : "software-popup-ok-btn" });
 			ok.setAction(function() {
 				_close();
 			});
@@ -133,6 +148,9 @@ function Message(params) {
 	 */
 	var _setText = function(text) {
 		_text = text;
+		if (_translatable) {
+			_text = Utils.translate(_text);
+		}
 	};
 	
 	/**

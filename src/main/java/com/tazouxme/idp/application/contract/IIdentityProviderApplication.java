@@ -2,6 +2,7 @@ package com.tazouxme.idp.application.contract;
 
 import java.util.Set;
 
+import com.tazouxme.idp.exception.AccessException;
 import com.tazouxme.idp.exception.ActivationException;
 import com.tazouxme.idp.exception.ApplicationException;
 import com.tazouxme.idp.exception.ClaimException;
@@ -9,6 +10,7 @@ import com.tazouxme.idp.exception.FederationException;
 import com.tazouxme.idp.exception.OrganizationException;
 import com.tazouxme.idp.exception.RoleException;
 import com.tazouxme.idp.exception.UserException;
+import com.tazouxme.idp.model.Access;
 import com.tazouxme.idp.model.Activation;
 import com.tazouxme.idp.model.Application;
 import com.tazouxme.idp.model.Claim;
@@ -18,6 +20,35 @@ import com.tazouxme.idp.model.Role;
 import com.tazouxme.idp.model.User;
 
 public interface IIdentityProviderApplication {
+	
+	/**
+	 * Create an Access to an Application (and a Federation if enabled)
+	 * @param user - User to give access
+	 * @param application - Application to be accessed
+	 * @param role - Role when accessing application
+	 * @param organization - Organization to which the Access belongs
+	 * @return The created Access
+	 * @throws AccessException
+	 */
+	public Access createAccess(User user, Application application, Role role, Organization organization) throws AccessException;
+	
+	/**
+	 * Update an Access entry in the database
+	 * @param externalId - Access External ID
+	 * @param enabled - Is access enabled
+	 * @param organization - Organization to which the Access belongs
+	 * @return The updated Access
+	 * @throws AccessException
+	 */
+	public Access updateAccess(String externalId, boolean enabled, Organization organization) throws AccessException;
+	
+	/**
+	 * Delete an Access entry in the database
+	 * @param externalId - Access External ID
+	 * @param organization - Organization to which the Access belongs
+	 * @throws AccessException
+	 */
+	public void deleteAccess(String externalId, Organization organization) throws AccessException;
 	
 	/**
 	 * Get all Activations for a specific User
@@ -68,11 +99,12 @@ public interface IIdentityProviderApplication {
 	 * @param name - Application's name
 	 * @param description - Application's description (may be empty)
 	 * @param acsUrl - Application's Assertion Consumer Service URL
+	 * @param logoutUrl - Application's Logout URL
 	 * @param organization - Organization to which the Application belongs
 	 * @return The created Application
 	 * @throws ApplicationException - When an Application with External ID already exists
 	 */
-	public Application createApplication(String urn, String name, String description, String acsUrl, Organization organization) throws ApplicationException;
+	public Application createApplication(String urn, String name, String description, String acsUrl, String logoutUrl, Organization organization) throws ApplicationException;
 	
 	/**
 	 * Update an Application entry in the database
@@ -81,11 +113,22 @@ public interface IIdentityProviderApplication {
 	 * @param name - Application's name
 	 * @param description - Application's description (may be empty)
 	 * @param acsUrl - Application's Assertion Consumer Service URL
+	 * @param logoutUrl - Application's Logout URL
 	 * @param organization - Organization to which the Application belongs
 	 * @return The updated Application
 	 * @throws ApplicationException - When an Application with External ID does not exist
 	 */
-	public Application updateApplication(String externalId, String urn, String name, String description, String acsUrl, Organization organization) throws ApplicationException;
+	public Application updateApplication(String externalId, String urn, String name, String description, String acsUrl, String logoutUrl, Organization organization) throws ApplicationException;
+	
+	/**
+	 * Update an Application entry in the database
+	 * @param externalId - Application's External Id
+	 * @param claims - Application's claims
+	 * @param organization - Organization to which the Application belongs
+	 * @return The updated Application
+	 * @throws ApplicationException - When an Application with External ID does not exist
+	 */
+	public Application updateApplicationClaims(String externalId, Set<Claim> claims, Organization organization) throws ApplicationException;
 	
 	/**
 	 * Delete an Application entry in the database
@@ -96,7 +139,15 @@ public interface IIdentityProviderApplication {
 	public void deleteApplication(String externalId, Organization organization) throws ApplicationException;
 	
 	/**
-	 * 
+	 * Find Federations identity for Application
+	 * @param urn - Application's URN
+	 * @param organizationExternalId - Organization External IDOrganization External ID
+	 * @return All existing Federations for the Application 
+	 */
+	public Set<Federation> findFederationsByURN(String urn, String organizationExternalId);
+	
+	/**
+	 * Find Federations identity for User
 	 * @param userExternalId - User External ID
 	 * @param organizationExternalId - Organization External IDOrganization External ID
 	 * @return All existing Federations for the User 
@@ -104,7 +155,7 @@ public interface IIdentityProviderApplication {
 	public Set<Federation> findFederationsByUser(String userExternalId, String organizationExternalId);
 	
 	/**
-	 * Find a Federation identity for User
+	 * Find a Federation identity for User and Application
 	 * @param userExternalId - User External ID
 	 * @param urn - Application's URN
 	 * @param organizationExternalId - Organization External IDOrganization External ID
@@ -112,6 +163,16 @@ public interface IIdentityProviderApplication {
 	 * @throws FederationException - When a Federation does not exist
 	 */
 	public Federation findFederationByUserAndURN(String userExternalId, String urn, String organizationExternalId) throws FederationException;
+	
+	/**
+	 * Create a new Federation entry for User against an Application
+	 * @param user - User to give access
+	 * @param application - Application to be accessed
+	 * @param organization - Organization to which the Access belongs
+	 * @return
+	 * @throws FederationException
+	 */
+	public Federation createFederation(User user, Application application, Organization organization) throws FederationException;
 	
 	/**
 	 * Get an Organization via its External ID
@@ -143,10 +204,11 @@ public interface IIdentityProviderApplication {
 	 * @param id - Organization External ID
 	 * @param name - Organization name
 	 * @param description - Organization description (may be null)
+	 * @param federation - Federation for User authentication is enabled
 	 * @return The updated Organization
 	 * @throws OrganizationException - When the Organization with External ID or domain does not exist
 	 */
-	public Organization updateOrganization(String id, String name, String description) throws OrganizationException;
+	public Organization updateOrganization(String id, String name, String description, boolean federation) throws OrganizationException;
 	
 	/**
 	 * Update an Organization entry in the database
@@ -166,6 +228,13 @@ public interface IIdentityProviderApplication {
 	public Organization deleteCertificate(String id) throws OrganizationException;
 	
 	/**
+	 * Get all Claims
+	 * @param organizationId - Organization External ID
+	 * @return 
+	 */
+	public Set<Claim> findAllClaims(String organizationId);
+	
+	/**
 	 * Create a Claim entry in the database
 	 * @param uri - Claim designated URI
 	 * @param name - Claim name
@@ -175,6 +244,21 @@ public interface IIdentityProviderApplication {
 	 * @throws ClaimException - When the Claim with External ID or URI already exists
 	 */
 	public Claim createClaim(String uri, String name, String description, Organization o) throws ClaimException;
+	
+	/**
+	 * Get all Roles
+	 * @param organizationId - Organization External ID
+	 * @return
+	 */
+	public Set<Role> findAllRoles(String organizationId);
+	
+	/**
+	 * Get a Role by its external ID
+	 * @param roleExteralId - Role External ID
+	 * @param organizationId - Organization External ID
+	 * @return
+	 */
+	public Role findRoleByExternalId(String roleExteralId, String organizationId) throws RoleException;
 	
 	/**
 	 * Create a Role entry in the database

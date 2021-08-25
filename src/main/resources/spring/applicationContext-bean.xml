@@ -42,6 +42,7 @@
     	<property name="path" value="${idp.path}" />
     	<property name="ssoPath" value="${idp.sso.path}" />
     	<property name="ssoSoapPath" value="${idp.sso.soap.path}" />
+    	<property name="sloPath" value="${idp.slo.path}" />
     	<property name="urn" value="${idp.urn}" />
     	<property name="keystorePath" value="${idp.keystore}" />
     	<property name="keystorePassword" value="${idp.keystore.pass}" />

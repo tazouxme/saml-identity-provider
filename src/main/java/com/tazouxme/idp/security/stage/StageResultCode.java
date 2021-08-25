@@ -15,11 +15,18 @@ public enum StageResultCode {
 	FAT_0101 ("FAT-0101", "SAMLRequest parameter not found", StatusCode.REQUEST_UNSUPPORTED),
 	FAT_0102 ("FAT-0102", "RelayState parameter not found", StatusCode.REQUEST_UNSUPPORTED),
 	FAT_0103 ("FAT-0103", "Only HTTP GET and POST supported", StatusCode.REQUEST_UNSUPPORTED),
+	FAT_0104 ("FAT-0104", "Captured message is not an AuthnRequest", StatusCode.REQUEST_UNSUPPORTED),
 	
 	// Soap ValidateRequestParameters
 	FAT_0151 ("FAT-0151", "MessageDecodingException occured during ArtifactResolve capture", StatusCode.REQUEST_UNSUPPORTED),
 	FAT_0152 ("FAT-0152", "ComponentInitializationException occured during ArtifactResolve capture", StatusCode.REQUEST_UNSUPPORTED),
-	FAT_0153 ("FAT-0153", "Captured message is not an ArtifactResolve", StatusCode.REQUEST_UNSUPPORTED),
+	FAT_0153 ("FAT-0153", "Captured message is not an ArtifactResolve. Only ArtifactResolve supported for binding " + SAMLConstants.SAML2_SOAP11_BINDING_URI, StatusCode.REQUEST_UNSUPPORTED),
+	
+	// Logout ValidateRequestParameters
+	FAT_0181 ("FAT-0181", "SAMLRequest parameter not found", StatusCode.REQUEST_UNSUPPORTED),
+	FAT_0182 ("FAT-0182", "RelayState parameter not found", StatusCode.REQUEST_UNSUPPORTED),
+	FAT_0183 ("FAT-0183", "Only HTTP GET and POST supported", StatusCode.REQUEST_UNSUPPORTED),
+	FAT_0184 ("FAT-0184", "Captured message is not an LogoutRequest", StatusCode.REQUEST_UNSUPPORTED),
 	
 	// Http ValidateRequestValues
 	FAT_0203 ("FAT-0203", "AuthnRequest ID not set", StatusCode.REQUEST_UNSUPPORTED),
@@ -52,6 +59,19 @@ public enum StageResultCode {
 	FAT_0262 ("FAT-0262", "ArtifactResolve Artifact not set", StatusCode.REQUEST_UNSUPPORTED),
 	FAT_0263 ("FAT-0263", "ArtifactResolve Artifact must not be empty", StatusCode.NO_SUPPORTED_IDP),
 	
+	// Logout ValidateRequestValues
+	FAT_0283 ("FAT-0283", "LogoutRequest ID not set", StatusCode.REQUEST_UNSUPPORTED),
+	FAT_0285 ("FAT-0285", "LogoutRequest IssueInstant not set", StatusCode.REQUEST_UNSUPPORTED),
+	FAT_0286 ("FAT-0286", "LogoutRequest IssueInstant is not valid", StatusCode.REQUEST_UNSUPPORTED),
+	FAT_0287 ("FAT-0287", "SAML Version must be '2.0'", StatusCode.VERSION_MISMATCH),
+	FAT_0289 ("FAT-0289", "LogoutRequest Issuer not set", StatusCode.REQUEST_UNSUPPORTED),
+	FAT_0290 ("FAT-0290", "LogoutRequest Issuer must not be empty", StatusCode.REQUEST_UNSUPPORTED),
+	FAT_0291 ("FAT-0291", "Unknown Identity Provider", StatusCode.NO_SUPPORTED_IDP),
+	FAT_0294 ("FAT-0294", "Unknown NameID", StatusCode.INVALID_NAMEID_POLICY),
+	FAT_0295 ("FAT-0295", "NameID must be set", StatusCode.INVALID_NAMEID_POLICY),
+	FAT_0296 ("FAT-0296", "Only " + NameIDType.UNSPECIFIED + ", " + NameIDType.EMAIL + ", " + NameIDType.ENCRYPTED + ", " + NameIDType.PERSISTENT + ", "
+			+ NameIDType.ENTITY + " and " + NameIDType.TRANSIENT + " accepted as NameIDPolicy", StatusCode.INVALID_NAMEID_POLICY),
+	
 	// Http ValidateUserCookies
 	FAT_0302 ("FAT-0302", "User not found", StatusCode.UNKNOWN_PRINCIPAL),
 	AUT_0301 ("AUT-0301", "Organization Cookie not found", StatusCode.REQUESTER),
@@ -67,6 +87,14 @@ public enum StageResultCode {
 	FAT_0355 ("FAT-0355", "Signature Cookie not found", StatusCode.REQUESTER),
 	ACT_0351 ("ACT-0351", "Organization is not enabled", StatusCode.REQUESTER),
 	ACT_0352 ("ACT-0352", "User is not enabled", StatusCode.REQUESTER),
+	
+	// Logout ValidateUserCookies
+	FAT_0382 ("FAT-0382", "User not found", StatusCode.UNKNOWN_PRINCIPAL),
+	FAT_0383 ("FAT-0383", "Organization Cookie not found", StatusCode.REQUESTER),
+	FAT_0384 ("FAT-0384", "User Cookie not found", StatusCode.REQUESTER),
+	FAT_0385 ("FAT-0385", "Signature Cookie not found", StatusCode.REQUESTER),
+	ACT_0381 ("ACT-0381", "Organization is not enabled", StatusCode.REQUESTER),
+	ACT_0382 ("ACT-0382", "User is not enabled", StatusCode.REQUESTER),
 	
 	// Http ValidateUserSignature
 	FAT_0402 ("FAT-0402", "InvalidKeyException occured during Signature verification", StatusCode.RESPONDER),
@@ -94,6 +122,13 @@ public enum StageResultCode {
 	FAT_0455 ("FAT-0455", "Cookie Signature does not correspond", StatusCode.REQUESTER),
 	FAT_0456 ("FAT-0456", "Token not found", StatusCode.RESPONDER),
 	
+	// Logout ValidateUserSignature
+	FAT_0482 ("FAT-0482", "InvalidKeyException occured during Signature verification", StatusCode.RESPONDER),
+	FAT_0483 ("FAT-0483", "SignatureException occured during Signature verification", StatusCode.RESPONDER),
+	FAT_0484 ("FAT-0484", "NoSuchAlgorithmException occured during Signature verification", StatusCode.RESPONDER),
+	FAT_0485 ("FAT-0485", "Cookie Signature does not correspond", StatusCode.REQUESTER),
+	FAT_0486 ("FAT-0486", "Token not found", StatusCode.RESPONDER),
+	
 	// Http ValidateOrganizationAccess
 	FAT_0502 ("FAT-0502", "Unknown Application", StatusCode.RESOURCE_NOT_RECOGNIZED),
 	FAT_0503 ("FAT-0503", "Unknown AssertionConsumerServiceURL", StatusCode.RESOURCE_NOT_RECOGNIZED),
@@ -102,8 +137,12 @@ public enum StageResultCode {
 	// Soap ValidateOrganizationAccess
 	FAT_0552 ("FAT-0552", "Unknown Application", StatusCode.RESOURCE_NOT_RECOGNIZED),
 	
+	// Logout ValidateOrganizationAccess
+	FAT_0582 ("FAT-0582", "Unknown Application", StatusCode.RESOURCE_NOT_RECOGNIZED),
+	
 	// Http ValidateUserAccess
 	FAT_0601 ("FAT-0601", NameIDType.PERSISTENT + " requested but Federation not defined for User", StatusCode.INVALID_NAMEID_POLICY),
+	FAT_0602 ("FAT-0602", NameIDType.PERSISTENT + " requested but Federation not defined for Organization", StatusCode.INVALID_NAMEID_POLICY),
 	ACC_0601 ("ACC-0601", "Access is disabled for User", StatusCode.REQUESTER),
 	ACC_0602 ("ACC-0602", "Access not found for User", StatusCode.REQUESTER),
 	ACC_0603 ("ACC-0603", "Cannot create Session for User", StatusCode.RESPONDER),
@@ -112,6 +151,16 @@ public enum StageResultCode {
 	FAT_0651 ("FAT-0651", NameIDType.PERSISTENT + " requested but Federation not defined for User", StatusCode.INVALID_NAMEID_POLICY),
 	ACC_0651 ("ACC-0651", "Access is disabled for User", StatusCode.REQUESTER),
 	ACC_0652 ("ACC-0652", "Access not found for User", StatusCode.REQUESTER),
+	
+	// Logout ValidateUserAccess
+	FAT_0681 ("FAT-0681", NameIDType.PERSISTENT + " requested but Federation not defined for User", StatusCode.INVALID_NAMEID_POLICY),
+	FAT_0682 ("FAT-0682", "NameID does not correspond to current logged in User", StatusCode.INVALID_NAMEID_POLICY),
+	FAT_0683 ("FAT-0683", "Entity does not correspond to current Application", StatusCode.INVALID_NAMEID_POLICY),
+	FAT_0684 ("FAT-0684", "NameID does not correspond to current logged in User'd ID", StatusCode.INVALID_NAMEID_POLICY),
+	FAT_0685 ("FAT-0685", "Federation not enabled for Organization", StatusCode.INVALID_NAMEID_POLICY),
+	FAT_0686 ("FAT-0686", "NameID does not correspond to current logged in User's Federation ID", StatusCode.INVALID_NAMEID_POLICY),
+	ACC_0681 ("ACC-0681", "Access is disabled for User", StatusCode.REQUESTER),
+	ACC_0682 ("ACC-0682", "Access not found for User", StatusCode.REQUESTER),
 	
 	// SingleSignOnFilter
 	FAT_0701 ("FAT-0701", "Authentication phase not correctly set", StatusCode.RESPONDER),
@@ -160,6 +209,9 @@ public enum StageResultCode {
 	// SOAPAuthenticationHandler
 	FAT_1401 ("FAT-1401", "MessageDecodingException occured during ArtifactResponse generation", StatusCode.REQUEST_DENIED),
 	FAT_1402 ("FAT-1402", "ComponentInitializationException occured during ArtifactResponse generation", StatusCode.RESPONDER),
+	
+	// SOAPAuthenticationHandler
+	FAT_1501 ("FAT-1501", "Cannot send SOAP LogoutRequest", StatusCode.RESPONDER),
 	
 	;
 	private String code;

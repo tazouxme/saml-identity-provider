@@ -1,15 +1,15 @@
-package com.tazouxme.idp.security.stage.soap;
+package com.tazouxme.idp.security.stage.validate.sso.soap;
 
 import java.util.Date;
 
 import org.apache.commons.lang3.StringUtils;
 
 import com.tazouxme.idp.IdentityProviderConstants;
-import com.tazouxme.idp.security.stage.AbstractStage;
 import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.security.stage.exception.StageException;
 import com.tazouxme.idp.security.stage.exception.StageExceptionType;
 import com.tazouxme.idp.security.stage.parameters.StageParameters;
+import com.tazouxme.idp.security.stage.validate.AbstractStage;
 import com.tazouxme.idp.security.token.UserAuthenticationPhase;
 import com.tazouxme.idp.security.token.UserAuthenticationToken;
 

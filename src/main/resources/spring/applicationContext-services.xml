@@ -6,7 +6,7 @@
         http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
         http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd">
         
-	<jaxrs:server id="serviceRest" address="/v1">
+	<jaxrs:server id="serviceRest" address="/api">
 		<jaxrs:serviceBeans>
 			<bean class="com.tazouxme.idp.service.IdentityProviderService" />
 		</jaxrs:serviceBeans>

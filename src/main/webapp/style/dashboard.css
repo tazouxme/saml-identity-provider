@@ -101,6 +101,11 @@ header span {
 	top: 152px;
 }
 
+#org-federation-field {
+	left: calc(900px + 4 * (100% - 1000px) / 5);
+	top: 152px;
+}
+
 #org-roles {
 	position: absolute;
 	top: 260px;
@@ -182,14 +187,18 @@ header span {
 	top: 420px;
 	left: 20px;
 }
+#slide-org-federation-field {
+	top: 500px;
+	left: 20px;
+}
 #slide-org-save-btn {
 	position: absolute;
-	top: 510px;
+	top: 590px;
 	left: 20px;
 }
 #slide-org-cancel-btn {
 	position: absolute;
-	top: 510px;
+	top: 590px;
 	left: 100px;
 }
 
@@ -396,13 +405,44 @@ header span {
 	top: 340px;
 	left: 20px;
 }
+#slide-app-logout-field {
+	top: 420px;
+	left: 20px;
+}
 #slide-app-save-btn, #slide-app-update-btn {
 	position: absolute;
-	top: 430px;
+	top: 510px;
 	left: 20px;
 }
 #slide-app-cancel-btn {
 	position: absolute;
-	top: 430px;
+	top: 510px;
+	left: 100px;
+}
+
+#slide-access-id-field {
+	top: 20px;
+	left: 20px;
+}
+#slide-access-urn-field {
+	top: 100px;
+	left: 20px;
+}
+#slide-access-user-field {
+	top: 180px;
+	left: 20px;
+}
+#slide-access-role-field {
+	top: 260px;
+	left: 20px;
+}
+#slide-access-save-btn {
+	position: absolute;
+	top: 510px;
+	left: 20px;
+}
+#slide-access-cancel-btn {
+	position: absolute;
+	top: 510px;
 	left: 100px;
 }

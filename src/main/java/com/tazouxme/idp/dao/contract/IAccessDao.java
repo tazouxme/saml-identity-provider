@@ -7,7 +7,7 @@ import com.tazouxme.idp.model.Access;
 
 public interface IAccessDao {
 	
-	public Access findByExternalId(String externalId) throws AccessException;
+	public Access findByExternalId(String externalId, String organizationExternalId) throws AccessException;
 	
 	public Set<Access> findByURN(String urn, String organizationExternalId);
 	

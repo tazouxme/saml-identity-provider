@@ -1,14 +1,14 @@
-package com.tazouxme.idp.security.stage.soap;
+package com.tazouxme.idp.security.stage.validate.sso.soap;
 
 import org.opensaml.messaging.decoder.MessageDecodingException;
 import org.opensaml.saml.saml2.binding.decoding.impl.HTTPSOAP11Decoder;
 import org.opensaml.saml.saml2.core.ArtifactResolve;
 
-import com.tazouxme.idp.security.stage.AbstractStage;
 import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.security.stage.exception.StageException;
 import com.tazouxme.idp.security.stage.exception.StageExceptionType;
 import com.tazouxme.idp.security.stage.parameters.StageParameters;
+import com.tazouxme.idp.security.stage.validate.AbstractStage;
 import com.tazouxme.idp.security.token.UserAuthenticationPhase;
 import com.tazouxme.idp.security.token.UserAuthenticationToken;
 import com.tazouxme.idp.security.token.UserAuthenticationType;

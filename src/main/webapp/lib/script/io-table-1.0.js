@@ -87,7 +87,7 @@ function Table(params) {
 		for (var i = 0; i < _columns.length; i++) {
 			var title = _columns[i];
 			if (_translatable) {
-				title = DAuth.lang.text.getText(title);
+				title = Utils.translate(title);
 			}
 			
 			var cell = document.createElement("th");

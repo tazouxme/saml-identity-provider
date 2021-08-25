@@ -7,16 +7,31 @@ function Slide(params) {
 	var _uid = params.id;
 	
 	/**
+	 * Translatable labels
+	 * @private
+	 */
+	var _translatable = !!params.translatable;
+	
+	/**
 	 * Title for the Slider
 	 * @private
 	 */
 	var _title = params.title;
+	if (_translatable) {
+		_title = Utils.translate(_title);
+	}
 	
 	/**
 	 * Size for the Slider
 	 * @private
 	 */
 	var _size = params.size;
+	
+	/**
+	 * Size for the Slider
+	 * @private
+	 */
+	var _removeOnClick = !!params.removeOnClick;
 	
 	/**
 	 * Check if the slider is already displayed
@@ -37,7 +52,7 @@ function Slide(params) {
 	var _overlay = document.createElement("div");
 	_overlay.classList.add("dauth-slide-overlay");
 	_overlay.addEventListener('click', function() {
-		_hide();
+		_removeOnClick ? _remove() : _hide();
 	});
 	document.body.appendChild(_overlay);
 	
@@ -53,7 +68,7 @@ function Slide(params) {
 	var _body = document.createElement("div");
 	_body.classList.add("dauth-slide-body");
 	
-	var _title = document.createElement("span");
+	var _head = document.createElement("span");
 	
 	/**
 	 * Show the Slider
@@ -87,6 +102,17 @@ function Slide(params) {
 	};
 	
 	/**
+	 * Remove the Slider
+	 * @private
+	 */
+	var _remove = function() {
+		_hide();
+		
+		_overlay.parentNode.removeChild(_overlay);
+		_slider.parentNode.removeChild(_slider);
+	};
+	
+	/**
 	 * Build the header of the Slider
 	 * @private
 	 */
@@ -101,10 +127,10 @@ function Slide(params) {
 			_hide();
 		});
 		
-		_title.appendChild(document.createTextNode(_title));
+		_head.appendChild(document.createTextNode(_title));
 		
 		header.appendChild(button);
-		header.appendChild(_title);
+		header.appendChild(_head);
 		
 		return header;
 	};
@@ -123,7 +149,12 @@ function Slide(params) {
 	 * @private
 	 */
 	var _setTitle = function(title) {
-		_title.textContent = title;
+		if (_translatable) {
+			_title = Utils.translate(title);
+		}
+		
+		_head.innerHTML = _title;
+		
 	};
 	
 	/**
@@ -135,7 +166,11 @@ function Slide(params) {
 			var value = data[_components[i].mapTo];
 			
 			if (value != null) {
-				_components[i].component.setValue(value);
+				if (_components[i].component instanceof Field || _components[i].component instanceof Checkbox) {
+					_components[i].component.setValue(value);
+				} else if (_components[i].component instanceof Select) {
+					_components[i].component.setOptions(value);
+				}
 			}
 		}
 	};
@@ -157,7 +192,7 @@ function Slide(params) {
 	 * @private
 	 */
 	var _addComponent = function(element) {
-		if (element.component instanceof Field || element.component instanceof Checkbox) {
+		if (element.component instanceof Field || element.component instanceof Checkbox || element.component instanceof Select) {
 			// { component: element.component, mapTo: element.mapTo }
 			_components.push(element);
 		}
@@ -177,6 +212,8 @@ function Slide(params) {
 			
 			if (element.component instanceof Field || element.component instanceof Checkbox) {
 				obj[element.mapTo] = element.component.getValue();
+			} else if (element.component instanceof Select) {
+				obj[element.mapTo] = element.component.getSelectedObject();
 			}
 		}
 		
@@ -192,6 +229,10 @@ function Slide(params) {
 			var element = _components[i].component;
 			
 			if (element instanceof Field) {
+				if (!element.validate().valid) {
+					return false;
+				}
+			} else if (element instanceof Select) {
 				if (!element.validate().valid) {
 					return false;
 				}
@@ -273,6 +314,14 @@ function Slide(params) {
 	 */
 	this.hide = function() {
 		_hide();
+	};
+	
+	/**
+	 * Remove the Slider
+	 * @public
+	 */
+	this.remove = function() {
+		_remove();
 	};
 	
 	/**

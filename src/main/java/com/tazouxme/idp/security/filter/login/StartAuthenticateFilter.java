@@ -166,13 +166,21 @@ public class StartAuthenticateFilter extends AbstractIdentityProviderFilter {
 				
 				if (NameID.PERSISTENT.equals(parameters.getAuthnRequest().getNameIDPolicy().getFormat())) {
 					logger.info("Federated User requested");
+					if (!parameters.getOrganization().isFederation()) {
+						logger.error("Federation not enabled for Organization");
+						response.setStatus(406);
+						response.setHeader(IdentityProviderConstants.AUTH_HEADER_CSRF, csrf);
+						response.setHeader(IdentityProviderConstants.AUTH_HEADER_ERROR, "Federation not enabled for Organization");
+						return;
+					}
+					
 					try {
 						Federation federation = federationBo.findByUserAndURN(user.getExternalId(), application.getUrn(), organization.getExternalId());
 						if (!federation.isEnabled()) {
-							logger.error("Federation not enabled");
+							logger.error("Federation not enabled for User");
 							response.setStatus(406);
 							response.setHeader(IdentityProviderConstants.AUTH_HEADER_CSRF, csrf);
-							response.setHeader(IdentityProviderConstants.AUTH_HEADER_ERROR, "Federation not enabled");
+							response.setHeader(IdentityProviderConstants.AUTH_HEADER_ERROR, "Federation not enabled for User");
 							return;
 						}
 						

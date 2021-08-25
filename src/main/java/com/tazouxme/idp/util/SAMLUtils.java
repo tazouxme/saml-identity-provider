@@ -50,8 +50,10 @@ import org.opensaml.saml.saml2.core.AuthnRequest;
 import org.opensaml.saml.saml2.core.AuthnStatement;
 import org.opensaml.saml.saml2.core.Conditions;
 import org.opensaml.saml.saml2.core.Issuer;
+import org.opensaml.saml.saml2.core.LogoutRequest;
 import org.opensaml.saml.saml2.core.NameID;
 import org.opensaml.saml.saml2.core.NameIDType;
+import org.opensaml.saml.saml2.core.RequestAbstractType;
 import org.opensaml.saml.saml2.core.Response;
 import org.opensaml.saml.saml2.core.Status;
 import org.opensaml.saml.saml2.core.StatusCode;
@@ -94,7 +96,7 @@ public class SAMLUtils {
 		return endpoint;
 	}
 	
-	public static AuthnRequest unmarshallAuthnRequest(byte[] saml, boolean inflate) throws StageException {
+	public static RequestAbstractType unmarshallAuthnRequest(byte[] saml, boolean inflate) throws StageException {
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         documentBuilderFactory.setNamespaceAware(true);
         
@@ -118,7 +120,7 @@ public class SAMLUtils {
         Unmarshaller unmarshaller = XMLObjectProviderRegistrySupport.getUnmarshallerFactory().getUnmarshaller(element);
         
 		try {
-			return (AuthnRequest) unmarshaller.unmarshall(element);
+			return (RequestAbstractType) unmarshaller.unmarshall(element);
 		} catch (UnmarshallingException e) {
 			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0802);
 		} 
@@ -139,15 +141,14 @@ public class SAMLUtils {
 		return response;
 	}
 	
-	public static Response buildResponse(StageParameters params, UserIdentity identity, String role, StageResultCode stageCode) throws StageException {
-		AuthnRequest authnRequest = params.getAuthnRequest();
+	public static Response buildResponse(StageParameters params, UserIdentity identity, String role, StageResultCode stageCode, String id) throws StageException {
 		String idp = params.getIdpUrn();
 
 		Response response = buildSAMLObject(Response.class);
 		response.setID(IDUtils.generateId("RES_", 4));
 		response.setVersion(SAMLVersion.VERSION_20);
 		response.setIssueInstant(Instant.now());
-		response.setInResponseTo(authnRequest.getID());
+		response.setInResponseTo(id);
 		response.setIssuer(buildIssuer(idp));
 		response.setStatus(buildStatus(stageCode));
 		
@@ -156,6 +157,34 @@ public class SAMLUtils {
 		}
 		
 		return response;
+	}
+	
+	public static LogoutRequest buildLogoutRequest(NameID nameId, String idp, String logoutUrl, Credential idpPrivateCredential) {
+		LogoutRequest request = buildSAMLObject(LogoutRequest.class);
+		request.setID(IDUtils.generateId("REQ_", 4));
+		request.setVersion(SAMLVersion.VERSION_20);
+		request.setIssueInstant(Instant.now());
+		request.setDestination(logoutUrl);
+		request.setIssuer(buildIssuer(idp));
+		request.setNameID(buildNameID(nameId.getFormat(), nameId.getValue()));
+		
+		Signature signature = buildSAMLObject(Signature.class);
+		signature.setSigningCredential(idpPrivateCredential);
+		signature.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA256);
+		signature.setCanonicalizationAlgorithm(SignatureConstants.ALGO_ID_C14N_EXCL_OMIT_COMMENTS);
+		
+		request.setSignature(signature);
+		
+		try {
+			XMLObjectProviderRegistrySupport.getMarshallerFactory().getMarshaller(request).marshall(request);
+			Signer.signObject(signature);
+		} catch (MarshallingException e) {
+			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0803);
+		} catch (SignatureException e) {
+			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0804);
+		}
+		
+		return request;
 	}
 
 	private static Issuer buildIssuer(String idp) {
@@ -244,21 +273,17 @@ public class SAMLUtils {
 	}
 	
 	private static Subject buildSubject(AuthnRequest authnRequest, UserIdentity identity, String applicationUrn) {
-		NameID nameId = buildSAMLObject(NameID.class);
+		NameID nameId = null;
 		String nameIDPolicy = authnRequest.getNameIDPolicy().getFormat();
 		
 		if (NameIDType.EMAIL.equals(nameIDPolicy) || NameIDType.ENCRYPTED.equals(nameIDPolicy) || NameIDType.UNSPECIFIED.equals(nameIDPolicy)) {
-			nameId.setFormat(NameID.EMAIL);
-			nameId.setValue(identity.getEmail());
+			nameId = buildNameID(nameIDPolicy, identity.getEmail());
 		} else if (NameIDType.TRANSIENT.equals(nameIDPolicy)) {
-			nameId.setFormat(NameID.TRANSIENT);
-			nameId.setValue(identity.getUserId());
+			nameId = buildNameID(nameIDPolicy, identity.getUserId());
 		} else if (NameIDType.PERSISTENT.equals(nameIDPolicy)) {
-			nameId.setFormat(NameID.PERSISTENT);
-			nameId.setValue(identity.getFederatedUserId());
+			nameId = buildNameID(nameIDPolicy, identity.getFederatedUserId());
 		} else if (NameIDType.ENTITY.equals(nameIDPolicy)) {
-			nameId.setFormat(NameID.ENTITY);
-			nameId.setValue(applicationUrn);
+			nameId = buildNameID(nameIDPolicy, applicationUrn);
 		}
 		
 		SubjectConfirmationData subjectConfirmationData = buildSAMLObject(SubjectConfirmationData.class);
@@ -275,6 +300,26 @@ public class SAMLUtils {
 		subject.getSubjectConfirmations().add(subjectConfirmation);
 		
 		return subject;
+	}
+	
+	public static NameID buildNameID(String nameIDPolicy, String nameIDValue) {
+		NameID nameId = buildSAMLObject(NameID.class);
+		
+		if (NameIDType.EMAIL.equals(nameIDPolicy) || NameIDType.ENCRYPTED.equals(nameIDPolicy) || NameIDType.UNSPECIFIED.equals(nameIDPolicy)) {
+			nameId.setFormat(NameID.EMAIL);
+			nameId.setValue(nameIDValue);
+		} else if (NameIDType.TRANSIENT.equals(nameIDPolicy)) {
+			nameId.setFormat(NameID.TRANSIENT);
+			nameId.setValue(nameIDValue);
+		} else if (NameIDType.PERSISTENT.equals(nameIDPolicy)) {
+			nameId.setFormat(NameID.PERSISTENT);
+			nameId.setValue(nameIDValue);
+		} else if (NameIDType.ENTITY.equals(nameIDPolicy)) {
+			nameId.setFormat(NameID.ENTITY);
+			nameId.setValue(nameIDValue);
+		}
+		
+		return nameId;
 	}
 	
 	private static Conditions buildConditions(String saas) {

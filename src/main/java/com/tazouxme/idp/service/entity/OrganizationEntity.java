@@ -15,6 +15,7 @@ public class OrganizationEntity {
 	private String domain;
 	private String name;
 	private String description;
+	private boolean federation;
 	private long creationDate;
 	private Set<ClaimEntity> claims = new HashSet<>();
 	private Set<RoleEntity> roles = new HashSet<>();
@@ -61,6 +62,14 @@ public class OrganizationEntity {
 
 	public void setDescription(String description) {
 		this.description = description;
+	}
+	
+	public boolean isFederation() {
+		return federation;
+	}
+	
+	public void setFederation(boolean federation) {
+		this.federation = federation;
 	}
 	
 	public String getCertificate() {

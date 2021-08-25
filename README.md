@@ -17,7 +17,9 @@ To change the KeyStore and Certificate (src/main/resources/cert), you can execut
 
 ##### Request type handled:
 - [x] AuthnRequest -> Responds with an SAML Response
+- [x] LogoutRequest -> Responds with an SAML LogoutResponse
 - [x] ArtifactResolve -> Responds with an SAML ArtifactResponse
+- [ ] AttributeQuery
 
 ##### Supported initializations: 
 - [x] SP-Initialization
@@ -46,11 +48,12 @@ To change the KeyStore and Certificate (src/main/resources/cert), you can execut
 
 ##### Services implemented
 - [x] Single Sign On
-- [ ] Single Log Out
+- [x] Single Log Out
 - [x] Claim based attributes
 - [x] Create and activate an account from zero
 - [x] Manage the account through a web UI (Ongoing...)
 - [x] Federation support (defined for NameIDPolicy urn:oasis:names:tc:SAML:2.0:nameid-format:persistent)
-- [x] Trust support (Ongoing...)
-- [ ] Internationalization
+- [x] Trust support
+- [x] Internationalization (Front-end)
 - [x] Automatic Metadata generation
+- [x] API documented with OpenAPI

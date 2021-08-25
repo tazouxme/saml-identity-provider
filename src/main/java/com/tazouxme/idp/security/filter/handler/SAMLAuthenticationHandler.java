@@ -105,7 +105,8 @@ public class SAMLAuthenticationHandler extends AbstractAuthenticationHandler {
 				authentication.getDetails().getParameters(),
 				authentication.getDetails().getIdentity(),
 				authentication.getRole(),
-				authentication.getDetails().getResultCode());
+				authentication.getDetails().getResultCode(),
+				authentication.getDetails().getParameters().getAuthnRequest().getID());
 		
 		MessageContext messageContext = new MessageContext();
 		messageContext.setMessage(samlResponse);

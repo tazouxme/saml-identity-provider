@@ -1,4 +1,4 @@
-package com.tazouxme.idp.security.stage.http;
+package com.tazouxme.idp.security.stage.validate.sso.http;
 
 import org.opensaml.saml.saml2.core.NameID;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,11 +13,11 @@ import com.tazouxme.idp.model.Access;
 import com.tazouxme.idp.model.Federation;
 import com.tazouxme.idp.model.Session;
 import com.tazouxme.idp.model.User;
-import com.tazouxme.idp.security.stage.AbstractStage;
 import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.security.stage.exception.StageException;
 import com.tazouxme.idp.security.stage.exception.StageExceptionType;
 import com.tazouxme.idp.security.stage.parameters.StageParameters;
+import com.tazouxme.idp.security.stage.validate.AbstractStage;
 import com.tazouxme.idp.security.token.UserAuthenticationPhase;
 import com.tazouxme.idp.security.token.UserAuthenticationToken;
 import com.tazouxme.idp.security.token.UserAuthenticationType;
@@ -57,12 +57,16 @@ public class ValidateUserAccessStage extends AbstractStage {
 		authentication.getDetails().getIdentity().setRole(user.isAdministrator() ? "ADMIN" : "USER");
 		
 		if (NameID.PERSISTENT.equals(o.getAuthnRequest().getNameIDPolicy().getFormat())) {
+			if (!o.getOrganization().isFederation()) {
+				throw new StageException(StageExceptionType.ACCESS, StageResultCode.FAT_0602, o);
+			}
+			
 			try {
 				Federation federation = federationBo.findByUserAndURN(
 						user.getExternalId(), o.getApplication().getUrn(), authentication.getDetails().getIdentity().getOrganizationId());
 				authentication.getDetails().getIdentity().setFederatedUserId(federation.getExternalId());
 			} catch (FederationException e) {
-				throw new StageException(StageExceptionType.ACCESS, StageResultCode.ACC_0602, o);
+				throw new StageException(StageExceptionType.ACCESS, StageResultCode.FAT_0601, o);
 			}
 		}
 		
@@ -78,7 +82,7 @@ public class ValidateUserAccessStage extends AbstractStage {
 			String token = registerToken(o.getOrganizationId(), o.getUserId());
 			authentication.getDetails().getIdentity().setToken(token);
 		} catch (SessionException e) {
-			throw new StageException(StageExceptionType.ACCESS, StageResultCode.FAT_0601, o);
+			throw new StageException(StageExceptionType.ACCESS, StageResultCode.ACC_0603, o);
 		}
 		
 		logger.info("User access valid");

@@ -22,6 +22,8 @@ import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import org.hibernate.envers.Audited;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.tazouxme.idp.dao.query.ApplicationQueries;
 
@@ -46,14 +48,21 @@ public class Application {
 	@Column(name = "urn", length = 32, updatable = false, nullable = false)
 	private String urn;
 	
+	@Audited
 	@Column(name = "name", length = 50, updatable = true, nullable = false)
 	private String name;
-	
+
+	@Audited
 	@Column(name = "description", length = 200, updatable = true, nullable = true)
 	private String description;
-	
-	@Column(name = "assertion_url", length = 200, updatable = true, nullable = true)
+
+	@Audited
+	@Column(name = "assertion_url", length = 200, updatable = true)
 	private String assertionUrl;
+
+	@Audited
+	@Column(name = "logout_url", length = 200, updatable = true)
+	private String logoutUrl;
 
 	@JsonIgnoreProperties("applications")
 	@ManyToOne(fetch = FetchType.LAZY)
@@ -68,6 +77,10 @@ public class Application {
 	@JsonIgnoreProperties("application")
 	@OneToMany(mappedBy = "application", cascade = CascadeType.ALL, orphanRemoval = true)
 	private Set<Access> accesses = new HashSet<>();
+	
+	@JsonIgnoreProperties("application")
+	@OneToMany(mappedBy = "application", cascade = CascadeType.ALL, orphanRemoval = true)
+	private Set<Federation> federations = new HashSet<>();
 
 	public long getId() {
 		return id;
@@ -117,6 +130,14 @@ public class Application {
 		this.assertionUrl = assertionUrl;
 	}
 	
+	public String getLogoutUrl() {
+		return logoutUrl;
+	}
+	
+	public void setLogoutUrl(String logoutUrl) {
+		this.logoutUrl = logoutUrl;
+	}
+	
 	public Organization getOrganization() {
 		return organization;
 	}
@@ -139,6 +160,14 @@ public class Application {
 	
 	public void setAccesses(Set<Access> accesses) {
 		this.accesses = accesses;
+	}
+	
+	public Set<Federation> getFederations() {
+		return federations;
+	}
+	
+	public void setFederations(Set<Federation> federations) {
+		this.federations = federations;
 	}
 	
 	@Override

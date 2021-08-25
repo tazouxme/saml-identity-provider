@@ -17,6 +17,8 @@ import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import org.hibernate.envers.Audited;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.tazouxme.idp.dao.query.OrganizationQueries;
 
@@ -43,15 +45,23 @@ public class Organization {
 	@Column(name = "code", length = 16, updatable = false, nullable = false)
 	private String code;
 	
+	@Audited
 	@Column(name = "name", length = 50, updatable = true, nullable = false)
 	private String name;
 	
+	@Audited
 	@Column(name = "description", length = 200, updatable = true, nullable = true)
 	private String description;
 	
+	@Audited
 	@Column(name = "enabled", length = 1, updatable = true, nullable = false)
 	private boolean enabled;
 	
+	@Audited
+	@Column(name = "federation", length = 1, updatable = true)
+	private boolean federation;
+	
+	@Audited
 	@Lob
 	@Column(name = "certificate", updatable = true, nullable = true)
 	private String certificate;
@@ -129,6 +139,14 @@ public class Organization {
 
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
+	}
+	
+	public boolean isFederation() {
+		return federation;
+	}
+	
+	public void setFederation(boolean federation) {
+		this.federation = federation;
 	}
 	
 	public String getCertificate() {

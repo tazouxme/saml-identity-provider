@@ -24,6 +24,8 @@ import org.opensaml.saml.saml2.core.AuthnContextClassRef;
 import org.opensaml.saml.saml2.core.AuthnContextComparisonTypeEnumeration;
 import org.opensaml.saml.saml2.core.AuthnRequest;
 import org.opensaml.saml.saml2.core.Issuer;
+import org.opensaml.saml.saml2.core.LogoutRequest;
+import org.opensaml.saml.saml2.core.NameID;
 import org.opensaml.saml.saml2.core.NameIDPolicy;
 import org.opensaml.saml.saml2.core.RequestedAuthnContext;
 import org.opensaml.saml.saml2.core.Response;
@@ -52,12 +54,32 @@ public class SAMLUtilsTest {
 		
 		return auth;
 	}
+	
+	public static LogoutRequest buildHttpLogoutRequest(String idpUrn, String application, String nameIDFormat, String nameId) throws Exception {
+		LogoutRequest auth = buildSAMLObject(LogoutRequest.class);
+		auth.setID(IDUtils.generateId("ID_", 4));
+		auth.setVersion(SAMLVersion.VERSION_20);
+		auth.setIssueInstant(Instant.now());
+		auth.setDestination(idpUrn);
+		auth.setIssuer(buildIssuer(application));
+		auth.setNameID(buildNameID(nameIDFormat, nameId));
+		
+		return auth;
+	}
 
 	private static Issuer buildIssuer(String serviceUrl) {
 		Issuer issuer = buildSAMLObject(Issuer.class);
 		issuer.setValue(serviceUrl);
 
 		return issuer;
+	}
+
+	private static NameID buildNameID(String nameIDFormat, String nameId) {
+		NameID nameID = buildSAMLObject(NameID.class);
+		nameID.setFormat(nameIDFormat);
+		nameID.setValue(nameId);
+
+		return nameID;
 	}
 
 	private static NameIDPolicy buildNameIDPolicy(String nameIDFormat) {

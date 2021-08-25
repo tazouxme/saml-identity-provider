@@ -7,8 +7,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
@@ -19,13 +17,12 @@ import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.security.stage.chain.StageChain;
 import com.tazouxme.idp.security.stage.exception.StageException;
 import com.tazouxme.idp.security.stage.exception.StageExceptionType;
+import com.tazouxme.idp.security.stage.parameters.StageParameters;
 import com.tazouxme.idp.security.token.UserAuthenticationPhase;
 import com.tazouxme.idp.security.token.UserAuthenticationToken;
 
 public abstract class AbstractSingleSignOnFilter extends AbstractIdentityProviderFilter {
 
-	protected final Log logger = LogFactory.getLog(getClass());
-	
 	@Autowired
 	protected IdentityProviderConfiguration configuration;
 	
@@ -58,7 +55,11 @@ public abstract class AbstractSingleSignOnFilter extends AbstractIdentityProvide
 		}
 	}
 	
-	protected abstract UserAuthenticationToken obtainAuthenticationAfterCheck(HttpServletRequest request);
+	protected UserAuthenticationToken obtainAuthenticationAfterCheck(HttpServletRequest request) {
+		return stages.execute(new UserAuthenticationToken(), obtainStageParameters(request));
+	}
+	
+	protected abstract StageParameters obtainStageParameters(HttpServletRequest request);
 	
 	protected abstract void userAuthenticatedSuccess(HttpServletRequest request, HttpServletResponse response, FilterChain chain, UserAuthenticationToken authentication)
 			throws IOException, ServletException;

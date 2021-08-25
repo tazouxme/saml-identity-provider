@@ -1,4 +1,4 @@
-package com.tazouxme.idp.security.stage.http;
+package com.tazouxme.idp.security.stage.validate.sso.http;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -27,11 +27,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.tazouxme.idp.bo.contract.ISessionBo;
 import com.tazouxme.idp.exception.SessionException;
-import com.tazouxme.idp.security.stage.AbstractStage;
 import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.security.stage.exception.StageException;
 import com.tazouxme.idp.security.stage.exception.StageExceptionType;
 import com.tazouxme.idp.security.stage.parameters.StageParameters;
+import com.tazouxme.idp.security.stage.validate.AbstractStage;
 import com.tazouxme.idp.security.token.UserAuthenticationPhase;
 import com.tazouxme.idp.security.token.UserAuthenticationToken;
 

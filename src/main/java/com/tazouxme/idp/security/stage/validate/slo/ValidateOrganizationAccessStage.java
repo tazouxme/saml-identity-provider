@@ -1,16 +1,15 @@
-package com.tazouxme.idp.security.stage.http;
+package com.tazouxme.idp.security.stage.validate.slo;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.tazouxme.idp.bo.contract.IApplicationBo;
 import com.tazouxme.idp.exception.ApplicationException;
-import com.tazouxme.idp.model.Application;
 import com.tazouxme.idp.model.Organization;
-import com.tazouxme.idp.security.stage.AbstractStage;
 import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.security.stage.exception.StageException;
 import com.tazouxme.idp.security.stage.exception.StageExceptionType;
 import com.tazouxme.idp.security.stage.parameters.StageParameters;
+import com.tazouxme.idp.security.stage.validate.AbstractStage;
 import com.tazouxme.idp.security.token.UserAuthenticationPhase;
 import com.tazouxme.idp.security.token.UserAuthenticationToken;
 
@@ -26,14 +25,9 @@ public class ValidateOrganizationAccessStage extends AbstractStage {
 	@Override
 	public UserAuthenticationToken executeInternal(UserAuthenticationToken authentication, StageParameters o) throws StageException {
 		try {
-			Application application = applicationBo.findByUrn(o.getAuthnRequest().getIssuer().getValue(), o.getOrganizationId());
-			if (!o.getAuthnRequest().getAssertionConsumerServiceURL().equals(application.getAssertionUrl())) {
-				throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0503, o);
-			}
-			
-			o.setApplication(application);
+			o.setApplication(applicationBo.findByUrn(o.getLogoutRequest().getIssuer().getValue(), o.getOrganizationId()));
 		} catch (ApplicationException e) {
-			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0502, o);
+			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0582, o);
 		}
 		
 		logger.info("Organization access valid");

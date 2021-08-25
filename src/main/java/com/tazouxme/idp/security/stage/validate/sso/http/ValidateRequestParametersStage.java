@@ -1,13 +1,15 @@
-package com.tazouxme.idp.security.stage.http;
+package com.tazouxme.idp.security.stage.validate.sso.http;
 
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.util.encoders.Base64;
+import org.opensaml.saml.saml2.core.AuthnRequest;
+import org.opensaml.saml.saml2.core.RequestAbstractType;
 
-import com.tazouxme.idp.security.stage.AbstractStage;
 import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.security.stage.exception.StageException;
 import com.tazouxme.idp.security.stage.exception.StageExceptionType;
 import com.tazouxme.idp.security.stage.parameters.StageParameters;
+import com.tazouxme.idp.security.stage.validate.AbstractStage;
 import com.tazouxme.idp.security.token.UserAuthenticationPhase;
 import com.tazouxme.idp.security.token.UserAuthenticationToken;
 import com.tazouxme.idp.security.token.UserAuthenticationType;
@@ -31,9 +33,19 @@ public class ValidateRequestParametersStage extends AbstractStage {
 		}
 		
 		if ("GET".equals(o.getUrlMethod())) {
-			o.setAuthnRequest(SAMLUtils.unmarshallAuthnRequest(Base64.decode(o.getSamlRequestParam()), true));
+			RequestAbstractType authnRequest = SAMLUtils.unmarshallAuthnRequest(Base64.decode(o.getSamlRequestParam()), true);
+			if (!(authnRequest instanceof AuthnRequest)) {
+				throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0104, o);
+			}
+			
+			o.setAuthnRequest((AuthnRequest) authnRequest);
 		} else if ("POST".equals(o.getUrlMethod())) {
-			o.setAuthnRequest(SAMLUtils.unmarshallAuthnRequest(Base64.decode(o.getSamlRequestParam()), false));
+			RequestAbstractType authnRequest = SAMLUtils.unmarshallAuthnRequest(Base64.decode(o.getSamlRequestParam()), false);
+			if (!(authnRequest instanceof AuthnRequest)) {
+				throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0104, o);
+			}
+			
+			o.setAuthnRequest((AuthnRequest) authnRequest);
 		} else {
 			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0103, o);
 		}

@@ -7,6 +7,12 @@ function Uploader(params) {
 	var _uid = params.id;
 	
 	/**
+	 * Translatable labels
+	 * @private
+	 */
+	var _translatable = !!params.translatable;
+	
+	/**
 	 * Accepted MimeTypes for the Uploader
 	 * @private
 	 */
@@ -227,7 +233,7 @@ function Uploader(params) {
 	 * Button to upload content to server
 	 * @private
 	 */
-	var _ok = new Button({ text : "Upload", uuid : "dauth-uploader-ok-btn" });
+	var _ok = new Button({ text : _translatable ? Utils.translate("defaults.btn.upload") : "Upload", uuid : "dauth-uploader-ok-btn" });
 	
 	var _filesPanel = document.createElement("div");
 	_filesPanel.classList.add("dauth-uploader-files");
@@ -269,7 +275,7 @@ function Uploader(params) {
 		});
 		buttons.appendChild(_ok.get());
 		
-		var cancel = new Button({ text : "Cancel", uuid : "dauth-uploader-cancel-btn" });
+		var cancel = new Button({ text : _translatable ? Utils.translate("defaults.btn.cancel") : "Cancel", uuid : "dauth-uploader-cancel-btn" });
 		cancel.setAction(function() {
 			_close();
 		});

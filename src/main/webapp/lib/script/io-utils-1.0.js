@@ -22,40 +22,69 @@ var Utils = (function(lang) {
 	 * Set a new lang
 	 * @private
 	 */
-	var _setLang = function(lang) {
+	var _setLang = async function(lang) {
 		if (lang == null || lang == "") {
 			return;
 		}
 		
 		_lang = lang;
-		_loaded = false
+		_loaded = false;
 		
-		fetch('i18n/' + _lang + '.json').then((res) => res.json()).then((translation) => {
-			_file = translation;
-
-			if (!_loaded) {
-				_loaded = true;
-			}
-		});
+		await _loadFile();
+		
+		document.dispatchEvent(new Event("I18nContentLoaded"));
 	}
+	
+	/**
+	 * Load File
+	 * @private
+	 */
+	var _loadFile = async function() {
+		var response = await fetch('i18n/' + _lang + '.json');
+		_file = await response.json();
+		_loaded = true;
+	};
 	
 	/**
 	 * Get text to be inserted in the element
 	 * @private
 	 */
 	var _translate = function(val) {
-		if (!_loaded) {
-			setTimeout(function() {
-				return _getText(val);
-			}, 1000);
-		}
-		
 		if (val == null || val == "") {
 			return val;
 		}
 		
-		var keys = val.split(".");
-		return keys.reduce((obj, i) => obj[i], _file);
+		var entries = val.split("|");
+		val = entries.splice(entries, 1)[0];
+		
+		try {
+			var translated = val.split(".").reduce((obj, i) => obj[i], _file);
+			
+			if (entries.length > 0) {
+				translated = _parse(translated, entries);
+			}
+			
+			translated = decodeURI(translated);
+			
+			if (translated == 'undefined') {
+				return "!!" + val + "!!";
+			}
+			
+			return translated;
+		} catch (e) {
+			return "!!" + val + "!!";
+		}
+	}
+	
+	/**
+	 * Parse text and replace %s by a value
+	 * @private
+	 */
+	var _parse = function(str) {
+		var args = [].slice.call(arguments, 1);
+        var i = 0;
+
+    	return str.replace(/%s/g, () => args[i++]);
 	}
 	
 	/**
@@ -114,7 +143,8 @@ var Utils = (function(lang) {
 		
 		// Text translation
 		setLang: _setLang,
-		translate: _translate
+		translate: _translate,
+		parse: _parse
 	};
 	
 })(navigator.language.substr(0, 2));

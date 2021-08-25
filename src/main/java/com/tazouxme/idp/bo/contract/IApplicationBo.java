@@ -25,6 +25,9 @@ public interface IApplicationBo {
 	public Application update(Application application) throws ApplicationException;
 	
 	@Transactional
+	public Application updateClaims(Application application) throws ApplicationException;
+	
+	@Transactional
 	public void delete(Application application) throws ApplicationException;
 
 }

@@ -1,0 +1,333 @@
+{
+
+"defaults": {
+	"btn": {
+		"ok": "Ok",
+		"no": "No",
+		"yes": "Yes",
+		"cancel": "Cancel",
+		"upload": "Upload"
+	}
+},
+
+"organization": {
+	"ribbon": {
+		"name": "Organization",
+		"data": {
+			"name": "Data",
+			"btn": {
+				"edit": "Edit Org."
+			}
+		},
+		"certificate": {
+			"name": "Certificates",
+			"btn": {
+				"add": "Add",
+				"delete": "Delete"
+			}
+		},
+		"globals": {
+			"name": "General",
+			"btn": {
+				"claims": "Claims",
+				"roles": "Roles"
+			}
+		}
+	},
+	"info": {
+		"id": "ID",
+		"code": "Code",
+		"domain": "Domain",
+		"name": "Name",
+		"date": "Creation date",
+		"description": "Description",
+		"certificate": "Certificate",
+		"federation": "Federation"
+	},
+	"claims": {
+		"table": {
+			"columns": {
+				"uri": "URI",
+				"name": "Name",
+				"description": "Description"
+			}
+		}
+	},
+	"roles": {
+		"table": {
+			"columns": {
+				"uri": "URI",
+				"name": "Name"
+			}
+		}
+	},
+	"slide": {
+		"id": "ID",
+		"code": "Code",
+		"domain": "Domain",
+		"name": "Name",
+		"date": "Creation date",
+		"description": "Description",
+		"federation": "Enable Federation",
+		"titles": {
+			"default": "Organization",
+			"update": "Edit Organization"
+		},
+		"btn": {
+			"save": "Ok",
+			"cancel": "Cancel"
+		}
+	},
+	"messages": {
+		"certificate": {
+			"add": {
+				"title": "",
+				"text": ""
+			},
+			"remove": {
+				"title": "Delete the Certificate",
+				"text": "Do you want to delete the Organization's certificate ?"
+			}
+		},
+		"errors": {
+			"create": {
+				"title": "Creation Error",
+				"text": "Error: %s"
+			},
+			"update": {
+				"title": "Edition Error",
+				"text": "Error: %s"
+			},
+			"delete": {
+				"title": "Deletion Error",
+				"text": "Error: %s"
+			},
+			"claims": {
+				"title": "Modification Error",
+				"text": "Error: %s"
+			}
+		}
+	}
+},
+
+"users": {
+	"ribbon": {
+		"name": "Users",
+		"data": {
+			"name": "Data",
+			"btn": {
+				"add": "Add",
+				"edit": "Edit",
+				"delete": "Delete"
+			}
+		},
+		"actions": {
+			"name": "Actions",
+			"btn": {
+				"activate": "Unlock",
+				"deactivate": "Lock"
+			}
+		},
+		"globals": {
+			"name": "General",
+			"btn": {
+				"data": "Data"
+			}
+		}
+	},
+	"registered": {
+		"table": {
+			"columns": {
+				"username": "Username",
+				"email": "Email",
+				"enabled": "Enabled",
+				"admin": "Administrator"
+			}
+		}
+	},
+	"claims": {
+		"table": {
+			"columns": {
+				"uri": "URI",
+				"name": "Name",
+				"value": "Value",
+				"date": "Creation date"
+			}
+		}
+	},
+	"slide": {
+		"id": "ID",
+		"username": "Username",
+		"admin": "Administrator",
+		"titles": {
+			"default": "User",
+			"create": "Create a User",
+			"update": "Delete a User"
+		},
+		"btn": {
+			"save": "Ok",
+			"cancel": "Cancel"
+		}
+	},
+	"messages": {
+		"data": {
+			"delete": {
+				"title": "Delete User",
+				"text": "Do you want to delete user %s ?"
+			}
+		},
+		"actions": {
+			"activate": {
+				"title": "Unlock User",
+				"text": "Do you want to unlock user %s ?"
+			},
+			"deactivate": {
+				"title": "Lock User",
+				"text": "Do you want to lock user %s ?"
+			}
+		},
+		"errors": {
+			"create": {
+				"title": "Creation Error",
+				"text": "Error: %s"
+			},
+			"update": {
+				"title": "Edition Error",
+				"text": "Error: %s"
+			},
+			"delete": {
+				"title": "Deletion Error",
+				"text": "Error: %s"
+			},
+			"claims": {
+				"title": "Modification Error",
+				"text": "Error: %s"
+			}
+		}
+	}
+},
+
+"applications": {
+	"ribbon": {
+		"name": "Applications",
+		"data": {
+			"name": "Data",
+			"btn": {
+				"add": "Add",
+				"edit": "Edit",
+				"delete": "Delete"
+			}
+		},
+		"claims": {
+			"name": "Claims",
+			"btn": {
+				"claims": "Claims"
+			}
+		},
+		"access": {
+			"name": "Access",
+			"btn": {
+				"add": "Create",
+				"activate": "Unlock",
+				"deactivate": "Lock",
+				"revoke": "Revoke"
+			}
+		}
+	},
+	"registered": {
+		"table": {
+			"columns": {
+				"name": "Name",
+				"urn": "URN",
+				"description": "Description",
+				"acs": "Assertion URL",
+				"logout": "Logout URL"
+			}
+		}
+	},
+	"access": {
+		"table": {
+			"columns": {
+				"email": "Email",
+				"role": "Role",
+				"enabled": "Enabled",
+				"federation": "Federation",
+				"federationId": "Federation ID"
+			}
+		}
+	},
+	"claims": {
+		"table": {
+			"columns": {
+				"uri": "URI",
+				"name": "Name",
+				"description": "Description"
+			}
+		}
+	},
+	"slide": {
+		"id": "ID",
+		"urn": "URN",
+		"name": "Name",
+		"description": "Description",
+		"acs": "Assertion URL",
+		"logout": "Logout URL",
+		"titles": {
+			"default": "Application",
+			"create": "Create an application",
+			"update": "Edit the application",
+			"claims": "Manage applications's claims",
+			"access": "Create an access"
+		},
+		"btn": {
+			"save": "Ok",
+			"cancel": "Cancel"
+		},
+		"defaults": {
+			"user": "-- User --",
+			"role": "-- Role --"
+		}
+	},
+	"messages": {
+		"data": {
+			"delete": {
+				"title": "Delete Application",
+				"text": "Do you want to delete application %s (%s) ?"
+			}
+		},
+		"access": {
+			"activate": {
+				"title": "Unlock Access",
+				"text": "Do you want to unlock the access for user %s ?"
+			},
+			"deactivate": {
+				"title": "Lock Access",
+				"text": "Do you want to lock the access for user %s ?"
+			},
+			"revoke": {
+				"title": "Revoke Access",
+				"text": "Do you want to revoke the access for user %s ?"
+			}
+		},
+		"errors": {
+			"create": {
+				"title": "Creation Error",
+				"text": "Error: %s"
+			},
+			"update": {
+				"title": "Edition Error",
+				"text": "Error: %s"
+			},
+			"delete": {
+				"title": "Deletion Error",
+				"text": "Error: %s"
+			},
+			"claims": {
+				"title": "Modification Error",
+				"text": "Error: %s"
+			}
+		}
+	}
+}
+
+}

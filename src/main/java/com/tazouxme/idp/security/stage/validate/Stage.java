@@ -1,4 +1,4 @@
-package com.tazouxme.idp.security.stage;
+package com.tazouxme.idp.security.stage.validate;
 
 import com.tazouxme.idp.security.stage.exception.StageException;
 import com.tazouxme.idp.security.stage.parameters.StageParameters;

@@ -4,9 +4,9 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.tazouxme.idp.security.stage.Stage;
 import com.tazouxme.idp.security.stage.exception.StageException;
 import com.tazouxme.idp.security.stage.parameters.StageParameters;
+import com.tazouxme.idp.security.stage.validate.Stage;
 import com.tazouxme.idp.security.token.UserAuthenticationToken;
 
 public class StageChain {

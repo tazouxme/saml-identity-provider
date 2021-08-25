@@ -10,6 +10,7 @@ public class ApplicationEntity {
 	private String name;
 	private String description;
 	private String acsUrl;
+	private String logoutUrl;
 	
 	private Set<ClaimEntity> claims = new HashSet<>();
 	private Set<AccessEntity> accesses = new HashSet<>();
@@ -52,6 +53,14 @@ public class ApplicationEntity {
 
 	public void setAcsUrl(String acsUrl) {
 		this.acsUrl = acsUrl;
+	}
+	
+	public String getLogoutUrl() {
+		return logoutUrl;
+	}
+	
+	public void setLogoutUrl(String logoutUrl) {
+		this.logoutUrl = logoutUrl;
 	}
 	
 	public Set<ClaimEntity> getClaims() {

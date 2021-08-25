@@ -1,6 +1,7 @@
 package com.tazouxme.idp.bo;
 
 import java.util.Date;
+import java.util.Objects;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,8 +18,8 @@ public class AccessBo implements IAccessBo {
 	private IAccessDao dao;
 	
 	@Override
-	public Access findByExternalId(String externalId) throws AccessException {
-		return dao.findByExternalId(externalId);
+	public Access findByExternalId(String externalId, String organizationExternalId) throws AccessException {
+		return dao.findByExternalId(externalId, organizationExternalId);
 	}
 	
 	@Override
@@ -50,16 +51,19 @@ public class AccessBo implements IAccessBo {
 
 	@Override
 	public Access update(Access access) throws AccessException {
-		Access pAccess = findByExternalId(access.getExternalId());
+		Access pAccess = findByExternalId(access.getExternalId(), access.getOrganization().getExternalId());
 		pAccess.setEnabled(access.isEnabled());
-		pAccess.setRole(access.getRole());
+		
+		if (Objects.nonNull(access.getRole())) {
+			pAccess.setRole(access.getRole());
+		}
 		
 		return dao.update(pAccess);
 	}
 
 	@Override
 	public void delete(Access access) throws AccessException {
-		dao.delete(findByExternalId(access.getExternalId()));
+		dao.delete(findByExternalId(access.getExternalId(), access.getOrganization().getExternalId()));
 	}
 
 }

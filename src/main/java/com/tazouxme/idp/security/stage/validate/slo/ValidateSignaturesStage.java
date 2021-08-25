@@ -1,4 +1,4 @@
-package com.tazouxme.idp.security.stage.soap;
+package com.tazouxme.idp.security.stage.validate.slo;
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -12,11 +12,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.tazouxme.idp.bo.contract.ISessionBo;
 import com.tazouxme.idp.exception.SessionException;
-import com.tazouxme.idp.security.stage.AbstractStage;
 import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.security.stage.exception.StageException;
 import com.tazouxme.idp.security.stage.exception.StageExceptionType;
 import com.tazouxme.idp.security.stage.parameters.StageParameters;
+import com.tazouxme.idp.security.stage.validate.AbstractStage;
 import com.tazouxme.idp.security.token.UserAuthenticationPhase;
 import com.tazouxme.idp.security.token.UserAuthenticationToken;
 
@@ -35,19 +35,19 @@ public class ValidateSignaturesStage extends AbstractStage {
 			// find Session by user + organization
 			String token = bo.find(o.getOrganizationId(), o.getUserId()).getToken();
 			if (!verifyCookieSignature(token.getBytes(), o.getSignature().getBytes(), o.getPublicCredential().getPublicKey())) {
-				throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0455, o);
+				throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0485, o);
 			}
 			
 			logger.info("Signatures valid");
 			return authentication;
 		} catch (SessionException e) {
-			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0456, o);
+			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0486, o);
 		} catch (InvalidKeyException e) {
-			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0452, o);
+			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0482, o);
 		} catch (SignatureException e) {
-			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0453, o);
+			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0483, o);
 		} catch (NoSuchAlgorithmException e) {
-			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0454, o);
+			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0484, o);
 		}
 	}
 	

@@ -7,6 +7,8 @@ public class AccessEntity {
 	
 	private UserEntity user;
 	private RoleEntity role;
+	private ApplicationEntity application;
+	private FederationEntity federation;
 
 	public String getId() {
 		return id;
@@ -38,6 +40,22 @@ public class AccessEntity {
 	
 	public void setRole(RoleEntity role) {
 		this.role = role;
+	}
+	
+	public ApplicationEntity getApplication() {
+		return application;
+	}
+	
+	public void setApplication(ApplicationEntity application) {
+		this.application = application;
+	}
+	
+	public FederationEntity getFederation() {
+		return federation;
+	}
+	
+	public void setFederation(FederationEntity federation) {
+		this.federation = federation;
 	}
 
 }

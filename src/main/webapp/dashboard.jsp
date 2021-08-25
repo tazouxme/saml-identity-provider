@@ -10,20 +10,22 @@
 <link rel="stylesheet" href="./lib/style/io-field-1.0.css" />
 <link rel="stylesheet" href="./lib/style/io-message-1.0.css" />
 <link rel="stylesheet" href="./lib/style/io-ribbon-1.0.css" />
+<link rel="stylesheet" href="./lib/style/io-select-1.0.css" />
 <link rel="stylesheet" href="./lib/style/io-slide-1.0.css" />
 <link rel="stylesheet" href="./lib/style/io-table-1.0.css" />
 <link rel="stylesheet" href="./lib/style/io-upload-1.0.css" />
 
+<script src="./lib/script/io-utils-1.0.js"></script>
 <script src="./lib/script/io-button-1.0.js"></script>
 <script src="./lib/script/io-checkbox-1.0.js"></script>
 <script src="./lib/script/io-field-1.0.js"></script>
 <script src="./lib/script/io-message-1.0.js"></script>
 <script src="./lib/script/io-request-1.0.js"></script>
 <script src="./lib/script/io-ribbon-1.0.js"></script>
+<script src="./lib/script/io-select-1.0.js"></script>
 <script src="./lib/script/io-slide-1.0.js"></script>
 <script src="./lib/script/io-table-1.0.js"></script>
 <script src="./lib/script/io-upload-1.0.js"></script>
-<script src="./lib/script/io-utils-1.0.js"></script>
 
 <link rel="stylesheet" href="./style/dashboard.css" />
 <script src="./script/dashboard.js"></script>
@@ -42,32 +44,32 @@
 
 <div id="org">
 	<div id="org-main">
-		<span>Organization Information</span>
+		<span>${dashboardOrganizationInformation}</span>
 	</div>
 	<div id="org-claims">
-		<span>Organization's Claims</span>
+		<span>${dashboardOrganizationClaims}</span>
 	</div>
 	<div id="org-roles">
-		<span>Organization's Roles</span>
+		<span>${dashboardOrganizationRoles}</span>
 	</div>
 </div>
 <div id="users">
 	<div id="user-main">
-		<span>Registered User</span>
+		<span>${dashboardUsersInformation}</span>
 	</div>
 	<div id="user-claims">
-		<span>User's Claims</span>
+		<span>${dashboardUsersClaims}</span>
 	</div>
 </div>
 <div id="apps">
 	<div id="app-main">
-		<span>Registered Application</span>
+		<span>${dashboardApplicationsInformation}</span>
 	</div>
 	<div id="app-users">
-		<span>Access Users</span>
+		<span>${dashboardApplicationsAccess}</span>
 	</div>
 	<div id="app-claims">
-		<span>Applicable Claims</span>
+		<span>${dashboardApplicationsClaims}</span>
 	</div>
 </div>
 

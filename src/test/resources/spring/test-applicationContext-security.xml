@@ -23,6 +23,8 @@
 				<!-- Security -->
 				<security:filter-chain pattern="/**" filters="
 					securityContextPersistenceFilter,
+					getSingleLogoutFilter,
+					postSingleLogoutFilter,
 					getSingleSignOnFilter,
 					postSingleSignOnFilter,
 					soapSingleSignOnFilter,
@@ -41,13 +43,13 @@
 	<bean id="ssoHttpStages" class="com.tazouxme.idp.security.stage.chain.StageChain">
 		<property name="stages">
 			<list>
-				<bean class="com.tazouxme.idp.security.stage.http.ValidateRequestParametersStage" />
-				<bean class="com.tazouxme.idp.security.stage.http.ValidateRequestValuesStage" />
-				<bean class="com.tazouxme.idp.security.stage.http.ValidateRequestURLStage" />
-				<bean class="com.tazouxme.idp.security.stage.http.ValidateCookiesStage" />
-				<bean class="com.tazouxme.idp.security.stage.http.ValidateSignaturesStage" />
-				<bean class="com.tazouxme.idp.security.stage.http.ValidateOrganizationAccessStage" />
-				<bean class="com.tazouxme.idp.security.stage.http.ValidateUserAccessStage" />
+				<bean class="com.tazouxme.idp.security.stage.validate.sso.http.ValidateRequestParametersStage" />
+				<bean class="com.tazouxme.idp.security.stage.validate.sso.http.ValidateRequestValuesStage" />
+				<bean class="com.tazouxme.idp.security.stage.validate.sso.http.ValidateRequestURLStage" />
+				<bean class="com.tazouxme.idp.security.stage.validate.sso.http.ValidateCookiesStage" />
+				<bean class="com.tazouxme.idp.security.stage.validate.sso.http.ValidateSignaturesStage" />
+				<bean class="com.tazouxme.idp.security.stage.validate.sso.http.ValidateOrganizationAccessStage" />
+				<bean class="com.tazouxme.idp.security.stage.validate.sso.http.ValidateUserAccessStage" />
 			</list>
 		</property>
 	</bean>
@@ -55,14 +57,34 @@
 	<bean id="ssoSoapStages" class="com.tazouxme.idp.security.stage.chain.StageChain">
 		<property name="stages">
 			<list>
-				<bean class="com.tazouxme.idp.security.stage.soap.ValidateRequestParametersStage" />
-				<bean class="com.tazouxme.idp.security.stage.soap.ValidateRequestValuesStage" />
-				<bean class="com.tazouxme.idp.security.stage.soap.ValidateCookiesStage" />
-				<bean class="com.tazouxme.idp.security.stage.soap.ValidateSignaturesStage" />
-				<bean class="com.tazouxme.idp.security.stage.soap.ValidateOrganizationAccessStage" />
-				<bean class="com.tazouxme.idp.security.stage.soap.ValidateUserAccessStage" />
+				<bean class="com.tazouxme.idp.security.stage.validate.sso.soap.ValidateRequestParametersStage" />
+				<bean class="com.tazouxme.idp.security.stage.validate.sso.soap.ValidateRequestValuesStage" />
+				<bean class="com.tazouxme.idp.security.stage.validate.sso.soap.ValidateCookiesStage" />
+				<bean class="com.tazouxme.idp.security.stage.validate.sso.soap.ValidateSignaturesStage" />
+				<bean class="com.tazouxme.idp.security.stage.validate.sso.soap.ValidateOrganizationAccessStage" />
+				<bean class="com.tazouxme.idp.security.stage.validate.sso.soap.ValidateUserAccessStage" />
 			</list>
 		</property>
+	</bean>
+	
+	<bean id="sloStages" class="com.tazouxme.idp.security.stage.chain.StageChain">
+		<property name="stages">
+			<list>
+				<bean class="com.tazouxme.idp.security.stage.validate.slo.ValidateRequestParametersStage" />
+				<bean class="com.tazouxme.idp.security.stage.validate.slo.ValidateRequestValuesStage" />
+				<bean class="com.tazouxme.idp.security.stage.validate.slo.ValidateCookiesStage" />
+				<bean class="com.tazouxme.idp.security.stage.validate.slo.ValidateSignaturesStage" />
+				<bean class="com.tazouxme.idp.security.stage.validate.slo.ValidateOrganizationAccessStage" />
+				<bean class="com.tazouxme.idp.security.stage.validate.slo.ValidateUserAccessStage" />
+			</list>
+		</property>
+	</bean>
+	
+	<bean id="getSingleLogoutFilter" class="com.tazouxme.idp.security.filter.slo.http.GetSingleLogoutFilter">
+		<property name="stages" ref="sloStages" />
+	</bean>
+	<bean id="postSingleLogoutFilter" class="com.tazouxme.idp.security.filter.slo.http.PostSingleLogoutFilter">
+		<property name="stages" ref="sloStages" />
 	</bean>
 	
 	<bean id="getSingleSignOnFilter" class="com.tazouxme.idp.security.filter.sso.http.GetSingleSignOnFilter">

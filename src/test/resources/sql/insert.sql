@@ -1,9 +1,9 @@
 -- Organization
 ALTER SEQUENCE Organization_sequence RESTART WITH 1
 insert into tz_organization
-(organization_id, external_id, domain, code, name, description, enabled, certificate, creation_date)
+(organization_id, external_id, domain, code, name, description, enabled, federation, certificate, creation_date)
 values
-(NEXT VALUE FOR Organization_sequence, 'ORG_test', 'test.com', 'TEST', 'Test', 'Test Organization', 1, 'xxx', 1627398003);
+(NEXT VALUE FOR Organization_sequence, 'ORG_test', 'test.com', 'TEST', 'Test', 'Test Organization', 1, 1, 'xxx', 1627398003);
 
 -- User
 ALTER SEQUENCE User_sequence RESTART WITH 1
@@ -15,10 +15,10 @@ values
 -- Application
 ALTER SEQUENCE Application_sequence RESTART WITH 1
 insert into tz_application
-(application_id, external_id, urn, name, description, assertion_url, organization_id)
+(application_id, external_id, urn, name, description, assertion_url, logout_url, organization_id)
 values
-(NEXT VALUE FOR Application_sequence, 'APP_test1', 'urn:com:tazouxme:test1', 'Test 1', 'Test 1 Application', 'http://localhost/test1/acs', 1),
-(NEXT VALUE FOR Application_sequence, 'APP_test2', 'urn:com:tazouxme:test2', 'Test 2', 'Test 2 Application', 'http://localhost/test2/acs', 1);
+(NEXT VALUE FOR Application_sequence, 'APP_test1', 'urn:com:tazouxme:test1', 'Test 1', 'Test 1 Application', 'http://localhost/test1/acs', 'http://localhost/test1/logout', 1),
+(NEXT VALUE FOR Application_sequence, 'APP_test2', 'urn:com:tazouxme:test2', 'Test 2', 'Test 2 Application', 'http://localhost/test2/acs', 'http://localhost/test2/logout', 1);
 
 -- Role
 ALTER SEQUENCE Role_sequence RESTART WITH 1

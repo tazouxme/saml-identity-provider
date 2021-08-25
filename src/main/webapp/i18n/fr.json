@@ -1,0 +1,333 @@
+{
+
+"defaults": {
+	"btn": {
+		"ok": "Ok",
+		"no": "Non",
+		"yes": "Oui",
+		"cancel": "Annuler",
+		"upload": "T%C3%A9l%C3%A9charger"
+	}
+},
+
+"organization": {
+	"ribbon": {
+		"name": "Organisation",
+		"data": {
+			"name": "Donn%C3%A9es",
+			"btn": {
+				"edit": "Editer Org."
+			}
+		},
+		"certificate": {
+			"name": "Certificats",
+			"btn": {
+				"add": "Ajouter",
+				"delete": "Supprimer"
+			}
+		},
+		"globals": {
+			"name": "G%C3%A9n%C3%A9ral",
+			"btn": {
+				"claims": "Claims",
+				"roles": "Roles"
+			}
+		}
+	},
+	"info": {
+		"id": "ID",
+		"code": "Code",
+		"domain": "Domaine",
+		"name": "Nom",
+		"date": "Date de cr%C3%A9ation",
+		"description": "Description",
+		"certificate": "Certificat",
+		"federation": "F%C3%A9d%C3%A9ration"
+	},
+	"claims": {
+		"table": {
+			"columns": {
+				"uri": "URI",
+				"name": "Nom",
+				"description": "Description"
+			}
+		}
+	},
+	"roles": {
+		"table": {
+			"columns": {
+				"uri": "URI",
+				"name": "Nom"
+			}
+		}
+	},
+	"slide": {
+		"id": "ID",
+		"code": "Code",
+		"domain": "Domaine",
+		"name": "Nom",
+		"date": "Date de cr%C3%A9ation",
+		"description": "Description",
+		"federation": "Activer F%C3%A9d%C3%A9ration",
+		"titles": {
+			"default": "Organisation",
+			"update": "Modifier l'Organisation"
+		},
+		"btn": {
+			"save": "Ok",
+			"cancel": "Annuler"
+		}
+	},
+	"messages": {
+		"certificate": {
+			"add": {
+				"title": "",
+				"text": ""
+			},
+			"remove": {
+				"title": "Supprimer le Certificat",
+				"text": "Voulez-vous supprimer le Certificat de l'Organisation ?"
+			}
+		},
+		"errors": {
+			"create": {
+				"title": "Erreur de cr%C3%A9ation",
+				"text": "Erreur : %s"
+			},
+			"update": {
+				"title": "Erreur de modification",
+				"text": "Erreur : %s"
+			},
+			"delete": {
+				"title": "Erreur de suppression",
+				"text": "Erreur : %s"
+			},
+			"claims": {
+				"title": "Erreur de sauvagarde",
+				"text": "Erreur : %s"
+			}
+		}
+	}
+},
+
+"users": {
+	"ribbon": {
+		"name": "Utilisateurs",
+		"data": {
+			"name": "Donn%C3%A9es",
+			"btn": {
+				"add": "Ajouter",
+				"edit": "Editer",
+				"delete": "Supprimer"
+			}
+		},
+		"actions": {
+			"name": "Actions",
+			"btn": {
+				"activate": "D%C3%A9bloquer",
+				"deactivate": "Bloquer"
+			}
+		},
+		"globals": {
+			"name": "G%C3%A9n%C3%A9ral",
+			"btn": {
+				"data": "Donn%C3%A9es"
+			}
+		}
+	},
+	"registered": {
+		"table": {
+			"columns": {
+				"username": "Nom d'utilisateur",
+				"email": "E-mail",
+				"enabled": "Activ%C3%A9",
+				"admin": "Administrateur"
+			}
+		}
+	},
+	"claims": {
+		"table": {
+			"columns": {
+				"uri": "URI",
+				"name": "Nom",
+				"value": "Valeur",
+				"date": "Date de cr%C3%A9ation"
+			}
+		}
+	},
+	"slide": {
+		"id": "ID",
+		"username": "Nom d'utilisateur",
+		"admin": "Administrateur",
+		"titles": {
+			"default": "Utilisateur",
+			"create": "Cr%C3%A9er un utilisateur",
+			"update": "Supprimer un utilisateur"
+		},
+		"btn": {
+			"save": "Ok",
+			"cancel": "Annuler"
+		}
+	},
+	"messages": {
+		"data": {
+			"delete": {
+				"title": "Supprimer l'utilisateur",
+				"text": "Voulez-vous supprimer l'utilisateur %s ?"
+			}
+		},
+		"actions": {
+			"activate": {
+				"title": "D%C3%A9bloquer l'utilisateur",
+				"text": "Voulez-vous d%C3%A9bloquer l'utilisateur %s ?"
+			},
+			"deactivate": {
+				"title": "Bloquer l'utilisateur",
+				"text": "Voulez-vous bloquer l'utilisateur %s ?"
+			}
+		},
+		"errors": {
+			"create": {
+				"title": "Erreur de cr%C3%A9ation",
+				"text": "Erreur : %s"
+			},
+			"update": {
+				"title": "Erreur de modification",
+				"text": "Erreur : %s"
+			},
+			"delete": {
+				"title": "Erreur de suppression",
+				"text": "Erreur : %s"
+			},
+			"claims": {
+				"title": "Erreur de sauvagarde",
+				"text": "Erreur : %s"
+			}
+		}
+	}
+},
+
+"applications": {
+	"ribbon": {
+		"name": "Applications",
+		"data": {
+			"name": "Donn%C3%A9es",
+			"btn": {
+				"add": "Ajouter",
+				"edit": "Editer",
+				"delete": "Supprimer"
+			}
+		},
+		"claims": {
+			"name": "Claims",
+			"btn": {
+				"claims": "Claims"
+			}
+		},
+		"access": {
+			"name": "Acc%C3%A8s",
+			"btn": {
+				"add": "Cr%C3%A9er",
+				"activate": "D%C3%A9bloquer",
+				"deactivate": "Bloquer",
+				"revoke": "R%C3%A9voquer"
+			}
+		}
+	},
+	"registered": {
+		"table": {
+			"columns": {
+				"name": "Nom",
+				"urn": "URN",
+				"description": "Description",
+				"acs": "Assertion URL",
+				"logout": "Logout URL"
+			}
+		}
+	},
+	"access": {
+		"table": {
+			"columns": {
+				"email": "E-mail",
+				"role": "Role",
+				"enabled": "Activ%C3%A9",
+				"federation": "F%C3%A9d%C3%A9ration",
+				"federationId": "F%C3%A9d%C3%A9ration ID"
+			}
+		}
+	},
+	"claims": {
+		"table": {
+			"columns": {
+				"uri": "URI",
+				"name": "Nom",
+				"description": "Description"
+			}
+		}
+	},
+	"slide": {
+		"id": "ID",
+		"urn": "URN",
+		"name": "Nom",
+		"description": "Description",
+		"acs": "Assertion URL",
+		"logout": "Logout URL",
+		"titles": {
+			"default": "Application",
+			"create": "Cr%C3%A9er une application",
+			"update": "Modifier l'application",
+			"claims": "G%C3%A9rer les Claims de l'application",
+			"access": "Cr%C3%A9er un acc%C3%A8s"
+		},
+		"btn": {
+			"save": "Ok",
+			"cancel": "Annuler"
+		},
+		"defaults": {
+			"user": "-- Utilisateur --",
+			"role": "-- Role --"
+		}
+	},
+	"messages": {
+		"data": {
+			"delete": {
+				"title": "Supprimer l'application",
+				"text": "Voulez-vous supprimer l'application %s (%s) ?"
+			}
+		},
+		"access": {
+			"activate": {
+				"title": "D%C3%A9bloquer l'acc%C3%A8s",
+				"text": "Voulez-vous d%C3%A9bloquer l'acc%C3%A8s %C3%A0 l'utilisateur %s ?"
+			},
+			"deactivate": {
+				"title": "Bloquer l'acc%C3%A8s",
+				"text": "Voulez-vous bloquer l'acc%C3%A8s %C3%A0 l'utilisateur %s ?"
+			},
+			"revoke": {
+				"title": "R%C3%A9voquer l'acc%C3%A8s",
+				"text": "Voulez-vous r%C3%A9voquer l'acc%C3%A8s %C3%A0 l'utilisateur %s ?"
+			}
+		},
+		"errors": {
+			"create": {
+				"title": "Erreur de cr%C3%A9ation",
+				"text": "Erreur : %s"
+			},
+			"update": {
+				"title": "Erreur de modification",
+				"text": "Erreur : %s"
+			},
+			"delete": {
+				"title": "Erreur de suppression",
+				"text": "Erreur : %s"
+			},
+			"claims": {
+				"title": "Erreur de sauvagarde",
+				"text": "Erreur : %s"
+			}
+		}
+	}
+}
+
+}

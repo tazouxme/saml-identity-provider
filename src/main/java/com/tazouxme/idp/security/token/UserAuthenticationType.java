@@ -4,6 +4,7 @@ public enum UserAuthenticationType {
 	
 	CLASSIC,
 	SAML,
-	SOAP;
+	SOAP,
+	LOGOUT;
 
 }

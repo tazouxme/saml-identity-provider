@@ -11,6 +11,8 @@ public class AuthenticationHandlerFactory {
 			return new SOAPAuthenticationHandler(context);
 		} else if (UserAuthenticationType.SAML.equals(type)) {
 			return new SAMLAuthenticationHandler(context);
+		} else if (UserAuthenticationType.LOGOUT.equals(type)) {
+			return new LogoutAuthenticationHandler(context);
 		} else if (UserAuthenticationType.CLASSIC.equals(type)) {
 			return new ClassicAuthenticationHandler(context);
 		}

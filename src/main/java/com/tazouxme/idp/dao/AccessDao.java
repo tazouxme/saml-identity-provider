@@ -22,10 +22,11 @@ public class AccessDao implements IAccessDao {
 	private EntityManager em;
 	
 	@Override
-	public Access findByExternalId(String externalId) throws AccessException {
+	public Access findByExternalId(String externalId, String organizationExternalId) throws AccessException {
 		try {
 			return em.createNamedQuery(AccessQueries.NQ_FIND_BY_ID, Access.class).
 				setParameter(AccessQueries.PARAM_ID, externalId).
+				setParameter(AccessQueries.PARAM_ORGANIZATION_ID, organizationExternalId).
 				getSingleResult();
 		} catch (Exception e) {
 			throw new AccessException("Cannot retrieve Access for given ID", e);

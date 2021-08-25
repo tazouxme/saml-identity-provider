@@ -54,9 +54,10 @@ public class MetadataServlet extends HttpServlet {
 		String entityId = req.getScheme() + "://" + configuration.getDomain() + portBuilder.toString() + configuration.getPath();
 		String entitySsoContext = entityId + configuration.getSsoPath();
 		String entitySsoSoapContext = entityId + configuration.getSsoSoapPath();
+		String entitySloContext = entityId + configuration.getSloPath();
 		
 		EntityDescriptor entityDescriptor = MetadataUtils.buildMetadata(
-				configuration.getUrn(), entitySsoContext, entitySsoSoapContext, configuration.getPublicCredential());
+				configuration.getUrn(), entitySsoContext, entitySsoSoapContext, entitySloContext, configuration.getPublicCredential());
 		
 		try {
 			DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();

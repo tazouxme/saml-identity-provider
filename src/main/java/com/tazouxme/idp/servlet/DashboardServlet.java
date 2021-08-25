@@ -7,10 +7,22 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.tazouxme.idp.messages.MessageConstants;
+import com.tazouxme.idp.messages.Messages;
+
 public class DashboardServlet extends HttpServlet {
 	
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		req.setAttribute(MessageConstants.DASHBOARD_ORG_INFO, Messages.find(req.getSession()).getString("dashboardServlet.organization.information"));
+		req.setAttribute(MessageConstants.DASHBOARD_ORG_CLAIMS, Messages.find(req.getSession()).getString("dashboardServlet.organization.claims"));
+		req.setAttribute(MessageConstants.DASHBOARD_ORG_ROLES, Messages.find(req.getSession()).getString("dashboardServlet.organization.roles"));
+		req.setAttribute(MessageConstants.DASHBOARD_USERS_INFO, Messages.find(req.getSession()).getString("dashboardServlet.users.information"));
+		req.setAttribute(MessageConstants.DASHBOARD_USERS_CLAIMS, Messages.find(req.getSession()).getString("dashboardServlet.users.claims"));
+		req.setAttribute(MessageConstants.DASHBOARD_APPS_INFO, Messages.find(req.getSession()).getString("dashboardServlet.applications.information"));
+		req.setAttribute(MessageConstants.DASHBOARD_APPS_ACCESS, Messages.find(req.getSession()).getString("dashboardServlet.applications.access"));
+		req.setAttribute(MessageConstants.DASHBOARD_APPS_CLAIMS, Messages.find(req.getSession()).getString("dashboardServlet.applications.claims"));
+		
 		req.getRequestDispatcher("/dashboard.jsp").forward(req, resp);
 	}
 

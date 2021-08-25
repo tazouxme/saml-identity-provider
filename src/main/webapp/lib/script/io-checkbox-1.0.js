@@ -7,10 +7,19 @@ function Checkbox(params) {
 	var _uid = params.id;
 	
 	/**
+	 * Translatable labels
+	 * @private
+	 */
+	var _translatable = !!params.translatable;
+	
+	/**
 	 * Checkbox title
 	 * @private
 	 */
 	var _title = params.title;
+	if (_translatable) {
+		_title = Utils.translate(_title);
+	}
 	
 	/**
 	 * Box HTML element for the Checkbox
@@ -180,7 +189,6 @@ function Checkbox(params) {
 	 * @public
 	 */
 	this.get = function() {
-		_buildCheckbox();
 		return _container;
 	};
 	

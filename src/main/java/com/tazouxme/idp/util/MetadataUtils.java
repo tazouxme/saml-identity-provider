@@ -7,6 +7,7 @@ import org.opensaml.saml.saml2.metadata.EntityDescriptor;
 import org.opensaml.saml.saml2.metadata.IDPSSODescriptor;
 import org.opensaml.saml.saml2.metadata.KeyDescriptor;
 import org.opensaml.saml.saml2.metadata.NameIDFormat;
+import org.opensaml.saml.saml2.metadata.SingleLogoutService;
 import org.opensaml.saml.saml2.metadata.SingleSignOnService;
 import org.opensaml.security.SecurityException;
 import org.opensaml.security.credential.Credential;
@@ -16,7 +17,7 @@ import org.opensaml.xmlsec.keyinfo.impl.X509KeyInfoGeneratorFactory;
 
 public class MetadataUtils {
 
-	public static EntityDescriptor buildMetadata(String entity, String ssoContext, String ssoSoapContext, Credential credential) {
+	public static EntityDescriptor buildMetadata(String entity, String ssoContext, String ssoSoapContext, String sloContext, Credential credential) {
 		IDPSSODescriptor idpDescription = SAMLUtils.buildSAMLObject(IDPSSODescriptor.class);
 		idpDescription.addSupportedProtocol(SAMLConstants.SAML20P_NS);
 		idpDescription.setWantAuthnRequestsSigned(Boolean.FALSE);
@@ -32,6 +33,8 @@ public class MetadataUtils {
 		idpDescription.getSingleSignOnServices().add(buildSingleSignOnService(SAMLConstants.SAML2_REDIRECT_BINDING_URI, ssoContext));
 		idpDescription.getSingleSignOnServices().add(buildSingleSignOnService(SAMLConstants.SAML2_POST_BINDING_URI, ssoContext));
 		idpDescription.getSingleSignOnServices().add(buildSingleSignOnService(SAMLConstants.SAML2_POST_SIMPLE_SIGN_BINDING_URI, ssoContext));
+		idpDescription.getSingleLogoutServices().add(buildSingleLogoutService(SAMLConstants.SAML2_REDIRECT_BINDING_URI, sloContext));
+		idpDescription.getSingleLogoutServices().add(buildSingleLogoutService(SAMLConstants.SAML2_POST_BINDING_URI, sloContext));
 
 		EntityDescriptor entityDescriptor = SAMLUtils.buildSAMLObject(EntityDescriptor.class);
 		entityDescriptor.setEntityID(entity);
@@ -45,6 +48,14 @@ public class MetadataUtils {
 		nameIDFormat.setURI(uri);
 
 		return nameIDFormat;
+	}
+	
+	private static SingleLogoutService buildSingleLogoutService(String binding, String ctx) {
+		SingleLogoutService sloService = SAMLUtils.buildSAMLObject(SingleLogoutService.class);
+		sloService.setBinding(binding);
+		sloService.setLocation(ctx);
+		
+		return sloService;
 	}
 	
 	private static SingleSignOnService buildSingleSignOnService(String binding, String ctx) {

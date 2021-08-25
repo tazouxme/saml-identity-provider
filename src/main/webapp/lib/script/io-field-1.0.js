@@ -15,7 +15,7 @@ var Field = function(params) {
 	
 	var _title = params.title;
 	if (_translatable) {
-		_title = DAuth.lang.text.getText(_title);
+		_title = Utils.translate(_title);
 	}
 	
 	/**

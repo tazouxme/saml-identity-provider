@@ -1,0 +1,68 @@
+/*
+ * -------------------------
+ * -- DAuth Select styles --
+ * -------------------------
+ */
+
+.dauth-select {
+	position: absolute;
+    height: 54px;
+    width: 250px;
+	border: 1px solid #bbbbbb;
+}
+
+.dauth-select:hover {
+	cursor: pointer;
+}
+
+.dauth-select > .dauth-field {
+	position: absolute;
+    left: 0px;
+    top: 0px;
+    width: calc(100% - 47px);
+}
+
+.dauth-select > .dauth-field > .dauth-field-input {
+	position: absolute;
+    left: 0px;
+    top: 2px;
+	border: 0px;
+}
+
+.dauth-select > .dauth-field > .dauth-field-icon {
+	top: 19px;
+}
+
+.dauth-select > ul {
+	position: relative;
+	display: none;
+    top: 55px;
+    margin: 0px;
+    padding: 0px;
+    list-style-type: none;
+    background-color: white;
+    border: 1px solid #bbbbbb;
+    z-index: 10;
+}
+
+.dauth-select > ul.displayed {
+	display: block;
+}
+
+.dauth-select > ul > li {
+	padding: 5px;
+	margin: 2px;
+}
+
+.dauth-select > ul > li:not(:first-child):hover {
+	cursor: pointer;
+	background-color: #89b8e7;
+}
+
+.dauth-select > ul > li:last-child {
+	padding-bottom: 5px;
+}
+
+.dauth-select.dauth-validation-error {
+	border: 1px solid red;
+}

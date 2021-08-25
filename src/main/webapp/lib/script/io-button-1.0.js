@@ -49,6 +49,7 @@ var Button = function(params) {
 	_span.appendChild(document.createTextNode(_text));
 	_button.appendChild(_span);
 	
+	
 	/**
 	 * Get data to be used by the button
 	 * @private

@@ -64,6 +64,55 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 	private IUserBo userBo;
 	
 	@Override
+	public Access createAccess(User user, Application application, Role role, Organization organization) throws AccessException {
+		Access access = new Access();
+		access.setOrganization(organization);
+		access.setUser(user);
+		access.setApplication(application);
+		access.setRole(role);
+		access.setEnabled(true);
+		
+		accessBo.create(access);
+		
+		if (access.getOrganization().isFederation()) {
+			try {
+				createFederation(user, application, organization);
+			} catch (FederationException e) {
+				throw new AccessException("Cannot create a new Federation for Access", e);
+			}
+		}
+		
+		return access;
+	}
+	
+	@Override
+	public Access updateAccess(String externalId, boolean enabled, Organization organization) throws AccessException {
+		Access access = new Access();
+		access.setExternalId(externalId);
+		access.setEnabled(enabled);
+		access.setOrganization(organization);
+		
+		return accessBo.update(access);
+	}
+	
+	@Override
+	public void deleteAccess(String externalId, Organization organization) throws AccessException {
+		Access access = accessBo.findByExternalId(externalId, organization.getExternalId());
+		
+		try {
+			Federation federation = new Federation();
+			federation.setUser(access.getUser());
+			federation.setApplication(access.getApplication());
+			federation.setOrganization(organization);
+			federationBo.delete(federation);
+		} catch (FederationException e) {
+			throw new AccessException("Cannot delete Federation for Access", e);
+		}
+		
+		accessBo.delete(access);
+	}
+	
+	@Override
 	public Set<Activation> findActivationsByUser(String userExternalId, String organizationId) {
 		return activationBo.findByUser(userExternalId, organizationId);
 	}
@@ -94,28 +143,40 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 	}
 	
 	@Override
-	public Application createApplication(String urn, String name, String description, String acsUrl, Organization organization) throws ApplicationException {
+	public Application createApplication(String urn, String name, String description, String acsUrl, String logoutUrl, Organization organization) throws ApplicationException {
 		Application application = new Application();
 		application.setUrn(urn);
 		application.setName(name);
 		application.setDescription(description);
 		application.setAssertionUrl(acsUrl);
+		application.setLogoutUrl(logoutUrl);
 		application.setOrganization(organization);
 		
 		return applicationBo.create(application);
 	}
 	
 	@Override
-	public Application updateApplication(String externalId, String urn, String name, String description, String acsUrl, Organization organization) throws ApplicationException {
+	public Application updateApplication(String externalId, String urn, String name, String description, String acsUrl, String logoutUrl, Organization organization) throws ApplicationException {
 		Application application = new Application();
 		application.setExternalId(externalId);
 		application.setUrn(urn);
 		application.setName(name);
 		application.setDescription(description);
 		application.setAssertionUrl(acsUrl);
+		application.setLogoutUrl(logoutUrl);
 		application.setOrganization(organization);
 		
 		return applicationBo.update(application);
+	}
+	
+	@Override
+	public Application updateApplicationClaims(String externalId, Set<Claim> claims, Organization organization) throws ApplicationException {
+		Application application = new Application();
+		application.setExternalId(externalId);
+		application.setOrganization(organization);
+		application.getClaims().addAll(claims);
+		
+		return applicationBo.updateClaims(application);
 	}
 	
 	@Override
@@ -127,6 +188,14 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 				accessBo.delete(access);
 			} catch (AccessException e) {
 				throw new ApplicationException("Unable to delete Access for Application", e);
+			}
+		}
+		
+		for (Federation federation : application.getFederations()) {
+			try {
+				federationBo.delete(federation);
+			} catch (FederationException e) {
+				throw new ApplicationException("Unable to delete Federation for Application", e);
 			}
 		}
 		
@@ -142,6 +211,11 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 	}
 	
 	@Override
+	public Set<Federation> findFederationsByURN(String urn, String organizationExternalId) {
+		return federationBo.findByURN(urn, organizationExternalId);
+	}
+	
+	@Override
 	public Set<Federation> findFederationsByUser(String userExternalId, String organizationExternalId) {
 		return federationBo.findByUser(userExternalId, organizationExternalId);
 	}
@@ -149,6 +223,17 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 	@Override
 	public Federation findFederationByUserAndURN(String userExternalId, String urn, String organizationExternalId) throws FederationException {
 		return federationBo.findByUserAndURN(userExternalId, urn, organizationExternalId);
+	}
+	
+	@Override
+	public Federation createFederation(User user, Application application, Organization organization) throws FederationException {
+		Federation federation = new Federation();
+		federation.setOrganization(organization);
+		federation.setUser(user);
+		federation.setApplication(application);
+		federation.setEnabled(true);
+		
+		return federationBo.create(federation);
 	}
 	
 	@Override
@@ -169,6 +254,7 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 		organization.setDomain(domain);
 		organization.setCertificate("");
 		organization.setEnabled(false);
+		organization.setFederation(false);
 		organization = organizationBo.create(organization);
 		
 		for (ClaimsDefaults claim : ClaimsDefaults.values()) {
@@ -191,10 +277,14 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 	}
 	
 	@Override
-	public Organization updateOrganization(String id, String name, String description) throws OrganizationException {
+	public Organization updateOrganization(String id, String name, String description, boolean federation) throws OrganizationException {
 		Organization organization = findOrganizationByExternalId(id);
 		organization.setName(name);
 		organization.setDescription(description);
+		
+		if (organization.isFederation() && !federation || !organization.isFederation() && federation) {
+			organization.setFederation(federation);
+		}
 		
 		return organizationBo.update(organization);
 	}
@@ -216,6 +306,11 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 	}
 	
 	@Override
+	public Set<Claim> findAllClaims(String organizationId) {
+		return claimBo.findAll(organizationId);
+	}
+	
+	@Override
 	public Claim createClaim(String uri, String name, String description, Organization o) throws ClaimException {
 		Claim claim = new Claim();
 		claim.setUri(uri);
@@ -224,6 +319,16 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 		claim.setOrganization(o);
 		
 		return claimBo.create(claim);
+	}
+	
+	@Override
+	public Set<Role> findAllRoles(String organizationId) {
+		return roleBo.findAll(organizationId);
+	}
+	
+	@Override
+	public Role findRoleByExternalId(String roleExteralId, String organizationId) throws RoleException {
+		return roleBo.findByExternalId(roleExteralId, organizationId);
 	}
 	
 	@Override
