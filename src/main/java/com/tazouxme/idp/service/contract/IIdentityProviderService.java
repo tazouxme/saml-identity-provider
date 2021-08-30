@@ -161,6 +161,7 @@ public interface IIdentityProviderService {
 	@DELETE
 	@Path("/user")
 	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
 	@Operation(
 		summary = "Delete a User", 
 		description = "Delete an existing user from the Organization",
@@ -251,6 +252,7 @@ public interface IIdentityProviderService {
 	@DELETE
 	@Path("/application")
 	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
 	@Operation(
 		summary = "Delete an Application", 
 		description = "Delete an existing application from the Organization",
@@ -299,6 +301,7 @@ public interface IIdentityProviderService {
 	@DELETE
 	@Path("/access")
 	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
 	@Operation(
 		summary = "Delete an Access", 
 		description = "Delete an existing access from the Organization",

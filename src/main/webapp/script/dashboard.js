@@ -183,8 +183,8 @@ updateAppBtn.setAction(function() {
 var removeAppBtn = new Button({ id: 'remove-app-btn', text: 'applications.ribbon.data.btn.delete', icon: './lib/img/delete_app.png', translatable: true });
 removeAppBtn.setEnabled(false);
 removeAppBtn.setAction(function() {
-	var message = new Message({ id: 'remove-app-message', type: 'question', title: 'Delete Application', translatable: true });
-	message.setText("Delete the Application " + appsTable.getSelectedData().name + " ("+ appsTable.getSelectedData().urn +") ?");
+	var message = new Message({ id: 'remove-app-message', type: 'question', title: 'applications.messages.data.delete.title', translatable: true });
+	message.setText("applications.messages.data.delete.text|" + appsTable.getSelectedData().name + "|"+ appsTable.getSelectedData().urn);
 	message.onValidate(function() {
 		var app = appsTable.getSelectedData();
 		deleteApplication(app);
@@ -686,7 +686,7 @@ function updateOrganization(data) {
 			}
 		},
 		onError: function(response) {
-			var message = new Message({ id : 'update-org-error-message', type : 'error', title : 'organization.messages.errors.update.title' });
+			var message = new Message({ id : 'update-org-error-message', type : 'error', title : 'organization.messages.errors.update.title', translatable: true });
 			message.setText("organization.messages.errors.update.text|" + response.data.message);
 			message.show();
 		}
@@ -705,7 +705,7 @@ function deleteCertificate(organizationId) {
 			removeKeyBtn.setEnabled(false);
 		},
 		onError: function(response) {
-			var message = new Message({ id : 'delete-certificate-error-message', type : 'error', title : 'organization.messages.errors.delete.title' });
+			var message = new Message({ id : 'delete-certificate-error-message', type : 'error', title : 'organization.messages.errors.delete.title', translatable: true });
 			message.setText("organization.messages.errors.delete.text|" + response.data.message);
 			message.show();
 		}
@@ -751,11 +751,11 @@ function createUser(data) {
 			usersTable.setSelectedLine(response.data.id);
 			
 			if (response.headers["x-activation-token"] != null) {
-				var message = new Message({ id : 'user-created-message', type : 'info', title : 'User Created' });
+				var message = new Message({ id : 'user-created-message', type : 'info', title : 'User Created', translatable: true });
 				message.setText("User " + response.data.username + " succesfully created! <a href='" + response.headers["x-activation-token"] + "'>Activation link</a>");
 				message.show();
 			} else {
-				var message = new Message({ id : 'user-created-message', type : 'info', title : 'User Created' });
+				var message = new Message({ id : 'user-created-message', type : 'info', title : 'User Created', translatable: true });
 				message.setText("User " + response.data.username + " succesfully created! An activation email has been sent.");
 				message.show();
 			}
@@ -766,7 +766,7 @@ function createUser(data) {
 			}
 		},
 		onError: function(response) {
-			var message = new Message({ id : 'create-user-error-message', type : 'error', title : 'users.messages.errors.create.title' });
+			var message = new Message({ id : 'create-user-error-message', type : 'error', title : 'users.messages.errors.create.title', translatable: true });
 			message.setText("users.messages.errors.create.text|" + response.data.message);
 			message.show();
 		}
@@ -794,7 +794,7 @@ function updateUser(data) {
 			}
 		},
 		onError: function(response) {
-			var message = new Message({ id : 'update-user-error-message', type : 'error', title : 'users.messages.errors.update.title' });
+			var message = new Message({ id : 'update-user-error-message', type : 'error', title : 'users.messages.errors.update.title', translatable: true });
 			message.setText("users.messages.errors.update.text|" + response.data.message);
 			message.show();
 		}
@@ -818,7 +818,7 @@ function deleteUser(data) {
 			userClaimsTable.clear();
 		},
 		onError: function(response) {
-			var message = new Message({ id : 'delete-user-error-message', type : 'error', title : 'users.messages.errors.delete.title' });
+			var message = new Message({ id : 'delete-user-error-message', type : 'error', title : 'users.messages.errors.delete.title', translatable: true });
 			message.setText("users.messages.errors.delete.text|" + response.data.message);
 			message.show();
 		}
@@ -892,7 +892,7 @@ function createApplication(data) {
 			}
 		},
 		onError: function(response) {
-			var message = new Message({ id : 'create-app-error-message', type : 'error', title : 'applications.messages.errors.create.title' });
+			var message = new Message({ id : 'create-app-error-message', type : 'error', title : 'applications.messages.errors.create.title', translatable: true });
 			message.setText("applications.messages.errors.create.text|" + response.data.message);
 			message.show();
 		}
@@ -921,7 +921,7 @@ function updateApplication(data) {
 			}
 		},
 		onError: function(response) {
-			var message = new Message({ id : 'update-app-error-message', type : 'error', title : 'applications.messages.errors.update.title' });
+			var message = new Message({ id : 'update-app-error-message', type : 'error', title : 'applications.messages.errors.update.title', translatable: true });
 			message.setText("applications.messages.errors.update.text|" + response.data.message);
 			message.show();
 		}
@@ -950,7 +950,7 @@ function deleteApplication(data) {
 			appClaimsTable.clear();
 		},
 		onError: function(response) {
-			var message = new Message({ id : 'delete-app-error-message', type : 'error', title : 'applications.messages.errors.delete.title' });
+			var message = new Message({ id : 'delete-app-error-message', type : 'error', title : 'applications.messages.errors.delete.title', translatable: true });
 			message.setText("applications.messages.errors.delete.text|" + response.data.message);
 			message.show();
 		}
@@ -1015,7 +1015,7 @@ function createAccess(data) {
 			}
 		},
 		onError: function(response) {
-			var message = new Message({ id : 'create-access-error-message', type : 'error', title : 'applications.messages.errors.create.title' });
+			var message = new Message({ id : 'create-access-error-message', type : 'error', title : 'applications.messages.errors.create.title', translatable: true });
 			message.setText("applications.messages.errors.create.text|" + response.data.message);
 			message.show();
 		}
@@ -1048,7 +1048,7 @@ function updateAccess(data) {
 			}
 		},
 		onError: function(response) {
-			var message = new Message({ id : 'update-access-error-message', type : 'error', title : 'applications.messages.errors.update.title' });
+			var message = new Message({ id : 'update-access-error-message', type : 'error', title : 'applications.messages.errors.update.title', translatable: true });
 			message.setText("applications.messages.errors.update.text|" + response.data.message);
 			message.show();
 		}
@@ -1069,7 +1069,7 @@ function deleteAccess(data) {
 			revokeUserAppBtn.setEnabled(false);
 		},
 		onError: function(response) {
-			var message = new Message({ id : 'delete-access-error-message', type : 'error', title : 'applications.messages.errors.delete.title' });
+			var message = new Message({ id : 'delete-access-error-message', type : 'error', title : 'applications.messages.errors.delete.title', translatable: true });
 			message.setText("applications.messages.errors.delete.text|" + response.data.message);
 			message.show();
 		}

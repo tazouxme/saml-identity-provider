@@ -199,14 +199,6 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 			}
 		}
 		
-		for (Claim claim : application.getClaims()) {
-			try {
-				claimBo.delete(claim);
-			} catch (ClaimException e) {
-				throw new ApplicationException("Unable to delete Claim for Application", e);
-			}
-		}
-		
 		applicationBo.delete(application);
 	}
 	

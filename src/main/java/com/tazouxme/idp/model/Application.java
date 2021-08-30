@@ -70,7 +70,7 @@ public class Application {
 	private Organization organization;
 	
 	@JsonIgnoreProperties("applications")
-	@ManyToMany(cascade = { CascadeType.ALL })
+	@ManyToMany(cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.PERSIST })
     @JoinTable(name = "tz_application_claims", joinColumns = { @JoinColumn(name = "application_id") }, inverseJoinColumns = { @JoinColumn(name = "claim_id") })
 	private Set<Claim> claims = new HashSet<>();
 	
