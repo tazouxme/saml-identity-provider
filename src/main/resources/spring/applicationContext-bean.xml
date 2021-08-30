@@ -49,6 +49,13 @@
     	<property name="alias" value="${idp.key.alias}" />
     	<property name="keyPassword" value="${idp.key.pass}" />
     	<property name="certificatePath" value="${idp.cert}" />
+    	<property name="templates">
+    		<bean class="com.tazouxme.idp.security.velocity.Templates">
+    			<property name="postSimpleSignTemplate" value="${idp.template.postSimpleSign}" />
+    			<property name="postTemplate" value="${idp.template.post}" />
+    			<property name="artifactTemplate" value="${idp.template.artifact}" />
+    		</bean>
+    	</property>
     </bean>
         
 </beans>

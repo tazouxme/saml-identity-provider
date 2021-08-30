@@ -247,7 +247,7 @@ public class ClientArtifactTest extends AbstractClientTest {
 			assertEquals(SSO_RELAY_STATE, findInputValue(text, "RelayState"));
 			
 			assertTrue(text.contains("SAMLResponse"));
-			response = SAMLUtilsTest.getResponse(Base64.decode(findInputValue(text, "SAMLResponse")));
+			response = (Response) SAMLUtilsTest.getResponse(Base64.decode(findInputValue(text, "SAMLResponse")));
 			assertEquals(StageResultCode.OK.getStatus(), response.getStatus().getStatusCode().getValue());
 			assertEquals("user1@test.com", response.getAssertions().get(0).getSubject().getNameID().getValue());
 		} catch (Exception e) {
@@ -400,7 +400,7 @@ public class ClientArtifactTest extends AbstractClientTest {
 			assertEquals(SSO_RELAY_STATE, findInputValue(text, "RelayState"));
 			
 			assertTrue(text.contains("SAMLResponse"));
-			response = SAMLUtilsTest.getResponse(Base64.decode(findInputValue(text, "SAMLResponse")));
+			response = (Response) SAMLUtilsTest.getResponse(Base64.decode(findInputValue(text, "SAMLResponse")));
 			assertEquals(StageResultCode.OK.getStatus(), response.getStatus().getStatusCode().getValue());
 			assertEquals("FED_2", response.getAssertions().get(0).getSubject().getNameID().getValue());
 		} catch (Exception e) {

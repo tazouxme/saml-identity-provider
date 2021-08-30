@@ -2,6 +2,7 @@ package com.tazouxme.idp.sanitizer;
 
 import com.tazouxme.idp.sanitizer.validation.SanitizerValidation;
 
+@FunctionalInterface
 public interface Sanitizer<T> {
 	
 	public static final RegexSanitizerRule DOMAIN_REGEX = 

@@ -37,6 +37,14 @@
 <header>
 	<img src="./img/gamma.png" title="My SSO" />
 	<span id="header-title">My SSO Dashboard</span>
+	
+	<div id="header-profile">
+	${loggedIn == true ?
+		'<span id="header-profile-user">'.concat(loggedInUser).concat('</span>')
+	:
+		'<span id="header-profile-login"><a href="./login">Login</a></span>'
+	}
+	</div>
 </header>
 
 <!-- Navigation elements -->

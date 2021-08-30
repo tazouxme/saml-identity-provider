@@ -26,8 +26,18 @@ header img {
 	border-radius: 50%;
 }
 
-header span {
+header > #header-title {
 	position: absolute;
 	top: 26px;
 	left: 65px;
+}
+
+header > #header-profile {
+	position: absolute;
+	top: 26px;
+	right: 65px;
+}
+
+header > #header-profile > #header-profile-login a {
+	color: white;
 }

@@ -12,6 +12,10 @@
 <header>
 	<img src="./img/gamma.png" title="My SSO" />
 	<span id="header-title">My SSO Home</span>
+	
+	<div id="header-profile">
+		<span id="header-profile-login"><a href="./login">Connect</a></span>
+	</div>
 </header>
 
 </body>

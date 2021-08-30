@@ -14,7 +14,6 @@ import org.opensaml.messaging.encoder.MessageEncodingException;
 import org.opensaml.messaging.pipeline.httpclient.BasicHttpClientMessagePipeline;
 import org.opensaml.messaging.pipeline.httpclient.HttpClientMessagePipeline;
 import org.opensaml.profile.context.ProfileRequestContext;
-import org.opensaml.saml.common.binding.security.impl.SAMLOutboundProtocolMessageSigningHandler;
 import org.opensaml.saml.common.messaging.context.SAMLBindingContext;
 import org.opensaml.saml.common.messaging.context.SAMLEndpointContext;
 import org.opensaml.saml.common.messaging.context.SAMLPeerEntityContext;
@@ -23,19 +22,17 @@ import org.opensaml.saml.saml2.binding.encoding.impl.HTTPPostEncoder;
 import org.opensaml.saml.saml2.binding.encoding.impl.HttpClientRequestSOAP11Encoder;
 import org.opensaml.saml.saml2.core.LogoutRequest;
 import org.opensaml.saml.saml2.core.LogoutResponse;
-import org.opensaml.saml.saml2.core.Response;
 import org.opensaml.saml.saml2.core.StatusCode;
 import org.opensaml.security.SecurityException;
 import org.opensaml.soap.client.http.AbstractPipelineHttpSOAPClient;
 import org.opensaml.soap.common.SOAPException;
-import org.opensaml.xmlsec.SignatureSigningParameters;
-import org.opensaml.xmlsec.context.SecurityParametersContext;
-import org.opensaml.xmlsec.signature.support.SignatureConstants;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.tazouxme.idp.IdentityProviderConstants;
+import com.tazouxme.idp.bo.contract.IAccessBo;
 import com.tazouxme.idp.bo.contract.ISessionBo;
+import com.tazouxme.idp.exception.AccessException;
 import com.tazouxme.idp.exception.SessionException;
 import com.tazouxme.idp.model.Access;
 import com.tazouxme.idp.model.Session;
@@ -69,96 +66,70 @@ public class LogoutAuthenticationHandler extends AbstractAuthenticationHandler {
 			return;
 		}
 		
+		IAccessBo accessBo = getContext().getBean(IAccessBo.class);
+		Access currentAccess = null;
+		
+		try {
+			currentAccess = accessBo.findByUserAndURN(parameters.getUserId(), logoutRequest.getIssuer().getValue(), parameters.getOrganizationId());
+		} catch (AccessException e) {
+			logger.error("Unable to retrieve current Access");
+			authentication.getDetails().setPhase(UserAuthenticationPhase.SLO_FAILED);
+			authentication.getDetails().setResultCode(StageResultCode.FAT_1505);
+			
+			fault(request, response, authentication);
+			return;
+		}
+		
 		boolean success = !UserAuthenticationPhase.SLO_FAILED.equals(authentication.getDetails().getPhase());
 		if (success) {
 			for (Access access : authentication.getDetails().getParameters().getUser().getAccesses()) {
+				if (access.getApplication().getUrn().equals(logoutRequest.getIssuer().getValue())) {
+					continue;
+				}
+				
 				try {
 					// send SOAP to all SaaS
 					LogoutResponse logoutResponse = logout(request, response, authentication, access);
 					
-					if (logoutResponse != null && StatusCode.SUCCESS.equals(logoutResponse.getStatus().getStatusCode().getValue())) {
-						continue;
+					if (logoutResponse == null || !StatusCode.SUCCESS.equals(logoutResponse.getStatus().getStatusCode().getValue())) {
+						redirect(request, response, authentication, currentAccess);
+						return;
 					}
 				} catch (StageException e) {
 					logger.error("logoutResponse is null or StatusCode is not Success");
-					fault(request, response, authentication);
+					redirect(request, response, authentication, currentAccess);
 					return;
 				}
 			}
 			
-			if (disconnect(authentication.getDetails().getIdentity())) {
-				CookieUtils.delete(response, CookieUtils.create(IdentityProviderConstants.COOKIE_ORGANIZATION, "", getConfiguration().getDomain(), getConfiguration().getPath(), 0));
-				CookieUtils.delete(response, CookieUtils.create(IdentityProviderConstants.COOKIE_USER, "", getConfiguration().getDomain(), getConfiguration().getPath(), 0));
-				CookieUtils.delete(response, CookieUtils.create(IdentityProviderConstants.COOKIE_SIGNATURE, "", getConfiguration().getDomain(), getConfiguration().getPath(), 0));
-				
-				SecurityContextHolder.clearContext();
-				
-				response.sendRedirect("./dashboard");
-				return;
+			if (currentAccess != null) {
+				if (disconnect(authentication)) {
+					CookieUtils.delete(response, CookieUtils.create(IdentityProviderConstants.COOKIE_ORGANIZATION, "", getConfiguration().getDomain(), getConfiguration().getPath(), 0));
+					CookieUtils.delete(response, CookieUtils.create(IdentityProviderConstants.COOKIE_USER, "", getConfiguration().getDomain(), getConfiguration().getPath(), 0));
+					CookieUtils.delete(response, CookieUtils.create(IdentityProviderConstants.COOKIE_SIGNATURE, "", getConfiguration().getDomain(), getConfiguration().getPath(), 0));
+					
+					SecurityContextHolder.clearContext();
+				}
 			}
 			
 		}
 		
-		fault(request, response, authentication);
+		redirect(request, response, authentication, currentAccess);
 	}
 	
 	@Override
 	public void fault(HttpServletRequest request, HttpServletResponse response, UserAuthenticationToken authentication) throws IOException, ServletException {
-		// send POST LogoutResponse unsuccessful
-		Response samlResponse = SAMLUtils.buildResponse(
-				authentication.getDetails().getParameters(),
-				authentication.getDetails().getIdentity(),
-				authentication.getRole(),
-				authentication.getDetails().getResultCode(),
-				authentication.getDetails().getParameters().getLogoutRequest().getID());
-		
-		MessageContext messageContext = new MessageContext();
-		messageContext.setMessage(samlResponse);
-
-		messageContext.getSubcontext(SAMLBindingContext.class, true).setRelayState(authentication.getDetails().getParameters().getRelayStateParam());
-		messageContext.getSubcontext(SAMLPeerEntityContext.class, true).getSubcontext(SAMLEndpointContext.class, true).
-				setEndpoint(SAMLUtils.getEndpoint(authentication.getDetails().getParameters().getApplication().getLogoutUrl()));
-		
-		HTTPPostEncoder encoder = new HTTPPostEncoder();
-		encoder.setVelocityEngine(new IdpVelocityEngine());
-		encoder.setVelocityTemplateId("/velocity/post-saml.vm");
-		encoder.setMessageContext(messageContext);
-		encoder.setHttpServletResponse(response);
-		
-		try {
-			encoder.prepareContext();
-			encoder.initialize();
-			encoder.encode();
-		} catch (MessageEncodingException e1) {
-			request.setAttribute("code", authentication.getDetails().getResultCode().getCode());
-			request.setAttribute("reason", authentication.getDetails().getResultCode().getReason());
-			request.setAttribute("status", authentication.getDetails().getResultCode().getStatus());
-			
-			request.getRequestDispatcher("/error.jsp").forward(request, response);
-			return;
-		} catch (ComponentInitializationException e1) {
-			request.setAttribute("code", authentication.getDetails().getResultCode().getCode());
-			request.setAttribute("reason", authentication.getDetails().getResultCode().getReason());
-			request.setAttribute("status", authentication.getDetails().getResultCode().getStatus());
-			
-			request.getRequestDispatcher("/error.jsp").forward(request, response);
-			return;
-		}
+		StageResultCode resultCode = authentication.getDetails().getResultCode();
+		response.sendError(resultCode.getCode(), resultCode.toString());
 	}
 	
 	private LogoutResponse logout(HttpServletRequest request, HttpServletResponse response, UserAuthenticationToken authentication, Access access) throws StageException {
-		SignatureSigningParameters signatureSigningParameters = new SignatureSigningParameters();
-		signatureSigningParameters.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA256);
-		signatureSigningParameters.setSigningCredential(getConfiguration().getPrivateCredential());
-		signatureSigningParameters.setSignatureCanonicalizationAlgorithm(SignatureConstants.ALGO_ID_C14N_EXCL_OMIT_COMMENTS);
-
 		MessageContext contextout = new MessageContext();
 		contextout.setMessage(SAMLUtils.buildLogoutRequest(
 				authentication.getDetails().getParameters().getLogoutRequest().getNameID(), 
 				getConfiguration().getUrn(), 
 				access.getApplication().getLogoutUrl(), 
 				getConfiguration().getPrivateCredential()));
-		contextout.getSubcontext(SecurityParametersContext.class, true).setSignatureSigningParameters(signatureSigningParameters);
 
 		InOutOperationContext context = new ProfileRequestContext();
 		context.setOutboundMessageContext(contextout);
@@ -168,10 +139,7 @@ public class LogoutAuthenticationHandler extends AbstractAuthenticationHandler {
 			@Override
 			@Nonnull
 			protected HttpClientMessagePipeline newPipeline() throws SOAPException {
-				BasicHttpClientMessagePipeline pipeline = new BasicHttpClientMessagePipeline(new HttpClientRequestSOAP11Encoder(), new HttpClientResponseSOAP11Decoder());
-				pipeline.setOutboundPayloadHandler(new SAMLOutboundProtocolMessageSigningHandler());
-
-				return pipeline;
+				return new BasicHttpClientMessagePipeline(new HttpClientRequestSOAP11Encoder(), new HttpClientResponseSOAP11Decoder());
 			}
 		};
 
@@ -182,6 +150,7 @@ public class LogoutAuthenticationHandler extends AbstractAuthenticationHandler {
 			soapClient.send(access.getApplication().getLogoutUrl(), context);
 		} catch (SOAPException | SecurityException e) {
 			logger.error("SOAP request not sent", e);
+			authentication.getDetails().setPhase(UserAuthenticationPhase.SLO_FAILED);
 			authentication.getDetails().setResultCode(StageResultCode.FAT_1501);
 			
 			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_1501, authentication.getDetails().getParameters());
@@ -190,7 +159,42 @@ public class LogoutAuthenticationHandler extends AbstractAuthenticationHandler {
 		return (LogoutResponse) context.getInboundMessageContext().getMessage();
 	}
 	
-	private boolean disconnect(UserIdentity identity) {
+	private void redirect(HttpServletRequest request, HttpServletResponse response, UserAuthenticationToken authentication, Access access) throws ServletException, IOException {
+		MessageContext messageContext = new MessageContext();
+		messageContext.setMessage(SAMLUtils.buildLogoutResponse(
+				authentication.getDetails().getParameters(), 
+				authentication.getDetails().getResultCode()));
+
+		messageContext.getSubcontext(SAMLBindingContext.class, true).setRelayState(authentication.getDetails().getParameters().getRelayStateParam());
+		messageContext.getSubcontext(SAMLPeerEntityContext.class, true).getSubcontext(SAMLEndpointContext.class, true).setEndpoint(SAMLUtils.getEndpoint(access.getApplication().getLogoutUrl()));
+		
+		HTTPPostEncoder encoder = new HTTPPostEncoder();
+		encoder.setVelocityEngine(new IdpVelocityEngine());
+		encoder.setVelocityTemplateId(getConfiguration().getTemplates().getPostTemplate());
+		encoder.setMessageContext(messageContext);
+		encoder.setHttpServletResponse(response);
+		
+		try {
+			encoder.prepareContext();
+			encoder.initialize();
+			encoder.encode();
+		} catch (MessageEncodingException e) {
+			logger.error("Unable to send SAML LogoutResponse", e);
+			authentication.getDetails().setPhase(UserAuthenticationPhase.SLO_FAILED);
+			authentication.getDetails().setResultCode(StageResultCode.FAT_1503);
+
+			fault(request, response, authentication);
+		} catch (ComponentInitializationException e) {
+			logger.error("Unable to send SAML LogoutResponse", e);
+			authentication.getDetails().setPhase(UserAuthenticationPhase.SLO_FAILED);
+			authentication.getDetails().setResultCode(StageResultCode.FAT_1504);
+
+			fault(request, response, authentication);
+		}
+	}
+	
+	private boolean disconnect(UserAuthenticationToken authentication) {
+		UserIdentity identity = authentication.getDetails().getIdentity();
 		ISessionBo sessionBo = getContext().getBean(ISessionBo.class);
 		
 		try {
@@ -198,6 +202,9 @@ public class LogoutAuthenticationHandler extends AbstractAuthenticationHandler {
 			sessionBo.delete(session);
 		} catch (SessionException e) {
 			logger.error("Cannot delete the Session", e);
+			authentication.getDetails().setPhase(UserAuthenticationPhase.SLO_FAILED);
+			authentication.getDetails().setResultCode(StageResultCode.FAT_1502);
+			
 			return false;
 		}
 		

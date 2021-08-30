@@ -28,7 +28,7 @@ import org.opensaml.saml.saml2.core.LogoutRequest;
 import org.opensaml.saml.saml2.core.NameID;
 import org.opensaml.saml.saml2.core.NameIDPolicy;
 import org.opensaml.saml.saml2.core.RequestedAuthnContext;
-import org.opensaml.saml.saml2.core.Response;
+import org.opensaml.saml.saml2.core.StatusResponseType;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
@@ -90,7 +90,7 @@ public class SAMLUtilsTest {
 		return nameIDPolicy;
 	}
 	
-	public static Response getResponse(byte[] samlResponse) {
+	public static StatusResponseType getResponse(byte[] samlResponse) {
 		Document document = null;
 		XMLObject responseXmlObj = null;
 		
@@ -126,7 +126,7 @@ public class SAMLUtilsTest {
 			throw new RuntimeException("Cannot generate the Response from the XML.", e);
 		} 
 		
-        return (Response) responseXmlObj;
+        return (StatusResponseType) responseXmlObj;
 	}
 
 	private static RequestedAuthnContext buildRequestedAuthnContext(String authnContext) {

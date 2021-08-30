@@ -11,6 +11,7 @@ public enum ClaimsDefaults {
 	CITY ("http://schemas.tazouxme.com/identity/claims/city", "CITY", "City"),
 	ZIP_CODE ("http://schemas.tazouxme.com/identity/claims/zipCode", "ZIPCODE", "ZIP Code"),
 	SEX ("http://schemas.tazouxme.com/identity/claims/sex", "SEX", "Sex"),
+	PICTURE ("http://schemas.tazouxme.com/identity/claims/picture", "PICTURE", "Picture"),
 	DATE_OF_BIRTH ("http://schemas.tazouxme.com/identity/claims/birthdate", "BIRTHDATE", "Date of Birth");
 	
 	private String uri;

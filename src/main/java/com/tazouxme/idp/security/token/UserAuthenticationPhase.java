@@ -18,6 +18,7 @@ public enum UserAuthenticationPhase {
 	IS_AUTHENTICATING,
 	IS_AUTHENTICATED,
 	
+	WEB_PAGE_ALLOWED,
 	WEB_PAGE_ACCESS;
 
 }

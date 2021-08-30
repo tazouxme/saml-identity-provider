@@ -30,21 +30,25 @@ public class StageParameters {
 	private Application application;
 	private String redirectUrl;
 	
-	public StageParameters(IdentityProviderConfiguration configuration, String redirectUrl) {
+	private StageParameters(IdentityProviderConfiguration configuration) {
 		this.configuration = configuration;
+	}
+	
+	public StageParameters(IdentityProviderConfiguration configuration, String redirectUrl) {
+		this(configuration);
 		this.redirectUrl = redirectUrl;
 	}
 	
 	public StageParameters(IdentityProviderConfiguration configuration, 
 			HttpServletRequest request, String organization, String user, String signature) {
-		this.configuration = configuration;
+		this(configuration);
 		this.requestParameters = new StageRequestParameters(request);
 		this.cookieParameters = new StageCookieParameters(organization, user, signature);
 	}
 	
 	public StageParameters(IdentityProviderConfiguration configuration, 
 			String urlMethod, String urlParam, String samlRequestParam, String relayStateParam, String organization, String user, String signature) {
-		this.configuration = configuration;
+		this(configuration);
 		this.requestParameters = new StageRequestParameters(urlMethod, urlParam, samlRequestParam, relayStateParam);
 		this.cookieParameters = new StageCookieParameters(organization, user, signature);
 	}

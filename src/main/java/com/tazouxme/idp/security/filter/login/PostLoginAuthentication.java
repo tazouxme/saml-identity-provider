@@ -10,13 +10,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tazouxme.idp.IdentityProviderConstants;
-import com.tazouxme.idp.security.filter.AbstractIdentityProviderFilter;
 import com.tazouxme.idp.security.filter.entity.PasswordEntity;
 import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.security.stage.exception.StageException;
@@ -24,16 +24,14 @@ import com.tazouxme.idp.security.stage.exception.StageExceptionType;
 import com.tazouxme.idp.security.token.UserAuthenticationPhase;
 import com.tazouxme.idp.security.token.UserAuthenticationToken;
 
-public class FinishAuthenticateFilter extends AbstractIdentityProviderFilter {
+public class PostLoginAuthentication implements ILoginAuthentication {
+
+	protected final Log logger = LogFactory.getLog(getClass());
 
 	private AuthenticationManager authenticationManager;
-	
-	public FinishAuthenticateFilter() {
-		super(new AntPathRequestMatcher("/login", "POST"));
-	}
 
 	@Override
-	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
+	public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
 		UserAuthenticationToken inAuthentication = (UserAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
 		
 		String organization = request.getParameter(IdentityProviderConstants.AUTH_PARAM_ORGANIZATION);
@@ -83,6 +81,11 @@ public class FinishAuthenticateFilter extends AbstractIdentityProviderFilter {
 			inAuthentication.getDetails().setResultCode(StageResultCode.FAT_1104);
 			chain.doFilter(request, response);
 		}
+	}
+	
+	@Override
+	public String getMethod() {
+		return "POST";
 	}
 	
 	private void handleStageException(StageException s, ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {

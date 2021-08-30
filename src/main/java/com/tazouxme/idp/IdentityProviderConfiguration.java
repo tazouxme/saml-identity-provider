@@ -25,6 +25,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 
+import com.tazouxme.idp.security.velocity.Templates;
+
 import net.shibboleth.utilities.java.support.resolver.CriteriaSet;
 import net.shibboleth.utilities.java.support.resolver.Criterion;
 import net.shibboleth.utilities.java.support.resolver.ResolverException;
@@ -38,6 +40,7 @@ public class IdentityProviderConfiguration implements InitializingBean {
 	
 	private KeyStore keystore;
 	private BasicX509Credential x509;
+	private Templates templates;
 	
 	private String domain;
 	private String path;
@@ -143,6 +146,14 @@ public class IdentityProviderConfiguration implements InitializingBean {
 	
 	public void setCertificatePath(String certificatePath) {
 		this.certificatePath = certificatePath;
+	}
+	
+	public Templates getTemplates() {
+		return templates;
+	}
+	
+	public void setTemplates(Templates templates) {
+		this.templates = templates;
 	}
 
 	public Credential getPrivateCredential() {

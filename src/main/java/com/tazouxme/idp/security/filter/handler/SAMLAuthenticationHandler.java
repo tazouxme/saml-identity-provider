@@ -50,11 +50,8 @@ public class SAMLAuthenticationHandler extends AbstractAuthenticationHandler {
 		AuthnRequest authnRequest = parameters.getAuthnRequest();
 		
 		if (authnRequest == null) {
-			request.setAttribute("code", authentication.getDetails().getResultCode().getCode());
-			request.setAttribute("reason", authentication.getDetails().getResultCode().getReason());
-			request.setAttribute("status", authentication.getDetails().getResultCode().getStatus());
-			
-			request.getRequestDispatcher("/error.jsp").forward(request, response);
+			StageResultCode resultCode = authentication.getDetails().getResultCode();
+			response.sendError(resultCode.getCode(), resultCode.toString());
 			return;
 		}
 		
@@ -105,8 +102,7 @@ public class SAMLAuthenticationHandler extends AbstractAuthenticationHandler {
 				authentication.getDetails().getParameters(),
 				authentication.getDetails().getIdentity(),
 				authentication.getRole(),
-				authentication.getDetails().getResultCode(),
-				authentication.getDetails().getParameters().getAuthnRequest().getID());
+				authentication.getDetails().getResultCode());
 		
 		MessageContext messageContext = new MessageContext();
 		messageContext.setMessage(samlResponse);
@@ -137,20 +133,12 @@ public class SAMLAuthenticationHandler extends AbstractAuthenticationHandler {
 			logger.error("Unable to send SAML Response", e);
 			// error
 			StageResultCode resultCode = StageResultCode.FAT_1303;
-			request.setAttribute("code", resultCode.getCode());
-			request.setAttribute("reason", resultCode.getReason());
-			request.setAttribute("status", resultCode.getStatus());
-			
-			request.getRequestDispatcher("/error.jsp").forward(request, response);
+			response.sendError(resultCode.getCode(), resultCode.toString());
 		} catch (ComponentInitializationException e) {
 			logger.error("Unable to send SAML Response", e);
 			// error
 			StageResultCode resultCode = StageResultCode.FAT_1304;
-			request.setAttribute("code", resultCode.getCode());
-			request.setAttribute("reason", resultCode.getReason());
-			request.setAttribute("status", resultCode.getStatus());
-			
-			request.getRequestDispatcher("/error.jsp").forward(request, response);
+			response.sendError(resultCode.getCode(), resultCode.toString());
 		}
 		
 		SecurityContextHolder.clearContext();
@@ -158,11 +146,8 @@ public class SAMLAuthenticationHandler extends AbstractAuthenticationHandler {
 	
 	@Override
 	public void fault(HttpServletRequest request, HttpServletResponse response, UserAuthenticationToken authentication) throws IOException, ServletException {
-		request.setAttribute("code", authentication.getDetails().getResultCode().getCode());
-		request.setAttribute("reason", authentication.getDetails().getResultCode().getReason());
-		request.setAttribute("status", authentication.getDetails().getResultCode().getStatus());
-		
-		request.getRequestDispatcher("/error.jsp").forward(request, response);
+		StageResultCode resultCode = authentication.getDetails().getResultCode();
+		response.sendError(resultCode.getCode(), resultCode.toString());
 	}
 
 	private SecretKey generateSecretKey() {

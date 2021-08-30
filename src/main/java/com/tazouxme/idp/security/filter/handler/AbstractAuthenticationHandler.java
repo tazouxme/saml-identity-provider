@@ -66,11 +66,7 @@ public abstract class AbstractAuthenticationHandler {
 				logger.error("Unable to set 'signature' Cookie", e);
 				// error
 				StageResultCode resultCode = StageResultCode.FAT_1302;
-				request.setAttribute("code", resultCode.getCode());
-				request.setAttribute("reason", resultCode.getReason());
-				request.setAttribute("status", resultCode.getStatus());
-				
-				request.getRequestDispatcher("/error.jsp").forward(request, response);
+				response.sendError(resultCode.getCode(), resultCode.toString());
 				return false;
 			}
 		}

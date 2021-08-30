@@ -23,14 +23,18 @@
 				<!-- Security -->
 				<security:filter-chain pattern="/**" filters="
 					securityContextPersistenceFilter,
+					
 					getSingleLogoutFilter,
 					postSingleLogoutFilter,
+					
+					logoutAuthenticateFilter,
+					
 					getSingleSignOnFilter,
 					postSingleSignOnFilter,
 					soapSingleSignOnFilter,
+					
 					loginAuthenticateFilter,
-					startAuthenticateFilter,
-					finishAuthenticateFilter,
+					
 					authenticationHandlerFilter,
 					exceptionTranslationFilter,
 					filterSecurityInterceptor" />
@@ -96,11 +100,20 @@
 	<bean id="soapSingleSignOnFilter" class="com.tazouxme.idp.security.filter.sso.soap.SoapSingleSignOnFilter">
 		<property name="stages" ref="ssoSoapStages" />
 	</bean>
-	<bean id="loginAuthenticateFilter" class="com.tazouxme.idp.security.filter.login.LoginAuthenticationFilter" />
-	<bean id="startAuthenticateFilter" class="com.tazouxme.idp.security.filter.login.StartAuthenticateFilter" />
-	<bean id="finishAuthenticateFilter" class="com.tazouxme.idp.security.filter.login.FinishAuthenticateFilter">
-		<property name="authenticationManager" ref="authenticationManager" />
+	<bean id="logoutAuthenticateFilter" class="com.tazouxme.idp.security.filter.logout.LogoutAuthenticationFilter" />
+	
+	<bean id="loginAuthenticateFilter" class="com.tazouxme.idp.security.filter.login.LoginAuthenticationFilter">
+		<constructor-arg>
+			<list>
+				<bean class="com.tazouxme.idp.security.filter.login.GetLoginAuthentication" />
+				<bean class="com.tazouxme.idp.security.filter.login.HeadLoginAuthentication" />
+				<bean class="com.tazouxme.idp.security.filter.login.PostLoginAuthentication">
+					<property name="authenticationManager" ref="authenticationManager" />
+				</bean>
+			</list>
+		</constructor-arg>
 	</bean>
+	
 	<bean id="authenticationHandlerFilter" class="com.tazouxme.idp.security.filter.AuthenticationHandlerFilter" />
 	
 	<bean id="exceptionTranslationFilter" class="org.springframework.security.web.access.ExceptionTranslationFilter">

@@ -10,6 +10,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
@@ -35,7 +36,8 @@ public class UserDetails {
     @JoinColumn(name = "claim_id", foreignKey = @ForeignKey(name = "fk_tz_user_claims"))
 	private Claim claim;
 	
-	@Column(name = "claim_value", length = 128, updatable = true, nullable = false)
+	@Lob
+	@Column(name = "claim_value", updatable = true, nullable = false)
 	private String claimValue;
 	
 	@Column(name = "creation_date", length = 16, updatable = false, nullable = false)

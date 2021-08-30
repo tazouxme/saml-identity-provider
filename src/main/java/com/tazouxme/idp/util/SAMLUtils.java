@@ -46,18 +46,23 @@ import org.opensaml.saml.saml2.core.Audience;
 import org.opensaml.saml.saml2.core.AudienceRestriction;
 import org.opensaml.saml.saml2.core.AuthnContext;
 import org.opensaml.saml.saml2.core.AuthnContextClassRef;
+import org.opensaml.saml.saml2.core.AuthnContextComparisonTypeEnumeration;
 import org.opensaml.saml.saml2.core.AuthnRequest;
 import org.opensaml.saml.saml2.core.AuthnStatement;
 import org.opensaml.saml.saml2.core.Conditions;
 import org.opensaml.saml.saml2.core.Issuer;
 import org.opensaml.saml.saml2.core.LogoutRequest;
+import org.opensaml.saml.saml2.core.LogoutResponse;
 import org.opensaml.saml.saml2.core.NameID;
+import org.opensaml.saml.saml2.core.NameIDPolicy;
 import org.opensaml.saml.saml2.core.NameIDType;
 import org.opensaml.saml.saml2.core.RequestAbstractType;
+import org.opensaml.saml.saml2.core.RequestedAuthnContext;
 import org.opensaml.saml.saml2.core.Response;
 import org.opensaml.saml.saml2.core.Status;
 import org.opensaml.saml.saml2.core.StatusCode;
 import org.opensaml.saml.saml2.core.StatusMessage;
+import org.opensaml.saml.saml2.core.StatusResponseType;
 import org.opensaml.saml.saml2.core.Subject;
 import org.opensaml.saml.saml2.core.SubjectConfirmation;
 import org.opensaml.saml.saml2.core.SubjectConfirmationData;
@@ -96,7 +101,15 @@ public class SAMLUtils {
 		return endpoint;
 	}
 	
-	public static RequestAbstractType unmarshallAuthnRequest(byte[] saml, boolean inflate) throws StageException {
+	public static RequestAbstractType unmarshallRequest(byte[] saml, boolean inflate) throws StageException {
+		return unmarshallRequestParameter(saml, inflate, RequestAbstractType.class);
+	}
+	
+	public static StatusResponseType unmarshallResponse(byte[] saml, boolean inflate) throws StageException {
+		return unmarshallRequestParameter(saml, inflate, StatusResponseType.class);
+	}
+	
+	private static <T> T unmarshallRequestParameter(byte[] saml, boolean inflate, Class<T> c) throws StageException {
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         documentBuilderFactory.setNamespaceAware(true);
         
@@ -120,10 +133,27 @@ public class SAMLUtils {
         Unmarshaller unmarshaller = XMLObjectProviderRegistrySupport.getUnmarshallerFactory().getUnmarshaller(element);
         
 		try {
-			return (RequestAbstractType) unmarshaller.unmarshall(element);
+			return c.cast(unmarshaller.unmarshall(element));
 		} catch (UnmarshallingException e) {
 			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0802);
 		} 
+	}
+	
+	public static AuthnRequest buildAuthnRequest(String idpUrn, String acs, String application, String authnContext, String binding, String nameIDFormat) throws Exception {
+		AuthnRequest auth = buildSAMLObject(AuthnRequest.class);
+		auth.setID(IDUtils.generateId("ID_", 4));
+		auth.setVersion(SAMLVersion.VERSION_20);
+		auth.setIssueInstant(Instant.now());
+		auth.setForceAuthn(false);
+		auth.setIsPassive(false);
+		auth.setProtocolBinding(binding);
+		auth.setDestination(idpUrn);
+		auth.setAssertionConsumerServiceURL(acs);
+		auth.setIssuer(buildIssuer(application));
+		auth.setNameIDPolicy(buildNameIDPolicy(nameIDFormat));
+		auth.setRequestedAuthnContext(buildRequestedAuthnContext(authnContext));
+		
+		return auth;
 	}
 	
 	public static ArtifactResponse buildArtifactResponse(StageParameters params, StageResultCode stageCode) {
@@ -141,15 +171,13 @@ public class SAMLUtils {
 		return response;
 	}
 	
-	public static Response buildResponse(StageParameters params, UserIdentity identity, String role, StageResultCode stageCode, String id) throws StageException {
-		String idp = params.getIdpUrn();
-
+	public static Response buildResponse(StageParameters params, UserIdentity identity, String role, StageResultCode stageCode) throws StageException {
 		Response response = buildSAMLObject(Response.class);
 		response.setID(IDUtils.generateId("RES_", 4));
 		response.setVersion(SAMLVersion.VERSION_20);
 		response.setIssueInstant(Instant.now());
-		response.setInResponseTo(id);
-		response.setIssuer(buildIssuer(idp));
+		response.setInResponseTo(params.getAuthnRequest().getID());
+		response.setIssuer(buildIssuer(params.getIdpUrn()));
 		response.setStatus(buildStatus(stageCode));
 		
 		if (stageCode.equals(StageResultCode.OK)) {
@@ -186,6 +214,35 @@ public class SAMLUtils {
 		
 		return request;
 	}
+	
+	public static LogoutResponse buildLogoutResponse(StageParameters params, StageResultCode stageCode) {
+		LogoutResponse response = buildSAMLObject(LogoutResponse.class);
+		response.setID(IDUtils.generateId("REQ_", 4));
+		response.setVersion(SAMLVersion.VERSION_20);
+		response.setIssueInstant(Instant.now());
+		response.setInResponseTo(params.getLogoutRequest().getID());
+		response.setDestination(params.getLogoutRequest().getIssuer().getValue());
+		response.setIssuer(buildIssuer(params.getIdpUrn()));
+		response.setStatus(buildStatus(stageCode));
+		
+		Signature signature = buildSAMLObject(Signature.class);
+		signature.setSigningCredential(params.getPrivateCredential());
+		signature.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA256);
+		signature.setCanonicalizationAlgorithm(SignatureConstants.ALGO_ID_C14N_EXCL_OMIT_COMMENTS);
+		
+		response.setSignature(signature);
+		
+		try {
+			XMLObjectProviderRegistrySupport.getMarshallerFactory().getMarshaller(response).marshall(response);
+			Signer.signObject(signature);
+		} catch (MarshallingException e) {
+			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0803);
+		} catch (SignatureException e) {
+			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0804);
+		}
+		
+		return response;
+	}
 
 	private static Issuer buildIssuer(String idp) {
 		Issuer issuer = buildSAMLObject(Issuer.class);
@@ -203,12 +260,31 @@ public class SAMLUtils {
 		
 		if (!stageCode.equals(StageResultCode.OK)) {
 			StatusMessage message = buildSAMLObject(StatusMessage.class);
-			message.setValue(stageCode.getCode() + ": " + stageCode.getReason());
+			message.setValue(stageCode.getReference() + ": " + stageCode.getReason());
 			
 			status.setStatusMessage(message);
 		}
 		
 		return status;
+	}
+
+	private static NameIDPolicy buildNameIDPolicy(String nameIDFormat) {
+		NameIDPolicy nameIDPolicy = buildSAMLObject(NameIDPolicy.class);
+		nameIDPolicy.setFormat(nameIDFormat);
+		nameIDPolicy.setAllowCreate(false);
+
+		return nameIDPolicy;
+	}
+
+	private static RequestedAuthnContext buildRequestedAuthnContext(String authnContext) {
+		AuthnContextClassRef authnContextClassRef = buildSAMLObject(AuthnContextClassRef.class);
+		authnContextClassRef.setURI(authnContext);
+
+		RequestedAuthnContext context = buildSAMLObject(RequestedAuthnContext.class);
+		context.setComparison(AuthnContextComparisonTypeEnumeration.EXACT);
+		context.getAuthnContextClassRefs().add(authnContextClassRef);
+
+		return context;
 	}
 	
 	private static Assertion buildAssertion(StageParameters stageParams, UserIdentity identity, String role) throws StageException {

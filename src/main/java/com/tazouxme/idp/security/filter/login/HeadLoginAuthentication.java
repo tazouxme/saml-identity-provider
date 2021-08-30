@@ -22,13 +22,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.util.encoders.Base64;
 import org.opensaml.saml.common.xml.SAMLConstants;
 import org.opensaml.saml.saml2.core.NameID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import com.tazouxme.idp.IdentityProviderConstants;
 import com.tazouxme.idp.bo.contract.IApplicationBo;
@@ -43,13 +44,14 @@ import com.tazouxme.idp.model.Application;
 import com.tazouxme.idp.model.Federation;
 import com.tazouxme.idp.model.Organization;
 import com.tazouxme.idp.model.User;
-import com.tazouxme.idp.security.filter.AbstractIdentityProviderFilter;
 import com.tazouxme.idp.security.stage.parameters.StageParameters;
 import com.tazouxme.idp.security.token.UserAuthenticationPhase;
 import com.tazouxme.idp.security.token.UserAuthenticationToken;
 import com.tazouxme.idp.security.token.UserAuthenticationType;
 
-public class StartAuthenticateFilter extends AbstractIdentityProviderFilter {
+public class HeadLoginAuthentication implements ILoginAuthentication {
+
+	protected final Log logger = LogFactory.getLog(getClass());
 
 	@Autowired
 	private IOrganizationBo organizationBo;
@@ -62,13 +64,9 @@ public class StartAuthenticateFilter extends AbstractIdentityProviderFilter {
 	
 	@Autowired
 	private IApplicationBo applicationBo;
-	
-	public StartAuthenticateFilter() {
-		super(new AntPathRequestMatcher("/login", "HEAD"));
-	}
 
 	@Override
-	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
+	public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
 		String csrf = request.getHeader(IdentityProviderConstants.AUTH_HEADER_CSRF);
 		String publicKey = request.getHeader(IdentityProviderConstants.AUTH_HEADER_PUBLIC_KEY);
 		String username = request.getHeader(IdentityProviderConstants.AUTH_HEADER_USERNAME);
@@ -223,6 +221,11 @@ public class StartAuthenticateFilter extends AbstractIdentityProviderFilter {
 			response.setHeader(IdentityProviderConstants.AUTH_HEADER_CSRF, csrf);
 			response.setHeader(IdentityProviderConstants.AUTH_HEADER_ERROR, "Unable to generate the SecretKey from the PublicKey");
 		}
+	}
+	
+	@Override
+	public String getMethod() {
+		return "HEAD";
 	}
 	
 	private PublicKey obtainPublicKey(String publicKey) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {

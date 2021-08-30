@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.context.ApplicationContext;
 
 import com.tazouxme.idp.IdentityProviderConstants;
+import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.security.token.UserAuthenticationPhase;
 import com.tazouxme.idp.security.token.UserAuthenticationToken;
 
@@ -29,7 +30,7 @@ public class ClassicAuthenticationHandler extends AbstractAuthenticationHandler 
 		if (UserAuthenticationPhase.SSO_FAILED.equals(authentication.getDetails().getPhase())) {
 			authentication.getDetails().setPhase(UserAuthenticationPhase.MUST_AUTHENTICATE);
 			
-			request.setAttribute(IdentityProviderConstants.SERVLET_ERROR_WRONG_USER_PASS, "Error" + authentication.getDetails().getResultCode().getCode());
+			request.setAttribute(IdentityProviderConstants.SERVLET_ERROR_WRONG_USER_PASS, "Error" + authentication.getDetails().getResultCode().getReference());
 			request.getRequestDispatcher("/authenticate.jsp").forward(request, response);
 			return;
 		}
@@ -54,11 +55,8 @@ public class ClassicAuthenticationHandler extends AbstractAuthenticationHandler 
 	
 	@Override
 	public void fault(HttpServletRequest request, HttpServletResponse response, UserAuthenticationToken authentication) throws IOException, ServletException {
-		request.setAttribute("code", authentication.getDetails().getResultCode().getCode());
-		request.setAttribute("reason", authentication.getDetails().getResultCode().getReason());
-		request.setAttribute("status", authentication.getDetails().getResultCode().getStatus());
-		
-		request.getRequestDispatcher("/error.jsp").forward(request, response);
+		StageResultCode resultCode = authentication.getDetails().getResultCode();
+		response.sendError(resultCode.getCode(), resultCode.toString());
 	}
 
 }

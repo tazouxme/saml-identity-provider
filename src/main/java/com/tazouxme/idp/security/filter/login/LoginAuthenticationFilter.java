@@ -1,54 +1,40 @@
 package com.tazouxme.idp.security.filter.login;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import com.tazouxme.idp.security.filter.AbstractIdentityProviderFilter;
-import com.tazouxme.idp.security.stage.StageResultCode;
-import com.tazouxme.idp.security.token.UserAuthenticationPhase;
-import com.tazouxme.idp.security.token.UserAuthenticationToken;
-import com.tazouxme.idp.security.token.UserAuthenticationType;
 
 public class LoginAuthenticationFilter extends AbstractIdentityProviderFilter {
+	
+	private Map<String, ILoginAuthentication> steps = new HashMap<>();
 
-	public LoginAuthenticationFilter() {
-		super(new AntPathRequestMatcher("/login", "GET"));
+	public LoginAuthenticationFilter(List<ILoginAuthentication> steps) {
+		super(new AntPathRequestMatcher("/login"));
+		
+		for (ILoginAuthentication step : steps) {
+			this.steps.put(step.getMethod(), step);
+		}
 	}
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws IOException, ServletException {
-		UserAuthenticationToken startAuthentication = (UserAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-		
-		if (startAuthentication == null || startAuthentication.getDetails().getParameters() == null ||
-				!UserAuthenticationPhase.MUST_AUTHENTICATE.equals(startAuthentication.getDetails().getPhase())) {
-			SecurityContextHolder.clearContext();
-			
-			UserAuthenticationToken authentication = new UserAuthenticationToken();
-			authentication.getDetails().setResultCode(StageResultCode.FAT_1001);
-			
-			SecurityContextHolder.getContext().setAuthentication(authentication);
-			
-			chain.doFilter(req, res);
+		ILoginAuthentication authentication = this.steps.get(req.getMethod());
+		if (authentication == null) {
+			res.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
 			return;
 		}
 		
-		if (UserAuthenticationType.SAML.equals(startAuthentication.getDetails().getType())) {
-			logger.info("SP Initialization process");
-
-		} else {
-			logger.info("IdP Initialization process");
-			
-		}
-		
-		// display authenticate page
-		req.getRequestDispatcher("/authenticate.jsp").forward(req, res);
+		authentication.doFilterInternal(req, res, chain);
 	}
 
 }

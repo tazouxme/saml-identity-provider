@@ -12,6 +12,48 @@
 		<param-name>contextConfigLocation</param-name>
 		<param-value>classpath:spring/test-applicationContext-*.xml</param-value>
 	</context-param>
+
+	<error-page>
+		<error-code>401</error-code>
+		<location>/error</location>
+	</error-page>
+	<error-page>
+		<error-code>403</error-code>
+		<location>/error</location>
+	</error-page>
+	<error-page>
+		<error-code>404</error-code>
+		<location>/error</location>
+	</error-page>
+	<error-page>
+		<error-code>405</error-code>
+		<location>/error</location>
+	</error-page>
+	<error-page>
+		<error-code>406</error-code>
+		<location>/error</location>
+	</error-page>
+	<error-page>
+		<error-code>409</error-code>
+		<location>/error</location>
+	</error-page>
+	<error-page>
+		<error-code>410</error-code>
+		<location>/error</location>
+	</error-page>
+	<error-page>
+		<error-code>412</error-code>
+		<location>/error</location>
+	</error-page>
+	<error-page>
+		<error-code>417</error-code>
+		<location>/error</location>
+	</error-page>
+	<error-page>
+		<error-code>500</error-code>
+		<location>/error</location>
+	</error-page>
+	
 	<listener>
 		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
 	</listener>
@@ -83,6 +125,16 @@
 	<servlet-mapping>
 		<servlet-name>ActivationServlet</servlet-name>
 		<url-pattern>/activate</url-pattern>
+	</servlet-mapping>
+
+	<servlet>
+		<servlet-name>ErrorServlet</servlet-name>
+		<servlet-class>com.tazouxme.idp.servlet.ErrorServlet</servlet-class>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>ErrorServlet</servlet-name>
+		<url-pattern>/error</url-pattern>
 	</servlet-mapping>
 		
 </web-app>

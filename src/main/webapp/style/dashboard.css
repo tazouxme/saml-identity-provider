@@ -26,10 +26,30 @@ header img {
 	border-radius: 50%;
 }
 
-header span {
+header > #header-title {
 	position: absolute;
 	top: 26px;
 	left: 65px;
+}
+
+header > #header-profile {
+	position: absolute;
+	top: 21px;
+	right: 65px;
+	padding: 5px 10px;
+}
+
+header > #header-profile:hover {
+	box-shadow: 0px 0px 6px 0px #ccc;
+	cursor: pointer;
+}
+
+header > #header-profile > #header-profile-login a {
+	color: white;
+}
+
+header > #header-profile > #header-profile-logout a {
+	color: white;
 }
 
 #dashboard-ribbon {

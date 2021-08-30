@@ -1,6 +1,6 @@
 package com.tazouxme.idp.security.stage.validate.sso.http;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
@@ -31,10 +31,10 @@ public class ValidateRequestValuesStage extends AbstractStage {
 		if (StringUtils.isEmpty(o.getAuthnRequest().getAssertionConsumerServiceURL())) {
 			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0204, o);
 		}
-		if (StringUtils.isEmpty(o.getAuthnRequest().getIssueInstant().toString())) {
+		if (o.getAuthnRequest().getIssueInstant() == null) {
 			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0205, o);
 		}
-		if (o.getAuthnRequest().getIssueInstant().getEpochSecond() > new Date().getTime()) {
+		if (o.getAuthnRequest().getIssueInstant().isAfter(Instant.now())) {
 			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0206, o);
 		}
 		if (!IdentityProviderConstants.SAML_VERSION.equals(o.getAuthnRequest().getVersion().toString())) {

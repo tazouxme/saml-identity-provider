@@ -4,6 +4,9 @@ public class IdentityProviderConstants {
 	
 	public static final String CERT_START = "-----BEGIN CERTIFICATE-----";
 	public static final String CERT_END = "-----END CERTIFICATE-----\r\n";
+
+	public static final String ERROR_CODE = "error_code";
+	public static final String ERROR_REASON = "error_reason";
 	
 	public static final String SAML_CLAIM_ORGANIZATION = "http://schemas.tazouxme.com/identity/claims/organization";
 	public static final String SAML_CLAIM_EMAIL = "http://schemas.tazouxme.com/identity/claims/email";

@@ -33,14 +33,14 @@ public class ValidateRequestParametersStage extends AbstractStage {
 		}
 		
 		if ("GET".equals(o.getUrlMethod())) {
-			RequestAbstractType authnRequest = SAMLUtils.unmarshallAuthnRequest(Base64.decode(o.getSamlRequestParam()), true);
+			RequestAbstractType authnRequest = SAMLUtils.unmarshallRequest(Base64.decode(o.getSamlRequestParam()), true);
 			if (!(authnRequest instanceof LogoutRequest)) {
 				throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0184, o);
 			}
 			
 			o.setLogoutRequest((LogoutRequest) authnRequest);
 		} else if ("POST".equals(o.getUrlMethod())) {
-			RequestAbstractType authnRequest = SAMLUtils.unmarshallAuthnRequest(Base64.decode(o.getSamlRequestParam()), false);
+			RequestAbstractType authnRequest = SAMLUtils.unmarshallRequest(Base64.decode(o.getSamlRequestParam()), false);
 			if (!(authnRequest instanceof LogoutRequest)) {
 				throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0184, o);
 			}

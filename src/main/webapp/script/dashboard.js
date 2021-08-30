@@ -321,7 +321,7 @@ appClaimsBtn.setAction(function() {
 		
 		new Request({
 			method: "PATCH", 
-			url: "./services/services/api/v1/application/" + appsTable.getSelectedData().id + "/claims", 
+			url: "./services/api/v1/application/" + appsTable.getSelectedData().id + "/claims", 
 			successCode: 202,
 			data: data,
 			onSuccess: function(response) {
@@ -452,8 +452,8 @@ applicationSlide.addComponent({ mapTo: 'id', component: new Field({ id: "slide-a
 applicationSlide.addComponent({ mapTo: 'urn', component: new Field({ id: "slide-app-urn-field", title: "applications.slide.urn", type: "text", icon: "", maxLength: "32", width: "250", mandatory: true, mandatory: true, translatable: true }) });
 applicationSlide.addComponent({ mapTo: 'name', component: new Field({ id: "slide-app-name-field", title: "applications.slide.name", type: "text", icon: "", maxLength: "32", width: "250", mandatory: true, mandatory: true, translatable: true }) });
 applicationSlide.addComponent({ mapTo: 'description', component: new Field({ id: "slide-app-description-field", title: "applications.slide.description", type: "text", icon: "", maxLength: "32", width: "450", translatable: true }) });
-applicationSlide.addComponent({ mapTo: 'acsUrl', component: new Field({ id: "slide-app-acs-field", title: "applications.slide.acs", type: "text", icon: "", maxLength: "32", width: "450", mandatory: true, mandatory: true, translatable: true }) });
-applicationSlide.addComponent({ mapTo: 'logoutUrl', component: new Field({ id: "slide-app-logout-field", title: "applications.slide.logout", type: "text", icon: "", maxLength: "32", width: "450", mandatory: true, mandatory: true, translatable: true }) });
+applicationSlide.addComponent({ mapTo: 'acsUrl', component: new Field({ id: "slide-app-acs-field", title: "applications.slide.acs", type: "text", icon: "", maxLength: "200", width: "450", mandatory: true, mandatory: true, translatable: true }) });
+applicationSlide.addComponent({ mapTo: 'logoutUrl', component: new Field({ id: "slide-app-logout-field", title: "applications.slide.logout", type: "text", icon: "", maxLength: "200", width: "450", mandatory: true, mandatory: true, translatable: true }) });
 applicationSlide.addComponent({ mapTo: '', component: saveAppBtn });
 applicationSlide.addComponent({ mapTo: '', component: modifyAppBtn });
 applicationSlide.addComponent({ mapTo: '', component: cancelAppBtn });

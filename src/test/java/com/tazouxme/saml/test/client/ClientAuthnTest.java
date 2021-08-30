@@ -6,9 +6,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
@@ -62,10 +60,11 @@ import org.opensaml.messaging.encoder.MessageEncodingException;
 import org.opensaml.saml.common.xml.SAMLConstants;
 import org.opensaml.saml.saml2.core.AuthnContext;
 import org.opensaml.saml.saml2.core.NameIDType;
-import org.opensaml.saml.saml2.core.Response;
+import org.opensaml.saml.saml2.core.StatusResponseType;
 
 import com.tazouxme.idp.IdentityProviderConstants;
 import com.tazouxme.idp.security.filter.entity.PasswordEntity;
+import com.tazouxme.idp.security.filter.stream.NoWrapAutoEndDeflaterOutputStream;
 import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.saml.test.util.SAMLUtilsTest;
 
@@ -95,7 +94,7 @@ public class ClientAuthnTest extends AbstractClientTest {
 		try {
 			HttpGet get = new HttpGet(SSO_URL);
 			CloseableHttpResponse response = httpClient.execute(get);
-			assertEquals(200, response.getStatusLine().getStatusCode());
+			assertEquals(400, response.getStatusLine().getStatusCode());
 
 			String text = new BufferedReader(
 					new InputStreamReader(response.getEntity().getContent(), StandardCharsets.UTF_8)).lines()
@@ -115,7 +114,7 @@ public class ClientAuthnTest extends AbstractClientTest {
 		try {
 			HttpGet get = new HttpGet(buildAuthnQueryParams("", SSO_URN, SSO_ACS1, SSO_APP1, SAMLConstants.SAML2_REDIRECT_BINDING_URI));
 			CloseableHttpResponse response = httpClient.execute(get);
-			assertEquals(200, response.getStatusLine().getStatusCode());
+			assertEquals(400, response.getStatusLine().getStatusCode());
 
 			String text = new BufferedReader(
 					new InputStreamReader(response.getEntity().getContent(), StandardCharsets.UTF_8)).lines()
@@ -145,7 +144,7 @@ public class ClientAuthnTest extends AbstractClientTest {
 			assertEquals(SSO_RELAY_STATE, findInputValue(text, "RelayState"));
 			
 			assertTrue(text.contains("SAMLResponse"));
-			Response response = SAMLUtilsTest.getResponse(Base64.decode(findInputValue(text, "SAMLResponse")));
+			StatusResponseType response = SAMLUtilsTest.getResponse(Base64.decode(findInputValue(text, "SAMLResponse")));
 			assertEquals(StageResultCode.FAT_0211.getStatus(), response.getStatus().getStatusCode().getValue());
 		} catch (Exception e) {
 			fail(e);
@@ -296,7 +295,7 @@ public class ClientAuthnTest extends AbstractClientTest {
 			assertEquals(SSO_RELAY_STATE, findInputValue(text, "RelayState"));
 			
 			assertTrue(text.contains("SAMLResponse"));
-			Response response = SAMLUtilsTest.getResponse(Base64.decode(findInputValue(text, "SAMLResponse")));
+			StatusResponseType response = SAMLUtilsTest.getResponse(Base64.decode(findInputValue(text, "SAMLResponse")));
 			assertEquals(StageResultCode.OK.getStatus(), response.getStatus().getStatusCode().getValue());
 
 		    BasicCookieStore cookieStore = new BasicCookieStore();
@@ -396,7 +395,7 @@ public class ClientAuthnTest extends AbstractClientTest {
 			assertEquals(SSO_RELAY_STATE, findInputValue(text, "RelayState"));
 			
 			assertTrue(text.contains("SAMLResponse"));
-			Response response = SAMLUtilsTest.getResponse(Base64.decode(findInputValue(text, "SAMLResponse")));
+			StatusResponseType response = SAMLUtilsTest.getResponse(Base64.decode(findInputValue(text, "SAMLResponse")));
 			assertEquals(StageResultCode.OK.getStatus(), response.getStatus().getStatusCode().getValue());
 			
 			BasicCookieStore cookieStore = new BasicCookieStore();
@@ -409,7 +408,7 @@ public class ClientAuthnTest extends AbstractClientTest {
 	    
 			get = new HttpGet(buildLogoutQueryParams(SSO_RELAY_STATE, SSO_URN, SSO_APP1, "USE_user1"));
 			loginPage = httpClient.execute(get, localContext); // -- User logs out
-			assertEquals(200, loginUser.getStatusLine().getStatusCode());
+			assertEquals(202, loginUser.getStatusLine().getStatusCode());
 
 			text = new BufferedReader(
 					new InputStreamReader(loginPage.getEntity().getContent(), StandardCharsets.UTF_8)).lines()
@@ -539,23 +538,6 @@ public class ClientAuthnTest extends AbstractClientTest {
 	    cookie.setPath("/saml-identity-provider");
 	    
 	    return cookie;
-	}
-
-	private class NoWrapAutoEndDeflaterOutputStream extends DeflaterOutputStream {
-
-		public NoWrapAutoEndDeflaterOutputStream(final OutputStream os, final int level) {
-			super(os, new Deflater(level, true));
-		}
-
-		@Override
-		public void close() throws IOException {
-			if (def != null) {
-				def.end();
-			}
-
-			super.close();
-		}
-
 	}
 
 }

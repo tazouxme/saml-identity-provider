@@ -357,7 +357,7 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 		user.setOrganization(organization);
 		
 		try {
-			user.getDetails().add(createUserDetails(IdentityProviderConstants.SAML_CLAIM_ORGANIZATION, organization.getCode(), organization.getExternalId(), user));
+			user.getDetails().add(createUserDetails(IdentityProviderConstants.SAML_CLAIM_ORGANIZATION, organization.getDomain(), organization.getExternalId(), user));
 			user.getDetails().add(createUserDetails(IdentityProviderConstants.SAML_CLAIM_EMAIL, user.getEmail(), organization.getExternalId(), user));
 		} catch (ClaimException e) {
 			throw new UserException("Unable to create new default Claim for User", e);

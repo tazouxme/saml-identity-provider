@@ -19,7 +19,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.tazouxme.idp.IdentityProviderConfiguration;
 import com.tazouxme.idp.IdentityProviderConstants;
-import com.tazouxme.idp.activation.sender.ActivationSender;
 import com.tazouxme.idp.activation.sender.MailActivationSender;
 import com.tazouxme.idp.application.contract.IIdentityProviderApplication;
 import com.tazouxme.idp.exception.AccessException;
@@ -38,6 +37,7 @@ import com.tazouxme.idp.model.Organization;
 import com.tazouxme.idp.model.Role;
 import com.tazouxme.idp.model.User;
 import com.tazouxme.idp.model.UserDetails;
+import com.tazouxme.idp.sanitizer.validation.SanitizerValidation;
 import com.tazouxme.idp.sanitizer.validation.SanitizerValidation.Severity;
 import com.tazouxme.idp.sanitizer.validation.SanitizerValidationImpl;
 import com.tazouxme.idp.sanitizer.validation.SanitizerValidationResult;
@@ -99,14 +99,9 @@ public class IdentityProviderService implements IIdentityProviderService {
 			
 			return Response.ok(entity).build();
 		} catch (OrganizationException e) {
-			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("ORG_NOT_FOUND");
-			exceptionEntity.setMessage("Organization not found");
-			exceptionEntity.setReason(e.getMessage());
-			
-			return Response.status(404).entity(exceptionEntity).build();
+			return Response.status(404).entity(obtainExceptionEntity("ORG_NOT_FOUND", "Organization not found", e)).build();
 		} catch (Exception e) {
-			return Response.status(500).build();
+			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
 	}
 	
@@ -115,20 +110,15 @@ public class IdentityProviderService implements IIdentityProviderService {
 		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getId(), entity.getName());
 		validationResult.getValidations().addAll(SanitizerUtils.sanitizeEquals(entity.getId(), findUserIdentity().getOrganizationId()).getValidations());
 		if (validationResult.hasError()) {
-			return Response.status(417).entity(validationResult.getFirstError()).build();
+			return Response.status(417).entity(obtainExceptionEntity(validationResult)).build();
 		}
 		
 		try {
 			idpApplication.updateOrganization(entity.getId(), entity.getName(), entity.getDescription(), entity.isFederation());
 		} catch (OrganizationException e) {
-			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("ORG_NOT_FOUND");
-			exceptionEntity.setMessage("Organization not found");
-			exceptionEntity.setReason(e.getMessage());
-			
-			return Response.status(404).entity(exceptionEntity).build();
+			return Response.status(404).entity(obtainExceptionEntity("ORG_NOT_FOUND", "Organization not found", e)).build();
 		} catch (Exception e) {
-			return Response.status(500).build();
+			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
 		
 		return Response.status(202).entity(entity).build();
@@ -139,20 +129,15 @@ public class IdentityProviderService implements IIdentityProviderService {
 		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonEmptyCertificate(entity.getCertificate());
 		validationResult.getValidations().addAll(SanitizerUtils.sanitizeEquals(entity.getId(), findUserIdentity().getOrganizationId()).getValidations());
 		if (validationResult.hasError()) {
-			return Response.status(417).entity(validationResult.getFirstError()).build();
+			return Response.status(417).entity(obtainExceptionEntity(validationResult)).build();
 		}
 		
 		try {
 			idpApplication.setCertificate(findUserIdentity().getOrganizationId(), entity.getCertificate());
 		} catch (OrganizationException e) {
-			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("ORG_NOT_FOUND");
-			exceptionEntity.setMessage("Organization not found");
-			exceptionEntity.setReason(e.getMessage());
-			
-			return Response.status(404).entity(exceptionEntity).build();
+			return Response.status(404).entity(obtainExceptionEntity("ORG_NOT_FOUND", "Organization not found", e)).build();
 		} catch (Exception e) {
-			return Response.status(500).build();
+			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
 		
 		return Response.status(202).entity(entity).build();
@@ -163,20 +148,15 @@ public class IdentityProviderService implements IIdentityProviderService {
 		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeEmpty(entity.getCertificate());
 		validationResult.getValidations().addAll(SanitizerUtils.sanitizeEquals(entity.getId(), findUserIdentity().getOrganizationId()).getValidations());
 		if (validationResult.hasError()) {
-			return Response.status(417).entity(validationResult.getFirstError()).build();
+			return Response.status(417).entity(obtainExceptionEntity(validationResult)).build();
 		}
 		
 		try {
 			idpApplication.deleteCertificate(findUserIdentity().getOrganizationId());
 		} catch (OrganizationException e) {
-			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("ORG_NOT_FOUND");
-			exceptionEntity.setMessage("Organization not found");
-			exceptionEntity.setReason(e.getMessage());
-			
-			return Response.status(404).entity(exceptionEntity).build();
+			return Response.status(404).entity(obtainExceptionEntity("ORG_NOT_FOUND", "Organization not found", e)).build();
 		} catch (Exception e) {
-			return Response.status(500).build();
+			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
 		
 		return Response.status(204).build();
@@ -198,14 +178,9 @@ public class IdentityProviderService implements IIdentityProviderService {
 				entities.add(entity);
 			}
 		} catch (OrganizationException e) {
-			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("ORG_NOT_FOUND");
-			exceptionEntity.setMessage("Organization not found");
-			exceptionEntity.setReason(e.getMessage());
-			
-			return Response.status(404).entity(exceptionEntity).build();
+			return Response.status(404).entity(obtainExceptionEntity("ORG_NOT_FOUND", "Organization not found", e)).build();
 		} catch (Exception e) {
-			return Response.status(500).build();
+			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
 		
 		return Response.ok(entities).build();
@@ -238,14 +213,9 @@ public class IdentityProviderService implements IIdentityProviderService {
 				entity.getDetails().add(userDetailsEntity);
 			}
 		} catch (UserException e) {
-			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("USER_NOT_FOUND");
-			exceptionEntity.setMessage("User not found");
-			exceptionEntity.setReason(e.getMessage());
-			
-			return Response.status(404).entity(exceptionEntity).build();
+			return Response.status(404).entity(obtainExceptionEntity("USER_NOT_FOUND", "User not found", e)).build();
 		} catch (Exception e) {
-			return Response.status(500).build();
+			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
 		
 		return Response.ok(entity).build();
@@ -255,7 +225,7 @@ public class IdentityProviderService implements IIdentityProviderService {
 	public Response createUser(HttpServletRequest request, UserEntity entity) {
 		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getUsername());
 		if (validationResult.hasError()) {
-			return Response.status(417).entity(validationResult.getFirstError()).build();
+			return Response.status(417).entity(obtainExceptionEntity(validationResult)).build();
 		}
 	
 		ResponseBuilder responseBuilder = Response.status(201);
@@ -271,41 +241,33 @@ public class IdentityProviderService implements IIdentityProviderService {
 				String mailUsername = request.getServletContext().getInitParameter("mail-username");
 				String mailPassword = request.getServletContext().getInitParameter("mail-password");
 				
-				if (!StringUtils.isBlank(mailUsername) && !StringUtils.isBlank(mailPassword)) {
-					ActivationSender sender = new MailActivationSender(mailUsername, mailPassword);
-					
-						if (!sender.send(link, user)) {
-							return Response.status(406).entity(new SanitizerValidationImpl(Severity.ERROR, "Unable to send the activation link")).build();
+				try {
+					if (!StringUtils.isBlank(mailUsername) && !StringUtils.isBlank(mailPassword)) {
+						if (!new MailActivationSender(mailUsername, mailPassword).send(link, user)) {
+							// add Header to response
+							responseBuilder.header(IdentityProviderConstants.AUTH_HEADER_ACTIVATION_TOKEN, link);
 						}
-				} else {
+					} else {
+						// add Header to response
+						responseBuilder.header(IdentityProviderConstants.AUTH_HEADER_ACTIVATION_TOKEN, link);
+					}
+				} catch (ServletException | IOException e) {
 					// add Header to response
 					responseBuilder.header(IdentityProviderConstants.AUTH_HEADER_ACTIVATION_TOKEN, link);
 				}
 			} catch (ActivationException e) {
-				return Response.status(406).entity(new SanitizerValidationImpl(Severity.ERROR, "Unable to send the create link")).build();
-			} catch (ServletException | IOException e) {
-				return Response.status(406).entity(new SanitizerValidationImpl(Severity.ERROR, "Unable to send the activation link")).build();
+				return Response.status(406).entity(obtainExceptionEntity(new SanitizerValidationImpl(Severity.ERROR, "Unable to create link"))).build();
 			}
 			
 			entity.setId(user.getExternalId());
 			entity.setEmail(user.getEmail());
 			entity.setEnabled(user.isEnabled());
 		} catch (UserException e) {
-			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("");
-			exceptionEntity.setMessage("");
-			exceptionEntity.setReason(e.getMessage());
-			
-			return Response.status(409).entity(exceptionEntity).build();
+			return Response.status(409).entity(obtainExceptionEntity("USER_FOUND", "User already exists", e)).build();
 		} catch (OrganizationException  e) {
-			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("");
-			exceptionEntity.setMessage("");
-			exceptionEntity.setReason(e.getMessage());
-			
-			return Response.status(404).entity(exceptionEntity).build();
+			return Response.status(404).entity(obtainExceptionEntity("ORG_NOT_FOUND", "Organization not found", e)).build();
 		} catch (Exception e) {
-			return Response.status(500).build();
+			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
 		
 		return responseBuilder.entity(entity).build();
@@ -323,7 +285,7 @@ public class IdentityProviderService implements IIdentityProviderService {
 		}, entity.isEnabled()).getValidations());
 		
 		if (validationResult.hasError()) {
-			return Response.status(417).entity(validationResult.getFirstError()).build();
+			return Response.status(417).entity(obtainExceptionEntity(validationResult)).build();
 		}
 	
 		try {
@@ -331,21 +293,11 @@ public class IdentityProviderService implements IIdentityProviderService {
 					idpApplication.findOrganizationByExternalId(findUserIdentity().getOrganizationId()));
 			entity.setEmail(user.getEmail());
 		} catch (UserException e) {
-			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("");
-			exceptionEntity.setMessage("");
-			exceptionEntity.setReason(e.getMessage());
-			
-			return Response.status(404).entity(exceptionEntity).build();
+			return Response.status(404).entity(obtainExceptionEntity("USER_NOT_FOUND", "User not found", e)).build();
 		} catch (OrganizationException e) {
-			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("");
-			exceptionEntity.setMessage("");
-			exceptionEntity.setReason(e.getMessage());
-			
-			return Response.status(404).entity(exceptionEntity).build();
+			return Response.status(404).entity(obtainExceptionEntity("ORG_NOT_FOUND", "Organization not found", e)).build();
 		} catch (Exception e) {
-			return Response.status(500).build();
+			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
 		
 		return Response.status(202).entity(entity).build();
@@ -355,28 +307,18 @@ public class IdentityProviderService implements IIdentityProviderService {
 	public Response deleteUser(UserEntity entity) {
 		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getId());
 		if (validationResult.hasError()) {
-			return Response.status(417).entity(validationResult.getFirstError()).build();
+			return Response.status(417).entity(obtainExceptionEntity(validationResult)).build();
 		}
 	
 		try {
 			idpApplication.deleteUser(entity.getId(), 
 					idpApplication.findOrganizationByExternalId(findUserIdentity().getOrganizationId()));
 		} catch (UserException e) {
-			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("");
-			exceptionEntity.setMessage("");
-			exceptionEntity.setReason(e.getMessage());
-			
-			return Response.status(404).entity(exceptionEntity).build();
+			return Response.status(404).entity(obtainExceptionEntity("USER_NOT_FOUND", "User not found", e)).build();
 		} catch (OrganizationException e) {
-			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("");
-			exceptionEntity.setMessage("");
-			exceptionEntity.setReason(e.getMessage());
-			
-			return Response.status(404).entity(exceptionEntity).build();
+			return Response.status(404).entity(obtainExceptionEntity("ORG_NOT_FOUND", "Organization not found", e)).build();
 		} catch (Exception e) {
-			return Response.status(500).build();
+			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
 		
 		return Response.status(204).build();
@@ -405,7 +347,7 @@ public class IdentityProviderService implements IIdentityProviderService {
 	public Response getApplication(String urn) {
 		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonEmpty(urn);
 		if (validationResult.hasError()) {
-			return Response.status(417).entity(validationResult.getFirstError()).build();
+			return Response.status(417).entity(obtainExceptionEntity(validationResult)).build();
 		}
 		
 		ApplicationEntity entity = new ApplicationEntity();
@@ -457,14 +399,9 @@ public class IdentityProviderService implements IIdentityProviderService {
 				entity.getClaims().add(claimEntity);
 			}
 		} catch (ApplicationException e) {
-			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("");
-			exceptionEntity.setMessage("");
-			exceptionEntity.setReason(e.getMessage());
-			
-			return Response.status(404).entity(exceptionEntity).build();
+			return Response.status(404).entity(obtainExceptionEntity("APP_NOT_FOUND", "Application not found", e)).build();
 		} catch (Exception e) {
-			return Response.status(500).build();
+			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
 		
 		return Response.ok(entity).build();
@@ -474,7 +411,7 @@ public class IdentityProviderService implements IIdentityProviderService {
 	public Response createApplication(ApplicationEntity entity) {
 		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getUrn(), entity.getName(), entity.getAcsUrl(), entity.getLogoutUrl());
 		if (validationResult.hasError()) {
-			return Response.status(417).entity(validationResult.getFirstError()).build();
+			return Response.status(417).entity(obtainExceptionEntity(validationResult)).build();
 		}
 		
 		try {
@@ -483,20 +420,15 @@ public class IdentityProviderService implements IIdentityProviderService {
 			entity.setId(application.getExternalId());
 		} catch (ApplicationException e) {
 			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("");
-			exceptionEntity.setMessage("");
+			exceptionEntity.setCode("APP_FOUND");
+			exceptionEntity.setMessage("Application already exists");
 			exceptionEntity.setReason(e.getMessage());
 			
-			return Response.status(409).entity(exceptionEntity).build();
+			return Response.status(409).entity(obtainExceptionEntity("APP_FOUND", "Application already exists", e)).build();
 		} catch (OrganizationException  e) {
-			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("");
-			exceptionEntity.setMessage("");
-			exceptionEntity.setReason(e.getMessage());
-			
-			return Response.status(404).entity(exceptionEntity).build();
+			return Response.status(404).entity(obtainExceptionEntity("ORG_NOT_FOUND", "Organization not found", e)).build();
 		} catch (Exception e) {
-			return Response.status(500).build();
+			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
 		
 		return Response.status(201).entity(entity).build();
@@ -506,28 +438,18 @@ public class IdentityProviderService implements IIdentityProviderService {
 	public Response updateApplication(ApplicationEntity entity) {
 		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getId(), entity.getUrn(), entity.getName(), entity.getAcsUrl(), entity.getLogoutUrl());
 		if (validationResult.hasError()) {
-			return Response.status(417).entity(validationResult.getFirstError()).build();
+			return Response.status(417).entity(obtainExceptionEntity(validationResult)).build();
 		}
 		
 		try {
-			idpApplication.updateApplication(entity.getId(), entity.getUrn(), entity.getName(), entity.getDescription(), entity.getLogoutUrl(), entity.getAcsUrl(), 
+			idpApplication.updateApplication(entity.getId(), entity.getUrn(), entity.getName(), entity.getDescription(), entity.getAcsUrl(), entity.getLogoutUrl(), 
 					idpApplication.findOrganizationByExternalId(findUserIdentity().getOrganizationId()));
 		} catch (ApplicationException e) {
-			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("");
-			exceptionEntity.setMessage("");
-			exceptionEntity.setReason(e.getMessage());
-			
-			return Response.status(404).entity(exceptionEntity).build();
+			return Response.status(404).entity(obtainExceptionEntity("APP_NOT_FOUND", "Application not found", e)).build();
 		} catch (OrganizationException  e) {
-			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("");
-			exceptionEntity.setMessage("");
-			exceptionEntity.setReason(e.getMessage());
-			
-			return Response.status(404).entity(exceptionEntity).build();
+			return Response.status(404).entity(obtainExceptionEntity("ORG_NOT_FOUND", "Organization not found", e)).build();
 		} catch (Exception e) {
-			return Response.status(500).build();
+			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
 		
 		return Response.status(202).entity(entity).build();
@@ -537,7 +459,7 @@ public class IdentityProviderService implements IIdentityProviderService {
 	public Response updateApplicationClaims(List<ClaimEntity> entities, String id) {
 		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonEmpty(id);
 		if (validationResult.hasError()) {
-			return Response.status(417).entity(validationResult.getFirstError()).build();
+			return Response.status(417).entity(obtainExceptionEntity(validationResult)).build();
 		}
 		
 		Set<String> entitiesName = entities.stream().map(entity -> entity.getName()).collect(Collectors.toSet());
@@ -550,21 +472,11 @@ public class IdentityProviderService implements IIdentityProviderService {
 							collect(Collectors.toSet()),
 					idpApplication.findOrganizationByExternalId(findUserIdentity().getOrganizationId()));
 		} catch (ApplicationException e) {
-			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("");
-			exceptionEntity.setMessage("");
-			exceptionEntity.setReason(e.getMessage());
-			
-			return Response.status(404).entity(exceptionEntity).build();
+			return Response.status(404).entity(obtainExceptionEntity("APP_NOT_FOUND", "Application not found", e)).build();
 		} catch (OrganizationException  e) {
-			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("");
-			exceptionEntity.setMessage("");
-			exceptionEntity.setReason(e.getMessage());
-			
-			return Response.status(404).entity(exceptionEntity).build();
+			return Response.status(404).entity(obtainExceptionEntity("ORG_NOT_FOUND", "Organization not found", e)).build();
 		} catch (Exception e) {
-			return Response.status(500).build();
+			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
 		
 		entities = new ArrayList<>();
@@ -585,28 +497,18 @@ public class IdentityProviderService implements IIdentityProviderService {
 	public Response deleteApplication(ApplicationEntity entity) {
 		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getId());
 		if (validationResult.hasError()) {
-			return Response.status(417).entity(validationResult.getFirstError()).build();
+			return Response.status(417).entity(obtainExceptionEntity(validationResult)).build();
 		}
 		
 		try {
 			idpApplication.deleteApplication(entity.getId(),
 					idpApplication.findOrganizationByExternalId(findUserIdentity().getOrganizationId()));
 		} catch (ApplicationException e) {
-			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("");
-			exceptionEntity.setMessage("");
-			exceptionEntity.setReason(e.getMessage());
-			
-			return Response.status(404).entity(exceptionEntity).build();
+			return Response.status(404).entity(obtainExceptionEntity("APP_NOT_FOUND", "Application not found", e)).build();
 		} catch (OrganizationException  e) {
-			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("");
-			exceptionEntity.setMessage("");
-			exceptionEntity.setReason(e.getMessage());
-			
-			return Response.status(404).entity(exceptionEntity).build();
+			return Response.status(404).entity(obtainExceptionEntity("ORG_NOT_FOUND", "Organization not found", e)).build();
 		} catch (Exception e) {
-			return Response.status(500).build();
+			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
 		
 		return Response.status(204).build();
@@ -616,7 +518,7 @@ public class IdentityProviderService implements IIdentityProviderService {
 	public Response createAccess(AccessEntity entity) {
 		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getUser().getId(), entity.getRole().getId(), entity.getApplication().getUrn());
 		if (validationResult.hasError()) {
-			return Response.status(417).entity(validationResult.getFirstError()).build();
+			return Response.status(417).entity(obtainExceptionEntity(validationResult)).build();
 		}
 		
 		try {
@@ -651,42 +553,17 @@ public class IdentityProviderService implements IIdentityProviderService {
 				entity.setFederation(new FederationEntity());
 			}
 		} catch (AccessException e) {
-			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("");
-			exceptionEntity.setMessage("");
-			exceptionEntity.setReason(e.getMessage());
-			
-			return Response.status(409).entity(exceptionEntity).build();
+			return Response.status(409).entity(obtainExceptionEntity("ACCESS_FOUND", "Access already exists", e)).build();
 		} catch (UserException e) {
-			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("");
-			exceptionEntity.setMessage("");
-			exceptionEntity.setReason(e.getMessage());
-			
-			return Response.status(404).entity(exceptionEntity).build();
+			return Response.status(404).entity(obtainExceptionEntity("USER_NOT_FOUND", "User not found", e)).build();
 		} catch (ApplicationException e) {
-			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("");
-			exceptionEntity.setMessage("");
-			exceptionEntity.setReason(e.getMessage());
-			
-			return Response.status(404).entity(exceptionEntity).build();
+			return Response.status(404).entity(obtainExceptionEntity("APP_NOT_FOUND", "Application not found", e)).build();
+		} catch (OrganizationException  e) {
+			return Response.status(404).entity(obtainExceptionEntity("ORG_NOT_FOUND", "Organization not found", e)).build();
 		} catch (RoleException e) {
-			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("");
-			exceptionEntity.setMessage("");
-			exceptionEntity.setReason(e.getMessage());
-			
-			return Response.status(404).entity(exceptionEntity).build();
-		} catch (OrganizationException e) {
-			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("");
-			exceptionEntity.setMessage("");
-			exceptionEntity.setReason(e.getMessage());
-			
-			return Response.status(404).entity(exceptionEntity).build();
+			return Response.status(404).entity(obtainExceptionEntity("ROLE_NOT_FOUND", "Role not found", e)).build();
 		} catch (Exception e) {
-			return Response.status(500).build();
+			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
 		
 		return Response.status(201).entity(entity).build();
@@ -696,7 +573,7 @@ public class IdentityProviderService implements IIdentityProviderService {
 	public Response updateAccess(AccessEntity entity) {
 		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getId());
 		if (validationResult.hasError()) {
-			return Response.status(417).entity(validationResult.getFirstError()).build();
+			return Response.status(417).entity(obtainExceptionEntity(validationResult)).build();
 		}
 		
 		try {
@@ -737,21 +614,11 @@ public class IdentityProviderService implements IIdentityProviderService {
 				entity.setFederation(new FederationEntity());
 			}
 		} catch (AccessException e) {
-			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("");
-			exceptionEntity.setMessage("");
-			exceptionEntity.setReason(e.getMessage());
-			
-			return Response.status(404).entity(exceptionEntity).build();
+			return Response.status(404).entity(obtainExceptionEntity("ACCESS_NOT_FOUND", "Access not found", e)).build();
 		} catch (OrganizationException e) {
-			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("");
-			exceptionEntity.setMessage("");
-			exceptionEntity.setReason(e.getMessage());
-			
-			return Response.status(404).entity(exceptionEntity).build();
+			return Response.status(404).entity(obtainExceptionEntity("ORG_NOT_FOUND", "Organization not found", e)).build();
 		} catch (Exception e) {
-			return Response.status(500).build();
+			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
 		
 		return Response.status(202).entity(entity).build();
@@ -761,28 +628,18 @@ public class IdentityProviderService implements IIdentityProviderService {
 	public Response deleteAccess(AccessEntity entity) {
 		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getId());
 		if (validationResult.hasError()) {
-			return Response.status(417).entity(validationResult.getFirstError()).build();
+			return Response.status(417).entity(obtainExceptionEntity(validationResult)).build();
 		}
 		
 		try {
 			idpApplication.deleteAccess(entity.getId(),
 					idpApplication.findOrganizationByExternalId(findUserIdentity().getOrganizationId()));
 		} catch (AccessException e) {
-			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("");
-			exceptionEntity.setMessage("");
-			exceptionEntity.setReason(e.getMessage());
-			
-			return Response.status(404).entity(exceptionEntity).build();
+			return Response.status(404).entity(obtainExceptionEntity("ACCESS_NOT_FOUND", "Access not found", e)).build();
 		} catch (OrganizationException e) {
-			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("");
-			exceptionEntity.setMessage("");
-			exceptionEntity.setReason(e.getMessage());
-			
-			return Response.status(404).entity(exceptionEntity).build();
+			return Response.status(404).entity(obtainExceptionEntity("ORG_NOT_FOUND", "Organization not found", e)).build();
 		} catch (Exception e) {
-			return Response.status(500).build();
+			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
 		
 		return Response.status(204).build();
@@ -829,6 +686,42 @@ public class IdentityProviderService implements IIdentityProviderService {
 		url.append(activation.getExternalId());
 		
 		return url.toString();
+	}
+	
+	private ExceptionEntity obtainExceptionEntity(SanitizerValidationResult validationResult) {
+		ExceptionEntity exceptionEntity = new ExceptionEntity();
+		exceptionEntity.setCode("VALIDATION_FAILED");
+		exceptionEntity.setMessage("Field validation failed");
+		exceptionEntity.setReason(validationResult.getFirstError().getMessage());
+		
+		return exceptionEntity;
+	}
+	
+	private ExceptionEntity obtainExceptionEntity(SanitizerValidation validationResult) {
+		ExceptionEntity exceptionEntity = new ExceptionEntity();
+		exceptionEntity.setCode("VALIDATION_FAILED");
+		exceptionEntity.setMessage("Field validation failed");
+		exceptionEntity.setReason(validationResult.getMessage());
+		
+		return exceptionEntity;
+	}
+	
+	private ExceptionEntity obtainExceptionEntity(String code, String message, Exception e) {
+		ExceptionEntity exceptionEntity = new ExceptionEntity();
+		exceptionEntity.setCode(code);
+		exceptionEntity.setMessage(message);
+		exceptionEntity.setReason(e.getMessage());
+		
+		return exceptionEntity;
+	}
+	
+	private ExceptionEntity obtainInternalExceptionEntity(Exception e) {
+		ExceptionEntity exceptionEntity = new ExceptionEntity();
+		exceptionEntity.setCode("FATAL_ERROR");
+		exceptionEntity.setMessage("Internal server error");
+		exceptionEntity.setReason(e.getMessage());
+		
+		return exceptionEntity;
 	}
 
 }

@@ -4,6 +4,7 @@ A simple personal project to develop an Identity Provider. Version 1.0.0.
 Icons provided by [Iconixar](https://www.iconfinder.com/Iconixar)  
   
 Identity Provider using open source frameworks
+- Java 11
 - Spring / Spring Security (5.x version)
 - Hibernate (5.x version)
 - Apache CXF (3.4.x version)
@@ -29,7 +30,7 @@ To change the KeyStore and Certificate (src/main/resources/cert), you can execut
 - [x] urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect (Signature not evaluated)
 - [x] urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST (Signature not evaluated)
 - [x] urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign (Signature is mandatory)
-- [x] urn:oasis:names:tc:SAML:2.0:bindings:SOAP [with ArtifactResolve] (Signature not evaluated)
+- [x] urn:oasis:names:tc:SAML:2.0:bindings:SOAP [ArtifactResolve | AttributeQuery] (Signature not evaluated)
 - [x] urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact (Signature not evaluated)
 
 ##### Supported AuthnContextClassRef:
