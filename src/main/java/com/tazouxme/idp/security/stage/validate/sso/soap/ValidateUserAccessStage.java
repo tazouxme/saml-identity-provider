@@ -30,7 +30,7 @@ public class ValidateUserAccessStage extends AbstractStage {
 		// find user and check SaaS access
 		Access access = null;
 		try {
-			access = accessBo.findByUserAndURN(o.getUserId(), o.getArtifactResolve().getIssuer().getValue(), o.getOrganizationId());
+			access = accessBo.findByUserAndURN(o.getUserId(), o.getSoapRequest().getIssuer().getValue(), o.getOrganizationId());
 			if (!access.isEnabled()) {
 				throw new StageException(StageExceptionType.ACCESS, StageResultCode.ACC_0651, o);
 			}

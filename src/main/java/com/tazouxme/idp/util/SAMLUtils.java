@@ -40,6 +40,7 @@ import org.opensaml.saml.saml2.core.ArtifactResolve;
 import org.opensaml.saml.saml2.core.ArtifactResponse;
 import org.opensaml.saml.saml2.core.Assertion;
 import org.opensaml.saml.saml2.core.Attribute;
+import org.opensaml.saml.saml2.core.AttributeQuery;
 import org.opensaml.saml.saml2.core.AttributeStatement;
 import org.opensaml.saml.saml2.core.AttributeValue;
 import org.opensaml.saml.saml2.core.Audience;
@@ -157,7 +158,7 @@ public class SAMLUtils {
 	}
 	
 	public static ArtifactResponse buildArtifactResponse(StageParameters params, StageResultCode stageCode) {
-		ArtifactResolve artifactResolve = params.getArtifactResolve();
+		ArtifactResolve artifactResolve = (ArtifactResolve) params.getSoapRequest();
 		String idp = params.getIdpUrn();
 
 		ArtifactResponse response = buildSAMLObject(ArtifactResponse.class);
@@ -182,6 +183,22 @@ public class SAMLUtils {
 		
 		if (stageCode.equals(StageResultCode.OK)) {
 			response.getAssertions().add(buildAssertion(params, identity, role));
+		}
+		
+		return response;
+	}
+	
+	public static Response buildAttributeQueryResponse(StageParameters params, UserIdentity identity, StageResultCode stageCode) throws StageException {
+		Response response = buildSAMLObject(Response.class);
+		response.setID(IDUtils.generateId("RES_", 4));
+		response.setVersion(SAMLVersion.VERSION_20);
+		response.setIssueInstant(Instant.now());
+		response.setInResponseTo(params.getSoapRequest().getID());
+		response.setIssuer(buildIssuer(params.getIdpUrn()));
+		response.setStatus(buildStatus(stageCode));
+		
+		if (stageCode.equals(StageResultCode.OK)) {
+			response.getAssertions().add(buildAssertion(params, identity));
 		}
 		
 		return response;
@@ -287,6 +304,22 @@ public class SAMLUtils {
 		return context;
 	}
 	
+	private static Assertion buildAssertion(StageParameters stageParams, UserIdentity identity) throws StageException {
+		AttributeQuery query = (AttributeQuery) stageParams.getSoapRequest();
+		String idp = stageParams.getIdpUrn();
+
+		Assertion assertion = buildSAMLObject(Assertion.class);
+		assertion.setID(UUID.randomUUID().toString());
+		assertion.setVersion(SAMLVersion.VERSION_20);
+		assertion.setIssueInstant(Instant.now());
+		assertion.setIssuer(buildIssuer(idp));
+		assertion.setSubject(buildSubject(query, identity, stageParams.getApplication().getUrn()));
+		assertion.setConditions(buildConditions(query.getIssuer().getValue()));
+		assertion.getAttributeStatements().add(buildAttributeStatement(identity.getClaims()));
+		
+		return assertion;
+	}
+	
 	private static Assertion buildAssertion(StageParameters stageParams, UserIdentity identity, String role) throws StageException {
 		AuthnRequest authnRequest = stageParams.getAuthnRequest();
 		String idp = stageParams.getIdpUrn();
@@ -378,6 +411,32 @@ public class SAMLUtils {
 		return subject;
 	}
 	
+	private static Subject buildSubject(AttributeQuery query, UserIdentity identity, String applicationUrn) {
+		NameID nameId = null;
+		String nameIDPolicy = query.getSubject().getNameID().getFormat();
+		
+		if (NameIDType.EMAIL.equals(nameIDPolicy) || NameIDType.ENCRYPTED.equals(nameIDPolicy) || NameIDType.UNSPECIFIED.equals(nameIDPolicy)) {
+			nameId = buildNameID(nameIDPolicy, identity.getEmail());
+		} else if (NameIDType.TRANSIENT.equals(nameIDPolicy)) {
+			nameId = buildNameID(nameIDPolicy, identity.getUserId());
+		}
+		
+		SubjectConfirmationData subjectConfirmationData = buildSAMLObject(SubjectConfirmationData.class);
+		subjectConfirmationData.setRecipient(query.getIssuer().getValue());
+		subjectConfirmationData.setInResponseTo(query.getID());
+		subjectConfirmationData.setNotOnOrAfter(Instant.ofEpochMilli(new Date().getTime() + 1000 * 3600 * 24));
+		
+		SubjectConfirmation subjectConfirmation = buildSAMLObject(SubjectConfirmation.class);
+		subjectConfirmation.setMethod(SubjectConfirmation.METHOD_BEARER);
+		subjectConfirmation.setSubjectConfirmationData(subjectConfirmationData);
+		
+		Subject subject = buildSAMLObject(Subject.class);
+		subject.setNameID(nameId);
+		subject.getSubjectConfirmations().add(subjectConfirmation);
+		
+		return subject;
+	}
+	
 	public static NameID buildNameID(String nameIDPolicy, String nameIDValue) {
 		NameID nameId = buildSAMLObject(NameID.class);
 		
@@ -430,6 +489,16 @@ public class SAMLUtils {
 	private static AttributeStatement buildAttributeStatement(Map<String, String> claims, String role) {
 		AttributeStatement attributeStatement = buildSAMLObject(AttributeStatement.class);
 		attributeStatement.getAttributes().add(buildAttribute(IdentityProviderConstants.SAML_CLAIM_ROLE, role));
+		
+		for (Entry<String, String> claim : claims.entrySet()) {
+			attributeStatement.getAttributes().add(buildAttribute(claim.getKey(), claim.getValue()));
+		}
+		
+		return attributeStatement;
+	}
+	
+	private static AttributeStatement buildAttributeStatement(Map<String, String> claims) {
+		AttributeStatement attributeStatement = buildSAMLObject(AttributeStatement.class);
 		
 		for (Entry<String, String> claim : claims.entrySet()) {
 			attributeStatement.getAttributes().add(buildAttribute(claim.getKey(), claim.getValue()));

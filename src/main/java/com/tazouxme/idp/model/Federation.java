@@ -7,25 +7,36 @@ import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.tazouxme.idp.dao.query.FederationQueries;
+import com.tazouxme.idp.model.base.AbstractModel;
 
 @Entity
-@Table(name = "tz_federation")
+@Table(name = "tz_federation", 
+	uniqueConstraints = {
+		@UniqueConstraint(name = "u_federation_1", columnNames = { "external_id" }),
+		@UniqueConstraint(name = "u_federation_2", columnNames = { "user_id", "organization_id", "application_id" })
+	},
+	indexes = {
+		@Index(name = "i_federation_1", unique = true, columnList = "external_id"),
+		@Index(name = "i_federation_2", unique = true, columnList = "user_id, organization_id, application_id")
+	})
 @NamedQueries({
 	@NamedQuery(name = FederationQueries.NQ_FIND_BY_URN, query = FederationQueries.FIND_BY_URN),
 	@NamedQuery(name = FederationQueries.NQ_FIND_BY_USER, query = FederationQueries.FIND_BY_USER),
 	@NamedQuery(name = FederationQueries.NQ_FIND_BY_USER_AND_URN, query = FederationQueries.FIND_BY_USER_AND_URN),
 	@NamedQuery(name = FederationQueries.NQ_FIND_BY_ORGANIZATION, query = FederationQueries.FIND_BY_ORGANIZATION)
 })
-public class Federation {
+public class Federation extends AbstractModel {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "Federation_generator")
@@ -38,9 +49,6 @@ public class Federation {
 	
 	@Column(name = "enabled", length = 1, updatable = true, nullable = false)
 	private boolean enabled;
-	
-	@Column(name = "creation_date", length = 16, updatable = false, nullable = false)
-	private long creationDate;
 
 	@JsonIgnoreProperties("federations")
 	@ManyToOne(fetch = FetchType.LAZY)
@@ -79,14 +87,6 @@ public class Federation {
 
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
-	}
-
-	public long getCreationDate() {
-		return creationDate;
-	}
-
-	public void setCreationDate(long creationDate) {
-		this.creationDate = creationDate;
 	}
 
 	public Organization getOrganization() {

@@ -38,6 +38,7 @@ public class IdpStorageService extends AbstractStorageService {
 		store.setStoreValue(value.getBytes());
 		store.setExpiration(expiration);
 		store.setVersion(1L);
+		store.setCreatedBy(findUserIdentity().getUserId());
 		
 		try {
 			store.setOrganization(organizationBo.findByExternalId(findUserIdentity().getOrganizationId()));

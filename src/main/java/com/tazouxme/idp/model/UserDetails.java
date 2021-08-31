@@ -9,17 +9,26 @@ import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.tazouxme.idp.model.base.AbstractModel;
 
 @Entity
-@Table(name = "tz_user_details")
-public class UserDetails {
+@Table(name = "tz_user_details", 
+	uniqueConstraints = {
+		@UniqueConstraint(name = "u_user_details_1", columnNames = { "user_id", "claim_id" })
+	},
+	indexes = {
+		@Index(name = "i_user_details_1", unique = true, columnList = "user_id, claim_id")
+	})
+public class UserDetails extends AbstractModel {
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "UserDetails_generator")
@@ -39,9 +48,6 @@ public class UserDetails {
 	@Lob
 	@Column(name = "claim_value", updatable = true, nullable = false)
 	private String claimValue;
-	
-	@Column(name = "creation_date", length = 16, updatable = false, nullable = false)
-	private long creationDate;
 
 	public long getId() {
 		return id;
@@ -73,14 +79,6 @@ public class UserDetails {
 
 	public void setClaimValue(String claimValue) {
 		this.claimValue = claimValue;
-	}
-
-	public long getCreationDate() {
-		return creationDate;
-	}
-
-	public void setCreationDate(long creationDate) {
-		this.creationDate = creationDate;
 	}
 	
 	@Override

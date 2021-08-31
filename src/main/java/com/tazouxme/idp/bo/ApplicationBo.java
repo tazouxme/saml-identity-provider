@@ -1,5 +1,6 @@
 package com.tazouxme.idp.bo;
 
+import java.util.Date;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,9 @@ public class ApplicationBo implements IApplicationBo {
 	@Override
 	public Application create(Application application) throws ApplicationException {
 		application.setExternalId(IDUtils.generateId("APP_", 8));
+		application.setCreationDate(new Date().getTime());
+		application.setStatus(1);
+		
 		return dao.create(application);
 	}
 

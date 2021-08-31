@@ -17,6 +17,7 @@ import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.tazouxme.idp.dao.query.StoreQueries;
+import com.tazouxme.idp.model.base.AbstractModel;
 
 @Entity
 @Table(name = "tz_store")
@@ -25,7 +26,7 @@ import com.tazouxme.idp.dao.query.StoreQueries;
 	@NamedQuery(name = StoreQueries.NQ_FIND_BY_KEY, query = StoreQueries.FIND_BY_KEY),
 	@NamedQuery(name = StoreQueries.NQ_FIND_BY_KEY_AND_VERSION, query = StoreQueries.FIND_BY_KEY_AND_VERSION)
 })
-public class Store {
+public class Store extends AbstractModel {
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "Store_generator")

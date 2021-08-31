@@ -20,6 +20,7 @@ import com.tazouxme.idp.IdentityProviderConfiguration;
 import com.tazouxme.idp.IdentityProviderConstants;
 import com.tazouxme.idp.bo.contract.ISessionBo;
 import com.tazouxme.idp.exception.SessionException;
+import com.tazouxme.idp.exception.base.AbstractIdentityProviderException;
 import com.tazouxme.idp.model.Session;
 import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.security.stage.exception.StageException;
@@ -115,11 +116,23 @@ public abstract class AbstractAuthenticationHandler {
 		Session session = new Session();
 		session.setOrganizationExternalId(organizationId);
 		session.setUserExternalId(userId);
+		session.setCreatedBy(userId);
 		
 		try {
 			ISessionBo sessionBo = context.getBean(ISessionBo.class);
+			
+			try {
+				sessionBo.delete(session);
+			} catch (Exception e) {
+				if (!(e instanceof AbstractIdentityProviderException)) {
+					logger.error("Unable to delete a Session", e);
+					throw e;
+				}
+			}
+			
 			return sessionBo.create(session).getToken();
 		} catch (SessionException e) {
+			logger.error("Unable to create a Session", e);
 			throw new StageException(StageExceptionType.ACCESS, StageResultCode.FAT_1102);
 		}
 	}

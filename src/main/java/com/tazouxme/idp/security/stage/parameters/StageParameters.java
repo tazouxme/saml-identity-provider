@@ -3,9 +3,9 @@ package com.tazouxme.idp.security.stage.parameters;
 import javax.crypto.SecretKey;
 import javax.servlet.http.HttpServletRequest;
 
-import org.opensaml.saml.saml2.core.ArtifactResolve;
 import org.opensaml.saml.saml2.core.AuthnRequest;
 import org.opensaml.saml.saml2.core.LogoutRequest;
+import org.opensaml.saml.saml2.core.RequestAbstractType;
 import org.opensaml.security.credential.Credential;
 import org.opensaml.security.x509.BasicX509Credential;
 
@@ -22,7 +22,7 @@ public class StageParameters {
 	
 	private AuthnRequest authnRequest;
 	private LogoutRequest logoutRequest;
-	private ArtifactResolve artifactResolve;
+	private RequestAbstractType soapRequest;
 	private SecretKey secretKey;
 	
 	private Organization organization;
@@ -129,12 +129,12 @@ public class StageParameters {
 		this.logoutRequest = logoutRequest;
 	}
 	
-	public ArtifactResolve getArtifactResolve() {
-		return artifactResolve;
+	public RequestAbstractType getSoapRequest() {
+		return soapRequest;
 	}
 	
-	public void setArtifactResolve(ArtifactResolve artifactResolve) {
-		this.artifactResolve = artifactResolve;
+	public void setSoapRequest(RequestAbstractType soapRequest) {
+		this.soapRequest = soapRequest;
 	}
 	
 	public SecretKey getSecretKey() {

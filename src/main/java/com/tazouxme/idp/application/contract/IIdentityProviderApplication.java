@@ -27,10 +27,11 @@ public interface IIdentityProviderApplication {
 	 * @param application - Application to be accessed
 	 * @param role - Role when accessing application
 	 * @param organization - Organization to which the Access belongs
+	 * @param createdBy - User who creates the record
 	 * @return The created Access
 	 * @throws AccessException
 	 */
-	public Access createAccess(User user, Application application, Role role, Organization organization) throws AccessException;
+	public Access createAccess(User user, Application application, Role role, Organization organization, String createdBy) throws AccessException;
 	
 	/**
 	 * Update an Access entry in the database
@@ -63,10 +64,11 @@ public interface IIdentityProviderApplication {
 	 * @param organizationId - External Organization ID
 	 * @param userId - External User ID
 	 * @param step - 'ACTIVATE' or 'PASSWORD'
+	 * @param createdBy - User who creates the record
 	 * @return The created Activation
 	 * @throws ActivationException - When an Activation with the same External ID exists
 	 */
-	public Activation createActivation(String organizationId, String userId, String step) throws ActivationException;
+	public Activation createActivation(String organizationId, String userId, String step, String createdBy) throws ActivationException;
 	
 	/**
 	 * Get all existing registered Applications for the Organization
@@ -101,10 +103,11 @@ public interface IIdentityProviderApplication {
 	 * @param acsUrl - Application's Assertion Consumer Service URL
 	 * @param logoutUrl - Application's Logout URL
 	 * @param organization - Organization to which the Application belongs
+	 * @param createdBy - User who creates the record
 	 * @return The created Application
 	 * @throws ApplicationException - When an Application with External ID already exists
 	 */
-	public Application createApplication(String urn, String name, String description, String acsUrl, String logoutUrl, Organization organization) throws ApplicationException;
+	public Application createApplication(String urn, String name, String description, String acsUrl, String logoutUrl, Organization organization, String createdBy) throws ApplicationException;
 	
 	/**
 	 * Update an Application entry in the database
@@ -169,10 +172,11 @@ public interface IIdentityProviderApplication {
 	 * @param user - User to give access
 	 * @param application - Application to be accessed
 	 * @param organization - Organization to which the Access belongs
-	 * @return
+	 * @param createdBy - User who creates the record
+	 * @return The created Federation
 	 * @throws FederationException
 	 */
-	public Federation createFederation(User user, Application application, Organization organization) throws FederationException;
+	public Federation createFederation(User user, Application application, Organization organization, String createdBy) throws FederationException;
 	
 	/**
 	 * Get an Organization via its External ID
@@ -194,10 +198,11 @@ public interface IIdentityProviderApplication {
 	 * Create an Organization entry in the database
 	 * @param code - Organization Code
 	 * @param domain - Organization domain
+	 * @param createdBy - User who creates the record
 	 * @return The created Organization
 	 * @throws OrganizationException - When the Organization with External ID or domain already exists
 	 */
-	public Organization createOrganization(String code, String domain) throws OrganizationException;
+	public Organization createOrganization(String code, String domain, String createdBy) throws OrganizationException;
 	
 	/**
 	 * Update an Organization entry in the database
@@ -240,10 +245,11 @@ public interface IIdentityProviderApplication {
 	 * @param name - Claim name
 	 * @param description - Claim description (may be empty)
 	 * @param o - Organization to which the Claim belongs
+	 * @param createdBy - User who creates the record
 	 * @return The created Claim
 	 * @throws ClaimException - When the Claim with External ID or URI already exists
 	 */
-	public Claim createClaim(String uri, String name, String description, Organization o) throws ClaimException;
+	public Claim createClaim(String uri, String name, String description, Organization o, String createdBy) throws ClaimException;
 	
 	/**
 	 * Get all Roles
@@ -265,10 +271,11 @@ public interface IIdentityProviderApplication {
 	 * @param uri - Role designated URI
 	 * @param name - Role name
 	 * @param o - Organization to which the Role belongs
+	 * @param createdBy - User who creates the record
 	 * @return The created Role
 	 * @throws RoleException - When the Role with External ID or URI already exists
 	 */
-	public Role createRole(String uri, String name, Organization o) throws RoleException;
+	public Role createRole(String uri, String name, Organization o, String createdBy) throws RoleException;
 	
 	/**
 	 * Get a User via its External Id
@@ -285,10 +292,11 @@ public interface IIdentityProviderApplication {
 	 * @param password - Plain text Password of the User (will be hashed)
 	 * @param administrator - Is the User is admin
 	 * @param organization - Organization to which the User belongs
+	 * @param createdBy - User who creates the record
 	 * @return The created User
 	 * @throws UserException - When a User with External Id or email already exists
 	 */
-	public User createUser(String username, String password, boolean administrator, Organization organization) throws UserException;
+	public User createUser(String username, String password, boolean administrator, Organization organization, String createdBy) throws UserException;
 	
 	/**
 	 * Update a User entry in the database. Parameters enabled is set to false. Claims ORG and USERNAME are automatically created

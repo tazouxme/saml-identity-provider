@@ -1,4 +1,4 @@
-package com.tazouxme.idp.model.master;
+package com.tazouxme.idp.model.base;
 
 import java.io.Serializable;
 

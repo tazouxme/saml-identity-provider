@@ -9,24 +9,35 @@ import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.tazouxme.idp.dao.query.RoleQueries;
+import com.tazouxme.idp.model.base.AbstractModel;
 
 @Entity
-@Table(name = "tz_role")
+@Table(name = "tz_role", 
+	uniqueConstraints = {
+		@UniqueConstraint(name = "u_role_1", columnNames = { "external_id" }),
+		@UniqueConstraint(name = "u_role_2", columnNames = { "uri", "organization_id" })
+	},
+	indexes = {
+		@Index(name = "i_role_1", unique = true, columnList = "external_id"),
+		@Index(name = "i_role_2", unique = true, columnList = "uri, organization_id")
+	})
 @NamedQueries({
 	@NamedQuery(name = RoleQueries.NQ_FIND_ALL, query = RoleQueries.FIND_ALL),
 	@NamedQuery(name = RoleQueries.NQ_FIND_BY_ID, query = RoleQueries.FIND_BY_ID),
 	@NamedQuery(name = RoleQueries.NQ_FIND_BY_URI, query = RoleQueries.FIND_BY_URI)
 })
-public class Role {
+public class Role extends AbstractModel {
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "Role_generator")

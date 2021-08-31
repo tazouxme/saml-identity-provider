@@ -1,6 +1,8 @@
 package com.tazouxme.idp.exception;
 
-public class ActivationException extends Exception {
+import com.tazouxme.idp.exception.base.AbstractIdentityProviderException;
+
+public class ActivationException extends AbstractIdentityProviderException {
 	
 	public ActivationException(String message) {
 		super(message);

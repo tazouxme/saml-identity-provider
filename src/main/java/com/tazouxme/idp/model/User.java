@@ -12,6 +12,7 @@ import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
@@ -19,17 +20,29 @@ import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.tazouxme.idp.dao.query.UserQueries;
+import com.tazouxme.idp.model.base.AbstractModel;
 
 @Entity
-@Table(name = "tz_user")
+@Table(name = "tz_user", 
+	uniqueConstraints = {
+		@UniqueConstraint(name = "u_user_1", columnNames = { "external_id" }),
+		@UniqueConstraint(name = "u_user_2", columnNames = { "username", "organization_id" }),
+		@UniqueConstraint(name = "u_user_3", columnNames = { "email", "organization_id" })
+	},
+	indexes = {
+		@Index(name = "i_user_1", unique = true, columnList = "external_id"),
+		@Index(name = "i_user_2", unique = true, columnList = "username, organization_id"),
+		@Index(name = "i_user_3", unique = true, columnList = "email, organization_id")
+	})
 @NamedQueries({
 	@NamedQuery(name = UserQueries.NQ_FIND_BY_EMAIL, query = UserQueries.FIND_BY_EMAIL),
 	@NamedQuery(name = UserQueries.NQ_FIND_BY_EXTERNAL_ID, query = UserQueries.FIND_BY_EXTERNAL_ID)
 })
-public class User {
+public class User extends AbstractModel {
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "User_generator")
@@ -54,9 +67,6 @@ public class User {
 	
 	@Column(name = "enabled", length = 1, updatable = true, nullable = false)
 	private boolean enabled;
-	
-	@Column(name = "creation_date", length = 16, updatable = false, nullable = false)
-	private long creationDate;
 
 	@JsonIgnoreProperties("users")
 	@ManyToOne(fetch = FetchType.LAZY)
@@ -129,14 +139,6 @@ public class User {
 
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
-	}
-
-	public long getCreationDate() {
-		return creationDate;
-	}
-
-	public void setCreationDate(long creationDate) {
-		this.creationDate = creationDate;
 	}
 
 	public Organization getOrganization() {

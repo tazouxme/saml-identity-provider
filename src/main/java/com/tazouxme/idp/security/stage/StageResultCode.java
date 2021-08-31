@@ -20,7 +20,8 @@ public enum StageResultCode {
 	// Soap ValidateRequestParameters
 	FAT_0151 ("FAT-0151", "MessageDecodingException occured during ArtifactResolve capture", StatusCode.REQUEST_UNSUPPORTED),
 	FAT_0152 ("FAT-0152", "ComponentInitializationException occured during ArtifactResolve capture", StatusCode.REQUEST_UNSUPPORTED),
-	FAT_0153 (417, "FAT-0153", "Captured message is not an ArtifactResolve. Only ArtifactResolve supported for binding " + SAMLConstants.SAML2_SOAP11_BINDING_URI, StatusCode.REQUEST_UNSUPPORTED),
+	FAT_0153 (417, "FAT-0153", "Captured message is not an ArtifactResolve nor AttributeQuery. "
+			+ "Only ArtifactResolve and AttributeQuery supported for binding " + SAMLConstants.SAML2_SOAP11_BINDING_URI, StatusCode.REQUEST_UNSUPPORTED),
 	
 	// Logout ValidateRequestParameters
 	FAT_0181 (400, "FAT-0181", "SAMLRequest parameter not found", StatusCode.REQUEST_UNSUPPORTED),
@@ -57,7 +58,11 @@ public enum StageResultCode {
 	FAT_0260 (412, "FAT-0260", "ArtifactResolve Issuer must not be empty", StatusCode.REQUEST_UNSUPPORTED),
 	FAT_0261 (412, "FAT-0261", "Unknown Identity Provider", StatusCode.NO_SUPPORTED_IDP),
 	FAT_0262 (412, "FAT-0262", "ArtifactResolve Artifact not set", StatusCode.REQUEST_UNSUPPORTED),
-	FAT_0263 (412, "FAT-0263", "ArtifactResolve Artifact must not be empty", StatusCode.NO_SUPPORTED_IDP),
+	FAT_0263 (412, "FAT-0263", "ArtifactResolve Artifact must not be empty", StatusCode.REQUEST_UNSUPPORTED),
+	FAT_0264 (412, "FAT-0264", "AttributeQuery Subject must not be empty", StatusCode.REQUEST_UNSUPPORTED),
+	FAT_0265 (412, "FAT-0265", "AttributeQuery NameID must not be empty", StatusCode.REQUEST_UNSUPPORTED),
+	FAT_0266 (412, "FAT-0266", "AttributeQuery Attribute must not be empty", StatusCode.REQUEST_UNSUPPORTED),
+	FAT_0267 (412, "FAT-0267", "Only ArtifactResolve and AttributeQuery supported", StatusCode.REQUEST_UNSUPPORTED),
 	
 	// Logout ValidateRequestValues
 	FAT_0283 (412, "FAT-0283", "LogoutRequest ID not set", StatusCode.REQUEST_UNSUPPORTED),

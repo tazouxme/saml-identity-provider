@@ -64,19 +64,20 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 	private IUserBo userBo;
 	
 	@Override
-	public Access createAccess(User user, Application application, Role role, Organization organization) throws AccessException {
+	public Access createAccess(User user, Application application, Role role, Organization organization, String createdBy) throws AccessException {
 		Access access = new Access();
 		access.setOrganization(organization);
 		access.setUser(user);
 		access.setApplication(application);
 		access.setRole(role);
 		access.setEnabled(true);
+		access.setCreatedBy(createdBy);
 		
 		accessBo.create(access);
 		
 		if (access.getOrganization().isFederation()) {
 			try {
-				createFederation(user, application, organization);
+				createFederation(user, application, organization, createdBy);
 			} catch (FederationException e) {
 				throw new AccessException("Cannot create a new Federation for Access", e);
 			}
@@ -118,11 +119,12 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 	}
 	
 	@Override
-	public Activation createActivation(String organizationId, String userId, String step) throws ActivationException {
+	public Activation createActivation(String organizationId, String userId, String step, String createdBy) throws ActivationException {
 		Activation activation = new Activation();
 		activation.setOrganizationExternalId(organizationId);
 		activation.setUserExternalId(userId);
 		activation.setStep(step);
+		activation.setCreatedBy(createdBy);
 		
 		return activationBo.create(activation);
 	}
@@ -143,7 +145,7 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 	}
 	
 	@Override
-	public Application createApplication(String urn, String name, String description, String acsUrl, String logoutUrl, Organization organization) throws ApplicationException {
+	public Application createApplication(String urn, String name, String description, String acsUrl, String logoutUrl, Organization organization, String createdBy) throws ApplicationException {
 		Application application = new Application();
 		application.setUrn(urn);
 		application.setName(name);
@@ -151,6 +153,7 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 		application.setAssertionUrl(acsUrl);
 		application.setLogoutUrl(logoutUrl);
 		application.setOrganization(organization);
+		application.setCreatedBy(createdBy);
 		
 		return applicationBo.create(application);
 	}
@@ -218,12 +221,13 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 	}
 	
 	@Override
-	public Federation createFederation(User user, Application application, Organization organization) throws FederationException {
+	public Federation createFederation(User user, Application application, Organization organization, String createdBy) throws FederationException {
 		Federation federation = new Federation();
 		federation.setOrganization(organization);
 		federation.setUser(user);
 		federation.setApplication(application);
 		federation.setEnabled(true);
+		federation.setCreatedBy(createdBy);
 		
 		return federationBo.create(federation);
 	}
@@ -239,7 +243,7 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 	}
 	
 	@Override
-	public Organization createOrganization(String code, String domain) throws OrganizationException {
+	public Organization createOrganization(String code, String domain, String createdBy) throws OrganizationException {
 		Organization organization = new Organization();
 		organization.setCode(code);
 		organization.setName(code);
@@ -247,11 +251,12 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 		organization.setCertificate("");
 		organization.setEnabled(false);
 		organization.setFederation(false);
+		organization.setCreatedBy(createdBy);
 		organization = organizationBo.create(organization);
 		
 		for (ClaimsDefaults claim : ClaimsDefaults.values()) {
 			try {
-				createClaim(claim.getUri(), claim.getName(), claim.getDescription(), organization);
+				createClaim(claim.getUri(), claim.getName(), claim.getDescription(), organization, createdBy);
 			} catch (ClaimException e) {
 				throw new OrganizationException("Unable to create new default Claim for Organization", e);
 			}
@@ -259,7 +264,7 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 		
 		for (RolesDefaults role : RolesDefaults.values()) {
 			try {
-				createRole(role.getUri(), role.getName(), organization);
+				createRole(role.getUri(), role.getName(), organization, createdBy);
 			} catch (RoleException e) {
 				throw new OrganizationException("Unable to create new default Role for Organization", e);
 			}
@@ -303,12 +308,13 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 	}
 	
 	@Override
-	public Claim createClaim(String uri, String name, String description, Organization o) throws ClaimException {
+	public Claim createClaim(String uri, String name, String description, Organization o, String createdBy) throws ClaimException {
 		Claim claim = new Claim();
 		claim.setUri(uri);
 		claim.setName(name);
 		claim.setDescription(description);
 		claim.setOrganization(o);
+		claim.setCreatedBy(createdBy);
 		
 		return claimBo.create(claim);
 	}
@@ -324,11 +330,12 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 	}
 	
 	@Override
-	public Role createRole(String uri, String name, Organization o) throws RoleException {
+	public Role createRole(String uri, String name, Organization o, String createdBy) throws RoleException {
 		Role role = new Role();
 		role.setUri(uri);
 		role.setName(name);
 		role.setOrganization(o);
+		role.setCreatedBy(createdBy);
 		
 		return roleBo.create(role);
 	}
@@ -339,7 +346,7 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 	}
 	
 	@Override
-	public User createUser(String username, String password, boolean administrator, Organization organization) throws UserException {
+	public User createUser(String username, String password, boolean administrator, Organization organization, String createdBy) throws UserException {
 		User user = new User();
 		user.setUsername(username);
 		user.setEmail(username + "@" + organization.getDomain());
@@ -347,10 +354,11 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 		user.setAdministrator(administrator);
 		user.setEnabled(false);
 		user.setOrganization(organization);
+		user.setCreatedBy(createdBy);
 		
 		try {
-			user.getDetails().add(createUserDetails(IdentityProviderConstants.SAML_CLAIM_ORGANIZATION, organization.getDomain(), organization.getExternalId(), user));
-			user.getDetails().add(createUserDetails(IdentityProviderConstants.SAML_CLAIM_EMAIL, user.getEmail(), organization.getExternalId(), user));
+			user.getDetails().add(createUserDetails(IdentityProviderConstants.SAML_CLAIM_ORGANIZATION, organization.getDomain(), organization.getExternalId(), user, createdBy));
+			user.getDetails().add(createUserDetails(IdentityProviderConstants.SAML_CLAIM_EMAIL, user.getEmail(), organization.getExternalId(), user, createdBy));
 		} catch (ClaimException e) {
 			throw new UserException("Unable to create new default Claim for User", e);
 		}
@@ -404,11 +412,13 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 		userBo.delete(user);
 	}
 	
-	private UserDetails createUserDetails(String key, String value, String organizationId, User user) throws ClaimException {
+	private UserDetails createUserDetails(String key, String value, String organizationId, User user, String createdBy) throws ClaimException {
 		UserDetails details = new UserDetails();
 		details.setClaim(claimBo.findByURI(key, organizationId));
 		details.setClaimValue(value);
 		details.setCreationDate(new Date().getTime());
+		details.setCreatedBy(createdBy);
+		details.setStatus(1);
 		details.setUser(user);
 		
 		return details;

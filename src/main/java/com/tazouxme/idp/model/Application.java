@@ -12,6 +12,7 @@ import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
@@ -21,20 +22,30 @@ import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 import org.hibernate.envers.Audited;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.tazouxme.idp.dao.query.ApplicationQueries;
+import com.tazouxme.idp.model.base.AbstractModel;
 
 @Entity
-@Table(name = "tz_application")
+@Table(name = "tz_application", 
+	uniqueConstraints = {
+		@UniqueConstraint(name = "u_application_1", columnNames = { "external_id" }),
+		@UniqueConstraint(name = "u_application_2", columnNames = { "urn", "organization_id" })
+	},
+	indexes = {
+		@Index(name = "i_application_1", unique = true, columnList = "external_id"),
+		@Index(name = "i_application_2", unique = true, columnList = "urn, organization_id")
+	})
 @NamedQueries({
 	@NamedQuery(name = ApplicationQueries.NQ_FIND_ALL, query = ApplicationQueries.FIND_ALL),
 	@NamedQuery(name = ApplicationQueries.NQ_FIND_BY_URN, query = ApplicationQueries.FIND_BY_URN),
 	@NamedQuery(name = ApplicationQueries.NQ_FIND_BY_EXTERNAL_ID, query = ApplicationQueries.FIND_BY_EXTERNAL_ID)
 })
-public class Application {
+public class Application extends AbstractModel {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "Application_generator")

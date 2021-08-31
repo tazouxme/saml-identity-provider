@@ -30,6 +30,8 @@ public class OrganizationBo implements IOrganizationBo {
 	public Organization create(Organization org) throws OrganizationException {
 		org.setExternalId(IDUtils.generateId("ORG_", 8));
 		org.setCreationDate(new Date().getTime());
+		org.setStatus(1);
+		
 		return dao.create(org);
 	}
 

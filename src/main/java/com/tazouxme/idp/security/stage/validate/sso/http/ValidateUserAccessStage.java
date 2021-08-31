@@ -99,8 +99,10 @@ public class ValidateUserAccessStage extends AbstractStage {
 		Session session = new Session();
 		session.setOrganizationExternalId(organizationId);
 		session.setUserExternalId(userId);
+		session.setCreatedBy(userId);
 		
 		try {
+			sessionBo.delete(session);
 			return sessionBo.create(session).getToken();
 		} catch (SessionException e) {
 			throw new StageException(StageExceptionType.ACCESS, StageResultCode.FAT_1102);

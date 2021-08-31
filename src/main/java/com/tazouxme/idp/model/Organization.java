@@ -10,25 +10,38 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.Lob;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 import org.hibernate.envers.Audited;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.tazouxme.idp.dao.query.OrganizationQueries;
+import com.tazouxme.idp.model.base.AbstractModel;
 
 @Entity
-@Table(name = "tz_organization")
+@Table(name = "tz_organization", 
+	uniqueConstraints = {
+		@UniqueConstraint(name = "u_organization_1", columnNames = { "external_id" }),
+		@UniqueConstraint(name = "u_organization_2", columnNames = { "domain" }),
+		@UniqueConstraint(name = "u_organization_3", columnNames = { "code" })
+	},
+	indexes = {
+		@Index(name = "i_organization_1", unique = true, columnList = "external_id"),
+		@Index(name = "i_organization_2", unique = true, columnList = "domain"),
+		@Index(name = "i_organization_3", unique = true, columnList = "code")
+	})
 @NamedQueries({
 	@NamedQuery(name = OrganizationQueries.NQ_FIND_BY_DOMAIN, query = OrganizationQueries.FIND_BY_DOMAIN),
 	@NamedQuery(name = OrganizationQueries.NQ_FIND_BY_EXTERNAL_ID, query = OrganizationQueries.FIND_BY_EXTERNAL_ID)
 })
-public class Organization {
+public class Organization extends AbstractModel {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "Organization_generator")
@@ -65,9 +78,6 @@ public class Organization {
 	@Lob
 	@Column(name = "certificate", updatable = true, nullable = true)
 	private String certificate;
-	
-	@Column(name = "creation_date", length = 16, updatable = false, nullable = false)
-	private long creationDate;
 	
 	@JsonIgnoreProperties("organization")
 	@OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -155,14 +165,6 @@ public class Organization {
 	
 	public void setCertificate(String certificate) {
 		this.certificate = certificate;
-	}
-
-	public long getCreationDate() {
-		return creationDate;
-	}
-
-	public void setCreationDate(long creationDate) {
-		this.creationDate = creationDate;
 	}
 
 	public Set<User> getUsers() {

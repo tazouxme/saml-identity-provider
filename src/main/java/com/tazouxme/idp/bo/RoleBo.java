@@ -1,5 +1,6 @@
 package com.tazouxme.idp.bo;
 
+import java.util.Date;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,9 @@ public class RoleBo implements IRoleBo {
 	@Override
 	public Role create(Role role) throws RoleException {
 		role.setExternalId(IDUtils.generateId("ROL_", 8));
+		role.setCreationDate(new Date().getTime());
+		role.setStatus(1);
+		
 		return dao.create(role);
 	}
 

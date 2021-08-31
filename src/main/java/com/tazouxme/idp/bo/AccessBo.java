@@ -46,6 +46,8 @@ public class AccessBo implements IAccessBo {
 	public Access create(Access access) throws AccessException {
 		access.setExternalId(IDUtils.generateId("ACC_", 8));
 		access.setCreationDate(new Date().getTime());
+		access.setStatus(1);
+		
 		return dao.create(access);
 	}
 

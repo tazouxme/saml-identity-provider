@@ -232,10 +232,10 @@ public class IdentityProviderService implements IIdentityProviderService {
 		
 		try {
 			User user = idpApplication.createUser(entity.getUsername(), "changeit", entity.isAdministrator(), 
-					idpApplication.findOrganizationByExternalId(findUserIdentity().getOrganizationId()));
+					idpApplication.findOrganizationByExternalId(findUserIdentity().getOrganizationId()), findUserIdentity().getUserId());
 			
 			try {
-				Activation activation = idpApplication.createActivation(user.getOrganization().getExternalId(), user.getExternalId(), IdentityProviderConstants.ACTIVATION_CONST_PASSWORD);
+				Activation activation = idpApplication.createActivation(user.getOrganization().getExternalId(), user.getExternalId(), IdentityProviderConstants.ACTIVATION_CONST_PASSWORD, findUserIdentity().getUserId());
 				String link = generateActivationAccess(request, user, activation);
 				
 				String mailUsername = request.getServletContext().getInitParameter("mail-username");
@@ -416,7 +416,7 @@ public class IdentityProviderService implements IIdentityProviderService {
 		
 		try {
 			Application application = idpApplication.createApplication(entity.getUrn(), entity.getName(), entity.getDescription(), entity.getAcsUrl(), entity.getLogoutUrl(), 
-					idpApplication.findOrganizationByExternalId(findUserIdentity().getOrganizationId()));
+					idpApplication.findOrganizationByExternalId(findUserIdentity().getOrganizationId()), findUserIdentity().getUserId());
 			entity.setId(application.getExternalId());
 		} catch (ApplicationException e) {
 			ExceptionEntity exceptionEntity = new ExceptionEntity();
@@ -526,7 +526,8 @@ public class IdentityProviderService implements IIdentityProviderService {
 					idpApplication.findUserByExternalId(entity.getUser().getId(), findUserIdentity().getOrganizationId()),
 					idpApplication.findApplicationByURN(entity.getApplication().getUrn(), findUserIdentity().getOrganizationId()),
 					idpApplication.findRoleByExternalId(entity.getRole().getId(), findUserIdentity().getOrganizationId()), 
-					idpApplication.findOrganizationByExternalId(findUserIdentity().getOrganizationId()));
+					idpApplication.findOrganizationByExternalId(findUserIdentity().getOrganizationId()),
+					findUserIdentity().getUserId());
 			
 			UserEntity userEntity = new UserEntity();
 			userEntity.setId(access.getUser().getExternalId());

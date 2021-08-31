@@ -25,7 +25,7 @@ public class ValidateOrganizationAccessStage extends AbstractStage {
 	@Override
 	public UserAuthenticationToken executeInternal(UserAuthenticationToken authentication, StageParameters o) throws StageException {
 		try {
-			o.setApplication(applicationBo.findByUrn(o.getArtifactResolve().getIssuer().getValue(), o.getOrganizationId()));
+			o.setApplication(applicationBo.findByUrn(o.getSoapRequest().getIssuer().getValue(), o.getOrganizationId()));
 		} catch (ApplicationException e) {
 			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0552, o);
 		}

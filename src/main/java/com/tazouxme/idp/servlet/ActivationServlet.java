@@ -19,7 +19,6 @@ import com.tazouxme.idp.bo.contract.IActivationBo;
 import com.tazouxme.idp.bo.contract.IUserBo;
 import com.tazouxme.idp.exception.ActivationException;
 import com.tazouxme.idp.exception.UserException;
-import com.tazouxme.idp.model.Activation;
 import com.tazouxme.idp.model.User;
 import com.tazouxme.idp.sanitizer.NonEmptySanitizer;
 import com.tazouxme.idp.sanitizer.Sanitizer;
@@ -111,9 +110,7 @@ public class ActivationServlet extends HttpServlet {
 			user.setPassword(BCrypt.hashpw(password, BCrypt.gensalt(6)));
 			
 			userBo.update(user);
-			
-			Activation activation = activationBo.find(organizationId, userId, step);
-			activationBo.delete(activation);
+			activationBo.delete(activationBo.find(organizationId, userId, step));
 		} catch (UserException | ActivationException e) {
 			req.setAttribute(IdentityProviderConstants.SERVLET_ERROR_WRONG_PASS, "Unable to enable the User");
 			req.getRequestDispatcher("/password.jsp").forward(req, res);

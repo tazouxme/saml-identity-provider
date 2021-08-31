@@ -1,6 +1,8 @@
 package com.tazouxme.idp.exception;
 
-public class StoreException extends Exception {
+import com.tazouxme.idp.exception.base.AbstractIdentityProviderException;
+
+public class StoreException extends AbstractIdentityProviderException {
 	
 	public StoreException(String message) {
 		super(message);

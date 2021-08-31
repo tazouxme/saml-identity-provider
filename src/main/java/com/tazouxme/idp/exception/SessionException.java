@@ -1,6 +1,8 @@
 package com.tazouxme.idp.exception;
 
-public class SessionException extends Exception {
+import com.tazouxme.idp.exception.base.AbstractIdentityProviderException;
+
+public class SessionException extends AbstractIdentityProviderException {
 	
 	public SessionException(String message) {
 		super(message);

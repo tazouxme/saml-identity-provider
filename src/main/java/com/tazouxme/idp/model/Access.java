@@ -9,18 +9,30 @@ import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.tazouxme.idp.dao.query.AccessQueries;
+import com.tazouxme.idp.model.base.AbstractModel;
 
 @Entity
-@Table(name = "tz_access")
+@Table(name = "tz_access", 
+	uniqueConstraints = {
+		@UniqueConstraint(name = "u_access_1", columnNames = { "external_id" }),
+		@UniqueConstraint(name = "u_access_2", columnNames = { "organization_id", "user_id", "application_id", "role_id" })
+	},
+	indexes = {
+		@Index(name = "i_access_1", unique = true, columnList = "external_id"),
+		@Index(name = "i_access_2", unique = true, columnList = "organization_id, user_id, application_id, role_id")
+	}
+)
 @NamedQueries({
 	@NamedQuery(name = AccessQueries.NQ_FIND_BY_ID, query = AccessQueries.FIND_BY_ID),
 	@NamedQuery(name = AccessQueries.NQ_FIND_BY_URN, query = AccessQueries.FIND_BY_URN),
@@ -28,7 +40,7 @@ import com.tazouxme.idp.dao.query.AccessQueries;
 	@NamedQuery(name = AccessQueries.NQ_FIND_BY_USER_AND_URN, query = AccessQueries.FIND_BY_USER_AND_URN),
 	@NamedQuery(name = AccessQueries.NQ_FIND_BY_ORGANIZATION, query = AccessQueries.FIND_BY_ORGANIZATION)
 })
-public class Access {
+public class Access extends AbstractModel {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "Access_generator")
@@ -41,9 +53,6 @@ public class Access {
 	
 	@Column(name = "enabled", length = 1, updatable = true, nullable = false)
 	private boolean enabled;
-	
-	@Column(name = "creation_date", length = 16, updatable = false, nullable = false)
-	private long creationDate;
 
 	@JsonIgnoreProperties("accesses")
 	@ManyToOne(fetch = FetchType.LAZY)
@@ -87,14 +96,6 @@ public class Access {
 
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
-	}
-
-	public long getCreationDate() {
-		return creationDate;
-	}
-
-	public void setCreationDate(long creationDate) {
-		this.creationDate = creationDate;
 	}
 
 	public Organization getOrganization() {

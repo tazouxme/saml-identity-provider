@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.time.Instant;
+import java.util.Date;
 
 import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -20,6 +21,8 @@ import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import org.opensaml.core.xml.io.Unmarshaller;
 import org.opensaml.core.xml.io.UnmarshallingException;
 import org.opensaml.saml.common.SAMLVersion;
+import org.opensaml.saml.saml2.core.Attribute;
+import org.opensaml.saml.saml2.core.AttributeQuery;
 import org.opensaml.saml.saml2.core.AuthnContextClassRef;
 import org.opensaml.saml.saml2.core.AuthnContextComparisonTypeEnumeration;
 import org.opensaml.saml.saml2.core.AuthnRequest;
@@ -27,8 +30,12 @@ import org.opensaml.saml.saml2.core.Issuer;
 import org.opensaml.saml.saml2.core.LogoutRequest;
 import org.opensaml.saml.saml2.core.NameID;
 import org.opensaml.saml.saml2.core.NameIDPolicy;
+import org.opensaml.saml.saml2.core.NameIDType;
 import org.opensaml.saml.saml2.core.RequestedAuthnContext;
 import org.opensaml.saml.saml2.core.StatusResponseType;
+import org.opensaml.saml.saml2.core.Subject;
+import org.opensaml.saml.saml2.core.SubjectConfirmation;
+import org.opensaml.saml.saml2.core.SubjectConfirmationData;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
@@ -66,6 +73,19 @@ public class SAMLUtilsTest {
 		
 		return auth;
 	}
+	
+	public static AttributeQuery buildAttributeQuery(String idpUrn, String application, String userId, String attributeName) {
+		AttributeQuery query = buildSAMLObject(AttributeQuery.class);
+		query.setID(IDUtils.generateId("ID_", 4));
+		query.setVersion(SAMLVersion.VERSION_20);
+		query.setIssueInstant(Instant.now());
+		query.setDestination(idpUrn);
+		query.setIssuer(buildIssuer(application));
+		query.setSubject(buildSubject(query, userId));
+		query.getAttributes().add(buildAttribute(attributeName));
+		
+		return query;
+	}
 
 	private static Issuer buildIssuer(String serviceUrl) {
 		Issuer issuer = buildSAMLObject(Issuer.class);
@@ -88,6 +108,31 @@ public class SAMLUtilsTest {
 		nameIDPolicy.setAllowCreate(false);
 
 		return nameIDPolicy;
+	}
+	
+	private static Subject buildSubject(AttributeQuery query, String userId) {
+		SubjectConfirmationData subjectConfirmationData = buildSAMLObject(SubjectConfirmationData.class);
+		subjectConfirmationData.setRecipient(query.getIssuer().getValue());
+		subjectConfirmationData.setInResponseTo(query.getID());
+		subjectConfirmationData.setNotOnOrAfter(Instant.ofEpochMilli(new Date().getTime() + 1000 * 3600 * 24));
+		
+		SubjectConfirmation subjectConfirmation = buildSAMLObject(SubjectConfirmation.class);
+		subjectConfirmation.setMethod(SubjectConfirmation.METHOD_BEARER);
+		subjectConfirmation.setSubjectConfirmationData(subjectConfirmationData);
+		
+		Subject subject = buildSAMLObject(Subject.class);
+		subject.setNameID(buildNameID(NameIDType.TRANSIENT, userId));
+		subject.getSubjectConfirmations().add(subjectConfirmation);
+		
+		return subject;
+	}
+	
+	private static Attribute buildAttribute(String name) {
+		Attribute attribute = buildSAMLObject(Attribute.class);
+		attribute.setName(name);
+		attribute.setNameFormat(Attribute.BASIC);
+		
+		return attribute;
 	}
 	
 	public static StatusResponseType getResponse(byte[] samlResponse) {

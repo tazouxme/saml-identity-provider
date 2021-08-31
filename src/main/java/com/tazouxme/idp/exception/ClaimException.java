@@ -1,6 +1,8 @@
 package com.tazouxme.idp.exception;
 
-public class ClaimException extends Exception {
+import com.tazouxme.idp.exception.base.AbstractIdentityProviderException;
+
+public class ClaimException extends AbstractIdentityProviderException {
 	
 	public ClaimException(String message) {
 		super(message);

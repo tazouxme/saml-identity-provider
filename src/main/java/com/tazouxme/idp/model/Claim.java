@@ -12,6 +12,7 @@ import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
@@ -20,18 +21,28 @@ import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.tazouxme.idp.dao.query.ClaimQueries;
+import com.tazouxme.idp.model.base.AbstractModel;
 
 @Entity
-@Table(name = "tz_claim")
+@Table(name = "tz_claim", 
+	uniqueConstraints = {
+		@UniqueConstraint(name = "u_claim_1", columnNames = { "external_id" }),
+		@UniqueConstraint(name = "u_claim_2", columnNames = { "uri", "organization_id" })
+	},
+	indexes = {
+		@Index(name = "i_claim_1", unique = true, columnList = "external_id"),
+		@Index(name = "i_claim_2", unique = true, columnList = "uri, organization_id")
+	})
 @NamedQueries({
 	@NamedQuery(name = ClaimQueries.NQ_FIND_ALL, query = ClaimQueries.FIND_ALL),
 	@NamedQuery(name = ClaimQueries.NQ_FIND_BY_ID, query = ClaimQueries.FIND_BY_ID),
 	@NamedQuery(name = ClaimQueries.NQ_FIND_BY_URI, query = ClaimQueries.FIND_BY_URI)
 })
-public class Claim {
+public class Claim extends AbstractModel {
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "Claim_generator")

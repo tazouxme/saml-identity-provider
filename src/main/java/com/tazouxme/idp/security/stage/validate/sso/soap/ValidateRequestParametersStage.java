@@ -3,6 +3,8 @@ package com.tazouxme.idp.security.stage.validate.sso.soap;
 import org.opensaml.messaging.decoder.MessageDecodingException;
 import org.opensaml.saml.saml2.binding.decoding.impl.HTTPSOAP11Decoder;
 import org.opensaml.saml.saml2.core.ArtifactResolve;
+import org.opensaml.saml.saml2.core.AttributeQuery;
+import org.opensaml.saml.saml2.core.RequestAbstractType;
 
 import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.security.stage.exception.StageException;
@@ -45,11 +47,11 @@ public class ValidateRequestParametersStage extends AbstractStage {
         	throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0152);
         }
         
-        if (!(message instanceof ArtifactResolve)) {
+        if (!(message instanceof ArtifactResolve) && !(message instanceof AttributeQuery)) {
         	throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0153);
         }
         
-        o.setArtifactResolve((ArtifactResolve) message);
+        o.setSoapRequest((RequestAbstractType) message);
 		
 		logger.info("Request parameters valid");
 		

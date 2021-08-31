@@ -7,19 +7,32 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 import com.tazouxme.idp.dao.query.SessionQueries;
+import com.tazouxme.idp.model.base.AbstractModel;
 
 @Entity
-@Table(name = "tz_session")
+@Table(name = "tz_session", 
+	uniqueConstraints = {
+		@UniqueConstraint(name = "u_session_1", columnNames = { "external_id" }),
+		@UniqueConstraint(name = "u_session_2", columnNames = { "organization_external_id", "user_external_id" }),
+		@UniqueConstraint(name = "u_session_3", columnNames = { "token" })
+	},
+	indexes = {
+		@Index(name = "i_session_1", unique = true, columnList = "external_id"),
+		@Index(name = "i_session_2", unique = true, columnList = "organization_external_id, user_external_id"),
+		@Index(name = "i_session_3", unique = true, columnList = "token")
+	})
 @NamedQueries({
 	@NamedQuery(name = SessionQueries.NQ_FIND, query = SessionQueries.FIND)
 })
-public class Session {
+public class Session extends AbstractModel {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "Session_generator")
@@ -38,9 +51,6 @@ public class Session {
 	
 	@Column(name = "token", length = 36, updatable = false, nullable = false)
 	private String token;
-	
-	@Column(name = "creation_date", length = 16, updatable = false, nullable = false)
-	private long creationDate;
 
 	public long getId() {
 		return id;
@@ -80,14 +90,6 @@ public class Session {
 
 	public void setToken(String token) {
 		this.token = token;
-	}
-
-	public long getCreationDate() {
-		return creationDate;
-	}
-
-	public void setCreationDate(long creationDate) {
-		this.creationDate = creationDate;
 	}
 	
 	@Override

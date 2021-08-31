@@ -1,6 +1,8 @@
 package com.tazouxme.idp.exception;
 
-public class RoleException extends Exception {
+import com.tazouxme.idp.exception.base.AbstractIdentityProviderException;
+
+public class RoleException extends AbstractIdentityProviderException {
 	
 	public RoleException(String message) {
 		super(message);

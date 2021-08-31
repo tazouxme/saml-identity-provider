@@ -1,6 +1,8 @@
 package com.tazouxme.idp.exception;
 
-public class AccessException extends Exception {
+import com.tazouxme.idp.exception.base.AbstractIdentityProviderException;
+
+public class AccessException extends AbstractIdentityProviderException {
 	
 	public AccessException(String message) {
 		super(message);

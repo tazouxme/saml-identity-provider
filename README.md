@@ -20,7 +20,7 @@ To change the KeyStore and Certificate (src/main/resources/cert), you can execut
 - [x] AuthnRequest -> Responds with an SAML Response
 - [x] LogoutRequest -> Responds with an SAML LogoutResponse
 - [x] ArtifactResolve -> Responds with an SAML ArtifactResponse
-- [ ] AttributeQuery
+- [x] AttributeQuery -> Response with an SAML Response
 
 ##### Supported initializations: 
 - [x] SP-Initialization

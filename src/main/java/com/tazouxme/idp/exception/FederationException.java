@@ -1,6 +1,8 @@
 package com.tazouxme.idp.exception;
 
-public class FederationException extends Exception {
+import com.tazouxme.idp.exception.base.AbstractIdentityProviderException;
+
+public class FederationException extends AbstractIdentityProviderException {
 	
 	public FederationException(String message) {
 		super(message);

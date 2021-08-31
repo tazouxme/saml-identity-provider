@@ -7,21 +7,32 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 import com.tazouxme.idp.dao.query.ActivationQueries;
+import com.tazouxme.idp.model.base.AbstractModel;
 
 @Entity
-@Table(name = "tz_activation")
+@Table(name = "tz_activation", 
+	uniqueConstraints = {
+		@UniqueConstraint(name = "u_activation_1", columnNames = { "external_id" }),
+		@UniqueConstraint(name = "u_activation_2", columnNames = { "user_external_id", "organization_external_id" })
+	},
+	indexes = {
+		@Index(name = "i_activation_1", unique = true, columnList = "external_id"),
+		@Index(name = "i_activation_2", unique = true, columnList = "user_external_id, organization_external_id")
+	})
 @NamedQueries({
 	@NamedQuery(name = ActivationQueries.NQ_FIND, query = ActivationQueries.FIND),
 	@NamedQuery(name = ActivationQueries.NQ_FIND_BY_ID, query = ActivationQueries.FIND_BY_ID),
 	@NamedQuery(name = ActivationQueries.NQ_FIND_BY_USER, query = ActivationQueries.FIND_BY_USER)
 })
-public class Activation {
+public class Activation extends AbstractModel {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "Activation_generator")
@@ -40,9 +51,6 @@ public class Activation {
 	
 	@Column(name = "step", length = 16, updatable = false, nullable = false)
 	private String step;
-	
-	@Column(name = "creation_date", length = 16, updatable = false, nullable = false)
-	private long creationDate;
 
 	public long getId() {
 		return id;
@@ -82,14 +90,6 @@ public class Activation {
 	
 	public void setStep(String step) {
 		this.step = step;
-	}
-
-	public long getCreationDate() {
-		return creationDate;
-	}
-
-	public void setCreationDate(long creationDate) {
-		this.creationDate = creationDate;
 	}
 	
 	@Override

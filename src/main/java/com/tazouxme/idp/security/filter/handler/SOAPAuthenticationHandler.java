@@ -1,6 +1,8 @@
 package com.tazouxme.idp.security.filter.handler;
 
 import java.io.IOException;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -16,10 +18,14 @@ import org.opensaml.saml.common.messaging.context.navigate.SAMLMessageContextIss
 import org.opensaml.saml.saml2.binding.encoding.impl.HTTPSOAP11Encoder;
 import org.opensaml.saml.saml2.core.ArtifactResolve;
 import org.opensaml.saml.saml2.core.ArtifactResponse;
+import org.opensaml.saml.saml2.core.Attribute;
+import org.opensaml.saml.saml2.core.AttributeQuery;
 import org.opensaml.saml.saml2.profile.impl.ResolveArtifact;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import com.tazouxme.idp.model.Claim;
+import com.tazouxme.idp.model.UserDetails;
 import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.security.stage.exception.StageException;
 import com.tazouxme.idp.security.stage.exception.StageExceptionType;
@@ -39,13 +45,31 @@ public class SOAPAuthenticationHandler extends AbstractAuthenticationHandler {
 	@Override
 	public void handle(HttpServletRequest request, HttpServletResponse response, UserAuthenticationToken authentication) throws IOException, ServletException {
 		StageParameters parameters = authentication.getDetails().getParameters();
-		ArtifactResolve artifactResolve = parameters.getArtifactResolve();
-		
-		if (artifactResolve == null) {
-			fault(request, response, authentication);
-			return;
+		if (parameters.getSoapRequest() instanceof ArtifactResolve) {
+			ArtifactResolve artifactResolve = (ArtifactResolve) parameters.getSoapRequest();
+			
+			if (artifactResolve == null) {
+				fault(request, response, authentication);
+				return;
+			}
+			
+			handleArtifact(request, response, authentication, artifactResolve);
+		} else if (parameters.getSoapRequest() instanceof AttributeQuery) {
+			AttributeQuery attributeQuery = (AttributeQuery) parameters.getSoapRequest();
+			
+			if (attributeQuery == null) {
+				fault(request, response, authentication);
+				return;
+			}
+			
+			handleAttribute(request, response, authentication, attributeQuery);
+		} else {
+			
 		}
-		
+	}
+	
+	private void handleArtifact(HttpServletRequest request, HttpServletResponse response, UserAuthenticationToken authentication, ArtifactResolve artifactResolve) throws IOException, ServletException {
+		StageParameters parameters = authentication.getDetails().getParameters();
 		ArtifactResponse artifactResponse = SAMLUtils.buildArtifactResponse(parameters, authentication.getDetails().getResultCode());
 		
         try {
@@ -89,6 +113,45 @@ public class SOAPAuthenticationHandler extends AbstractAuthenticationHandler {
         } catch (ComponentInitializationException e) {
 			fault(request, response, authentication);
         }
+		
+		SecurityContextHolder.clearContext();
+	}
+	
+	private void handleAttribute(HttpServletRequest request, HttpServletResponse response, UserAuthenticationToken authentication, AttributeQuery attributeQuery) throws IOException, ServletException {
+		StageParameters parameters = authentication.getDetails().getParameters();
+		Set<String> attributes = attributeQuery.getAttributes().stream().map(Attribute::getName).collect(Collectors.toSet());
+		
+		Set<Claim> claims = parameters.getApplication().getClaims();
+		Set<UserDetails> details = parameters.getUser().getDetails();
+		
+		if (!claims.stream().map(Claim::getUri).collect(Collectors.toSet()).containsAll(attributes)) {
+			// not allowed
+			fault(request, response, authentication);
+			return;
+		}
+		
+		for (UserDetails detail : details) {
+			if (attributes.contains(detail.getClaim().getUri())) {
+				authentication.getDetails().getIdentity().getClaims().put(detail.getClaim().getUri(), detail.getClaimValue());
+			}
+		}
+		
+        MessageContext context = new MessageContext();
+		context.setMessage(SAMLUtils.buildAttributeQueryResponse(parameters, authentication.getDetails().getIdentity(), authentication.getDetails().getResultCode()));
+
+		HTTPSOAP11Encoder encoder = new HTTPSOAP11Encoder();
+		encoder.setMessageContext(context);
+		encoder.setHttpServletResponse(response);
+
+		try {
+			encoder.prepareContext();
+			encoder.initialize();
+			encoder.encode();
+		} catch (MessageEncodingException e) {
+			fault(request, response, authentication);
+		} catch (ComponentInitializationException e) {
+			fault(request, response, authentication);
+		}
 		
 		SecurityContextHolder.clearContext();
 	}

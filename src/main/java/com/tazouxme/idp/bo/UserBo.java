@@ -9,6 +9,7 @@ import com.tazouxme.idp.bo.contract.IUserBo;
 import com.tazouxme.idp.dao.contract.IUserDao;
 import com.tazouxme.idp.exception.UserException;
 import com.tazouxme.idp.model.User;
+import com.tazouxme.idp.model.UserDetails;
 import com.tazouxme.idp.util.IDUtils;
 
 public class UserBo implements IUserBo {
@@ -30,6 +31,16 @@ public class UserBo implements IUserBo {
 	public User create(User user) throws UserException {
 		user.setExternalId(IDUtils.generateId("USE_", 8));
 		user.setCreationDate(new Date().getTime());
+		user.setStatus(1);
+		
+		if (StringUtils.isBlank(user.getCreatedBy())) {
+			user.setCreatedBy(user.getExternalId());
+			
+			for (UserDetails details : user.getDetails()) {
+				details.setCreatedBy(user.getExternalId());
+			}
+		}
+		
 		return dao.create(user);
 	}
 

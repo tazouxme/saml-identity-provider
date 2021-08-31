@@ -23,15 +23,11 @@ public class SessionBo implements ISessionBo {
 
 	@Override
 	public Session create(Session session) throws SessionException {
-		try {
-			delete(session);
-		} catch (SessionException e) {
-			// session does not exist, proceed
-		}
-
 		session.setToken(UUID.randomUUID().toString());
 		session.setExternalId(IDUtils.generateId("SES_", 8));
 		session.setCreationDate(new Date().getTime());
+		session.setStatus(1);
+		
 		return dao.create(session);
 	}
 

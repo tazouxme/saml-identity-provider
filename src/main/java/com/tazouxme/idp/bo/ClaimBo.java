@@ -1,5 +1,6 @@
 package com.tazouxme.idp.bo;
 
+import java.util.Date;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,9 @@ public class ClaimBo implements IClaimBo {
 	@Override
 	public Claim create(Claim claim) throws ClaimException {
 		claim.setExternalId(IDUtils.generateId("CLA_", 8));
+		claim.setCreationDate(new Date().getTime());
+		claim.setStatus(1);
+		
 		return dao.create(claim);
 	}
 

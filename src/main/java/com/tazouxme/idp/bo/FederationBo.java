@@ -40,6 +40,8 @@ public class FederationBo implements IFederationBo {
 	public Federation create(Federation federation) throws FederationException {
 		federation.setExternalId(IDUtils.generateId("FED_", 8));
 		federation.setCreationDate(new Date().getTime());
+		federation.setStatus(1);
+		
 		return dao.create(federation);
 	}
 

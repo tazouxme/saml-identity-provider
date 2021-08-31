@@ -75,7 +75,7 @@ public class RegisterServlet extends HttpServlet {
 		
 		try {
 			User user = register(organizationCode, organizationDomain, username, password, true);
-			Activation activation = idpApplication.createActivation(user.getOrganization().getExternalId(), user.getExternalId(), IdentityProviderConstants.ACTIVATION_CONST_ACTIVATE);
+			Activation activation = idpApplication.createActivation(user.getOrganization().getExternalId(), user.getExternalId(), IdentityProviderConstants.ACTIVATION_CONST_ACTIVATE, user.getExternalId());
 			
 			ActivationSender sender = findActivationSender(req, res, getServletContext().getInitParameter("mail-username"), getServletContext().getInitParameter("mail-password"));
 			sender.send(generateActivationAccess(req, user, activation), user);
@@ -95,7 +95,7 @@ public class RegisterServlet extends HttpServlet {
 	
 	private User register(String organizationCode, String organizationDomain, String username, String password, boolean administrator) throws OrganizationException, UserException, ClaimException {
 		return idpApplication.createUser(username, password, administrator, 
-				idpApplication.createOrganization(organizationCode, organizationDomain));
+				idpApplication.createOrganization(organizationCode, organizationDomain, "SYSTEM"), null);
 	}
 	
 	private String generateActivationAccess(HttpServletRequest req, User user, Activation activation) {

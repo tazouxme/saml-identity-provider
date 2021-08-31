@@ -1,6 +1,8 @@
 package com.tazouxme.idp.exception;
 
-public class OrganizationException extends Exception {
+import com.tazouxme.idp.exception.base.AbstractIdentityProviderException;
+
+public class OrganizationException extends AbstractIdentityProviderException {
 	
 	public OrganizationException(String message) {
 		super(message);

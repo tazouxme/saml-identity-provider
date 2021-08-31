@@ -35,6 +35,8 @@ public class ActivationBo implements IActivationBo {
 	public Activation create(Activation activation) throws ActivationException {
 		activation.setExternalId(IDUtils.generateId("ACT_", 8));
 		activation.setCreationDate(new Date().getTime());
+		activation.setStatus(1);
+		
 		return dao.create(activation);
 	}
 

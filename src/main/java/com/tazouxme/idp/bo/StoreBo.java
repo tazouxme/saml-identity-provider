@@ -1,5 +1,6 @@
 package com.tazouxme.idp.bo;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -33,6 +34,9 @@ public class StoreBo implements IStoreBo {
 
 	@Override
 	public Store create(Store store) throws StoreException {
+		store.setCreationDate(new Date().getTime());
+		store.setStatus(1);
+		
 		return dao.create(store);
 	}
 
