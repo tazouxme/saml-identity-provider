@@ -1,21 +1,14 @@
 package com.tazouxme.idp.service.entity;
 
-public class FederationEntity {
+import com.tazouxme.idp.service.entity.base.AbstractEntity;
+
+public class FederationEntity extends AbstractEntity {
 	
-	private String id;
 	private boolean enabled;
 	
 	public FederationEntity() {
-		this.id = "";
 		this.enabled = false;
-	}
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
+		setId("");
 	}
 
 	public boolean isEnabled() {

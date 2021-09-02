@@ -1,18 +1,11 @@
 package com.tazouxme.idp.service.entity;
 
-public class RoleEntity {
+import com.tazouxme.idp.service.entity.base.AbstractEntity;
+
+public class RoleEntity extends AbstractEntity {
 	
-	private String id;
 	private String uri;
 	private String name;
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
 
 	public String getUri() {
 		return uri;

@@ -1,19 +1,12 @@
 package com.tazouxme.idp.service.entity;
 
-public class ClaimEntity {
+import com.tazouxme.idp.service.entity.base.AbstractEntity;
+
+public class ClaimEntity extends AbstractEntity {
 	
-	private String id;
 	private String uri;
 	private String name;
 	private String description;
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
 
 	public String getUri() {
 		return uri;

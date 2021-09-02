@@ -19,5 +19,20 @@ public class AbstractIdentityProviderException extends Exception {
 	public IdentityProviderExceptionCode getCode() {
 		return code;
 	}
+	
+	@Override
+	public String toString() {
+		StringBuilder b = new StringBuilder();
+		b.append("Status: ");
+		b.append(getCode().getStatus());
+		b.append(", ");
+		b.append("Code: ");
+		b.append(getCode().getCode());
+		b.append(", ");
+		b.append("Message: ");
+		b.append(getMessage());
+		
+		return b.toString();
+	}
 
 }

@@ -1,22 +1,15 @@
 package com.tazouxme.idp.service.entity;
 
-public class AccessEntity {
+import com.tazouxme.idp.service.entity.base.AbstractEntity;
+
+public class AccessEntity extends AbstractEntity {
 	
-	private String id;
 	private boolean enabled;
 	
 	private UserEntity user;
 	private RoleEntity role;
 	private ApplicationEntity application;
 	private FederationEntity federation;
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
 
 	public boolean isEnabled() {
 		return enabled;

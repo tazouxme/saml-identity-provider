@@ -3,9 +3,10 @@ package com.tazouxme.idp.service.entity;
 import java.util.HashSet;
 import java.util.Set;
 
-public class ApplicationEntity {
+import com.tazouxme.idp.service.entity.base.AbstractEntity;
+
+public class ApplicationEntity extends AbstractEntity {
 	
-	private String id;
 	private String urn;
 	private String name;
 	private String description;
@@ -14,14 +15,6 @@ public class ApplicationEntity {
 	
 	private Set<ClaimEntity> claims = new HashSet<>();
 	private Set<AccessEntity> accesses = new HashSet<>();
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
 
 	public String getUrn() {
 		return urn;

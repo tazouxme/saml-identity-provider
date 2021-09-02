@@ -3,9 +3,10 @@ package com.tazouxme.idp.service.entity;
 import java.util.HashSet;
 import java.util.Set;
 
-public class OrganizationEntity {
+import com.tazouxme.idp.service.entity.base.AbstractEntity;
+
+public class OrganizationEntity extends AbstractEntity {
 	
-	private String id;
 	private String code;
 	private String domain;
 	private String name;
@@ -16,14 +17,6 @@ public class OrganizationEntity {
 	private Set<RoleEntity> roles = new HashSet<>();
 	private String certificate;
 	private boolean hasCertificate = false;
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
 
 	public String getCode() {
 		return code;

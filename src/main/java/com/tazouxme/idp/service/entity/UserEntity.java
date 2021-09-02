@@ -3,23 +3,16 @@ package com.tazouxme.idp.service.entity;
 import java.util.HashSet;
 import java.util.Set;
 
-public class UserEntity {
+import com.tazouxme.idp.service.entity.base.AbstractEntity;
+
+public class UserEntity extends AbstractEntity {
 	
-	private String id;
 	private String username;
 	private String email;
 	private boolean enabled;
 	private boolean administrator;
 	
 	private Set<UserDetailsEntity> details = new HashSet<>();
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
 
 	public String getUsername() {
 		return username;
