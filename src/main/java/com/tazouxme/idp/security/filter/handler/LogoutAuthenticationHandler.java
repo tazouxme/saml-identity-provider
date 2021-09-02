@@ -30,19 +30,16 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.tazouxme.idp.IdentityProviderConstants;
-import com.tazouxme.idp.bo.contract.IAccessBo;
-import com.tazouxme.idp.bo.contract.ISessionBo;
-import com.tazouxme.idp.exception.AccessException;
-import com.tazouxme.idp.exception.SessionException;
+import com.tazouxme.idp.application.contract.IIdentityProviderApplication;
+import com.tazouxme.idp.application.exception.AccessException;
+import com.tazouxme.idp.application.exception.SessionException;
 import com.tazouxme.idp.model.Access;
-import com.tazouxme.idp.model.Session;
 import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.security.stage.exception.StageException;
 import com.tazouxme.idp.security.stage.exception.StageExceptionType;
 import com.tazouxme.idp.security.stage.parameters.StageParameters;
 import com.tazouxme.idp.security.token.UserAuthenticationPhase;
 import com.tazouxme.idp.security.token.UserAuthenticationToken;
-import com.tazouxme.idp.security.token.UserIdentity;
 import com.tazouxme.idp.security.velocity.IdpVelocityEngine;
 import com.tazouxme.idp.util.CookieUtils;
 import com.tazouxme.idp.util.SAMLUtils;
@@ -66,11 +63,11 @@ public class LogoutAuthenticationHandler extends AbstractAuthenticationHandler {
 			return;
 		}
 		
-		IAccessBo accessBo = getContext().getBean(IAccessBo.class);
+		IIdentityProviderApplication application = getContext().getBean(IIdentityProviderApplication.class);
 		Access currentAccess = null;
 		
 		try {
-			currentAccess = accessBo.findByUserAndURN(parameters.getUserId(), logoutRequest.getIssuer().getValue(), parameters.getOrganizationId());
+			currentAccess = application.findAccessByUserAndURN(parameters.getUserId(), logoutRequest.getIssuer().getValue(), parameters.getOrganizationId());
 		} catch (AccessException e) {
 			logger.error("Unable to retrieve current Access");
 			authentication.getDetails().setPhase(UserAuthenticationPhase.SLO_FAILED);
@@ -194,12 +191,10 @@ public class LogoutAuthenticationHandler extends AbstractAuthenticationHandler {
 	}
 	
 	private boolean disconnect(UserAuthenticationToken authentication) {
-		UserIdentity identity = authentication.getDetails().getIdentity();
-		ISessionBo sessionBo = getContext().getBean(ISessionBo.class);
+		IIdentityProviderApplication application = getContext().getBean(IIdentityProviderApplication.class);
 		
 		try {
-			Session session = sessionBo.find(identity.getUserId(), identity.getOrganizationId());
-			sessionBo.delete(session);
+			application.deleteSession(authentication.getDetails().getParameters().getUser(), authentication.getDetails().getParameters().getOrganization());
 		} catch (SessionException e) {
 			logger.error("Cannot delete the Session", e);
 			authentication.getDetails().setPhase(UserAuthenticationPhase.SLO_FAILED);

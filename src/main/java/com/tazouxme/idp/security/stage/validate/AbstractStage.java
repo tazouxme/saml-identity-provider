@@ -2,7 +2,9 @@ package com.tazouxme.idp.security.stage.validate;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import com.tazouxme.idp.application.contract.IIdentityProviderApplication;
 import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.security.stage.exception.StageException;
 import com.tazouxme.idp.security.stage.exception.StageExceptionType;
@@ -13,6 +15,9 @@ import com.tazouxme.idp.security.token.UserAuthenticationToken;
 public abstract class AbstractStage implements Stage {
 
 	protected final Log logger = LogFactory.getLog(getClass());
+
+	@Autowired
+	protected IIdentityProviderApplication idpApplication;
 	
 	private final UserAuthenticationPhase entryPhase;
 	private final UserAuthenticationPhase exitPhase;

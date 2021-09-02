@@ -1,4 +1,4 @@
-package com.tazouxme.saml.test.util;
+package com.tazouxme.idp.test.util;
 
 import java.util.ArrayList;
 

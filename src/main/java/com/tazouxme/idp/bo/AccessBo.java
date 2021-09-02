@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.tazouxme.idp.bo.contract.IAccessBo;
 import com.tazouxme.idp.dao.contract.IAccessDao;
-import com.tazouxme.idp.exception.AccessException;
 import com.tazouxme.idp.model.Access;
 import com.tazouxme.idp.util.IDUtils;
 
@@ -18,7 +17,7 @@ public class AccessBo implements IAccessBo {
 	private IAccessDao dao;
 	
 	@Override
-	public Access findByExternalId(String externalId, String organizationExternalId) throws AccessException {
+	public Access findByExternalId(String externalId, String organizationExternalId) {
 		return dao.findByExternalId(externalId, organizationExternalId);
 	}
 	
@@ -38,12 +37,12 @@ public class AccessBo implements IAccessBo {
 	}
 	
 	@Override
-	public Access findByUserAndURN(String userExternalId, String urn, String organizationExternalId) throws AccessException {
+	public Access findByUserAndURN(String userExternalId, String urn, String organizationExternalId) {
 		return dao.findByUserAndURN(userExternalId, urn, organizationExternalId);
 	}
 
 	@Override
-	public Access create(Access access) throws AccessException {
+	public Access create(Access access) {
 		access.setExternalId(IDUtils.generateId("ACC_", 8));
 		access.setCreationDate(new Date().getTime());
 		access.setStatus(1);
@@ -52,7 +51,7 @@ public class AccessBo implements IAccessBo {
 	}
 
 	@Override
-	public Access update(Access access) throws AccessException {
+	public Access update(Access access) {
 		Access pAccess = findByExternalId(access.getExternalId(), access.getOrganization().getExternalId());
 		pAccess.setEnabled(access.isEnabled());
 		
@@ -64,7 +63,7 @@ public class AccessBo implements IAccessBo {
 	}
 
 	@Override
-	public void delete(Access access) throws AccessException {
+	public void delete(Access access) {
 		dao.delete(findByExternalId(access.getExternalId(), access.getOrganization().getExternalId()));
 	}
 

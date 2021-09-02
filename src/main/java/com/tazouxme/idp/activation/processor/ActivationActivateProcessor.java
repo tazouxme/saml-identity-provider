@@ -7,12 +7,12 @@ import javax.servlet.ServletException;
 import org.springframework.context.ApplicationContext;
 
 import com.tazouxme.idp.IdentityProviderConstants;
-import com.tazouxme.idp.bo.contract.IActivationBo;
+import com.tazouxme.idp.application.contract.IIdentityProviderApplication;
+import com.tazouxme.idp.application.exception.ActivationException;
+import com.tazouxme.idp.application.exception.OrganizationException;
+import com.tazouxme.idp.application.exception.UserException;
 import com.tazouxme.idp.bo.contract.IOrganizationBo;
 import com.tazouxme.idp.bo.contract.IUserBo;
-import com.tazouxme.idp.exception.ActivationException;
-import com.tazouxme.idp.exception.OrganizationException;
-import com.tazouxme.idp.exception.UserException;
 import com.tazouxme.idp.model.Activation;
 import com.tazouxme.idp.model.Organization;
 import com.tazouxme.idp.model.User;
@@ -31,18 +31,18 @@ public class ActivationActivateProcessor extends AbstractActivationProcessor {
 			return;
 		}
 		
-		IActivationBo activationBo = getApplicationContext().getBean(IActivationBo.class);
+		IIdentityProviderApplication application = getApplicationContext().getBean(IIdentityProviderApplication.class);
 		
 		try {
-			Activation activation = activationBo.findByExternalId(codes[0]);
+			Activation activation = application.findActivationByExternalId(codes[0]);
 			if (!IdentityProviderConstants.ACTIVATION_CONST_ACTIVATE.equals(activation.getStep())) {
 				return;
 			}
 			
-			activateOrganization(activation.getOrganizationExternalId());
+			Organization organization = activateOrganization(activation.getOrganizationExternalId());
 			activateUser(activation.getUserExternalId(), activation.getOrganizationExternalId());
 			
-			activationBo.delete(activation);
+			application.deleteActivation(activation.getExternalId(), organization);
 		} catch (ActivationException | UserException | OrganizationException e) {
 			getServletRequest().setAttribute(IdentityProviderConstants.SERVLET_ERROR_REGISTER, "Unable to activate the account");
 			getServletRequest().getRequestDispatcher("/register.jsp").forward(getServletRequest(), getServletResponse());
@@ -53,20 +53,20 @@ public class ActivationActivateProcessor extends AbstractActivationProcessor {
 		getServletResponse().sendRedirect("./dashboard");
 	}
 	
-	private void activateOrganization(String organizationId) throws OrganizationException {
+	private Organization activateOrganization(String organizationId) throws OrganizationException {
 		IOrganizationBo organizationBo = getApplicationContext().getBean(IOrganizationBo.class);
 		Organization organization = organizationBo.findByExternalId(organizationId);
 		organization.setEnabled(true);
 		
-		organizationBo.update(organization);
+		return organizationBo.update(organization);
 	}
 	
-	private void activateUser(String userId, String organizationId) throws UserException {
+	private User activateUser(String userId, String organizationId) throws UserException {
 		IUserBo userBo = getApplicationContext().getBean(IUserBo.class);
 		User user = userBo.findByExternalId(userId, organizationId);
 		user.setEnabled(true);
 		
-		userBo.update(user);
+		return userBo.update(user);
 	}
 
 }

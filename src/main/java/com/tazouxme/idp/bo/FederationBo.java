@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.tazouxme.idp.bo.contract.IFederationBo;
 import com.tazouxme.idp.dao.contract.IFederationDao;
-import com.tazouxme.idp.exception.FederationException;
 import com.tazouxme.idp.model.Federation;
 import com.tazouxme.idp.util.IDUtils;
 
@@ -32,12 +31,12 @@ public class FederationBo implements IFederationBo {
 	}
 
 	@Override
-	public Federation findByUserAndURN(String userExternalId, String urn, String organizationExternalId) throws FederationException {
+	public Federation findByUserAndURN(String userExternalId, String urn, String organizationExternalId) {
 		return dao.findByUserAndURN(userExternalId, urn, organizationExternalId);
 	}
 
 	@Override
-	public Federation create(Federation federation) throws FederationException {
+	public Federation create(Federation federation) {
 		federation.setExternalId(IDUtils.generateId("FED_", 8));
 		federation.setCreationDate(new Date().getTime());
 		federation.setStatus(1);
@@ -46,7 +45,7 @@ public class FederationBo implements IFederationBo {
 	}
 
 	@Override
-	public Federation update(Federation federation) throws FederationException {
+	public Federation update(Federation federation) {
 		Federation pFed = findByUserAndURN(federation.getUser().getExternalId(), federation.getApplication().getUrn(), federation.getOrganization().getExternalId());
 		pFed.setEnabled(federation.isEnabled());
 		
@@ -54,7 +53,7 @@ public class FederationBo implements IFederationBo {
 	}
 
 	@Override
-	public void delete(Federation federation) throws FederationException {
+	public void delete(Federation federation) {
 		dao.delete(findByUserAndURN(federation.getUser().getExternalId(), federation.getApplication().getUrn(), federation.getOrganization().getExternalId()));
 	}
 

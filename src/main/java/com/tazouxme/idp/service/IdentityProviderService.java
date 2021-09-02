@@ -1,7 +1,6 @@
 package com.tazouxme.idp.service;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +13,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -21,13 +22,9 @@ import com.tazouxme.idp.IdentityProviderConfiguration;
 import com.tazouxme.idp.IdentityProviderConstants;
 import com.tazouxme.idp.activation.sender.MailActivationSender;
 import com.tazouxme.idp.application.contract.IIdentityProviderApplication;
-import com.tazouxme.idp.exception.AccessException;
-import com.tazouxme.idp.exception.ActivationException;
-import com.tazouxme.idp.exception.ApplicationException;
-import com.tazouxme.idp.exception.FederationException;
-import com.tazouxme.idp.exception.OrganizationException;
-import com.tazouxme.idp.exception.RoleException;
-import com.tazouxme.idp.exception.UserException;
+import com.tazouxme.idp.application.exception.ActivationException;
+import com.tazouxme.idp.application.exception.FederationException;
+import com.tazouxme.idp.application.exception.base.AbstractIdentityProviderException;
 import com.tazouxme.idp.model.Access;
 import com.tazouxme.idp.model.Activation;
 import com.tazouxme.idp.model.Application;
@@ -37,7 +34,6 @@ import com.tazouxme.idp.model.Organization;
 import com.tazouxme.idp.model.Role;
 import com.tazouxme.idp.model.User;
 import com.tazouxme.idp.model.UserDetails;
-import com.tazouxme.idp.sanitizer.validation.SanitizerValidation;
 import com.tazouxme.idp.sanitizer.validation.SanitizerValidation.Severity;
 import com.tazouxme.idp.sanitizer.validation.SanitizerValidationImpl;
 import com.tazouxme.idp.sanitizer.validation.SanitizerValidationResult;
@@ -56,6 +52,8 @@ import com.tazouxme.idp.service.entity.exception.ExceptionEntity;
 import com.tazouxme.idp.util.SanitizerUtils;
 
 public class IdentityProviderService implements IIdentityProviderService {
+
+	protected final Log logger = LogFactory.getLog(getClass());
 	
 	@Autowired
 	private IdentityProviderConfiguration configuration;
@@ -67,6 +65,7 @@ public class IdentityProviderService implements IIdentityProviderService {
 	public Response getOrganization() {
 		try {
 			Organization organization = idpApplication.findOrganizationByExternalId(findUserIdentity().getOrganizationId());
+			byte[] certificate = organization.getCertificate();
 			
 			OrganizationEntity entity = new OrganizationEntity();
 			entity.setId(organization.getExternalId());
@@ -74,7 +73,7 @@ public class IdentityProviderService implements IIdentityProviderService {
 			entity.setDomain(organization.getDomain());
 			entity.setName(organization.getName());
 			entity.setDescription(organization.getDescription());
-			entity.setCertificate(organization.getCertificate());
+			entity.setHasCertificate(!StringUtils.isBlank(new String(certificate != null ? certificate : new byte[] {})));
 			entity.setFederation(organization.isFederation());
 			entity.setCreationDate(organization.getCreationDate());
 			
@@ -98,8 +97,8 @@ public class IdentityProviderService implements IIdentityProviderService {
 			}
 			
 			return Response.ok(entity).build();
-		} catch (OrganizationException e) {
-			return Response.status(404).entity(obtainExceptionEntity("ORG_NOT_FOUND", "Organization not found", e)).build();
+		} catch (AbstractIdentityProviderException e) {
+			return Response.status(e.getCode().getStatus()).entity(obtainExceptionEntity(e, "Cannot get Organization with ID " + findUserIdentity().getOrganizationId())).build();
 		} catch (Exception e) {
 			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
@@ -107,16 +106,21 @@ public class IdentityProviderService implements IIdentityProviderService {
 	
 	@Override
 	public Response updateOrganization(OrganizationEntity entity) {
-		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getId(), entity.getName());
-		validationResult.getValidations().addAll(SanitizerUtils.sanitizeEquals(entity.getId(), findUserIdentity().getOrganizationId()).getValidations());
+		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonNull(entity);
+		if (validationResult.hasError()) {
+			return Response.status(405).entity(obtainExceptionEntity(validationResult)).build();
+		}
+		
+		validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getId(), entity.getName());
+		validationResult.add(SanitizerUtils.sanitizeEquals(entity.getId(), findUserIdentity().getOrganizationId()));
 		if (validationResult.hasError()) {
 			return Response.status(417).entity(obtainExceptionEntity(validationResult)).build();
 		}
 		
 		try {
 			idpApplication.updateOrganization(entity.getId(), entity.getName(), entity.getDescription(), entity.isFederation());
-		} catch (OrganizationException e) {
-			return Response.status(404).entity(obtainExceptionEntity("ORG_NOT_FOUND", "Organization not found", e)).build();
+		} catch (AbstractIdentityProviderException e) {
+			return Response.status(e.getCode().getStatus()).entity(obtainExceptionEntity(e, "Cannot update Organization with ID " + findUserIdentity().getOrganizationId())).build();
 		} catch (Exception e) {
 			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
@@ -126,16 +130,23 @@ public class IdentityProviderService implements IIdentityProviderService {
 	
 	@Override
 	public Response setCertificate(OrganizationEntity entity) {
-		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonEmptyCertificate(entity.getCertificate());
-		validationResult.getValidations().addAll(SanitizerUtils.sanitizeEquals(entity.getId(), findUserIdentity().getOrganizationId()).getValidations());
+		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonNull(entity);
+		if (validationResult.hasError()) {
+			return Response.status(405).entity(obtainExceptionEntity(validationResult)).build();
+		}
+		
+		validationResult = SanitizerUtils.sanitizeNonEmptyCertificate(entity.getCertificate());
+		validationResult.add(SanitizerUtils.sanitizeEquals(entity.getId(), findUserIdentity().getOrganizationId()));
 		if (validationResult.hasError()) {
 			return Response.status(417).entity(obtainExceptionEntity(validationResult)).build();
 		}
 		
 		try {
 			idpApplication.setCertificate(findUserIdentity().getOrganizationId(), entity.getCertificate());
-		} catch (OrganizationException e) {
-			return Response.status(404).entity(obtainExceptionEntity("ORG_NOT_FOUND", "Organization not found", e)).build();
+			entity.setHasCertificate(true);
+			entity.setCertificate("");
+		} catch (AbstractIdentityProviderException e) {
+			return Response.status(e.getCode().getStatus()).entity(obtainExceptionEntity(e, "Cannot set the Certificate to the Organization with ID " + findUserIdentity().getOrganizationId())).build();
 		} catch (Exception e) {
 			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
@@ -145,16 +156,21 @@ public class IdentityProviderService implements IIdentityProviderService {
 	
 	@Override
 	public Response deleteCertificate(OrganizationEntity entity) {
-		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeEmpty(entity.getCertificate());
-		validationResult.getValidations().addAll(SanitizerUtils.sanitizeEquals(entity.getId(), findUserIdentity().getOrganizationId()).getValidations());
+		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonNull(entity);
+		if (validationResult.hasError()) {
+			return Response.status(405).entity(obtainExceptionEntity(validationResult)).build();
+		}
+		
+		validationResult = SanitizerUtils.sanitizeEmpty(entity.getCertificate());
+		validationResult.add(SanitizerUtils.sanitizeEquals(entity.getId(), findUserIdentity().getOrganizationId()));
 		if (validationResult.hasError()) {
 			return Response.status(417).entity(obtainExceptionEntity(validationResult)).build();
 		}
 		
 		try {
 			idpApplication.deleteCertificate(findUserIdentity().getOrganizationId());
-		} catch (OrganizationException e) {
-			return Response.status(404).entity(obtainExceptionEntity("ORG_NOT_FOUND", "Organization not found", e)).build();
+		} catch (AbstractIdentityProviderException e) {
+			return Response.status(e.getCode().getStatus()).entity(obtainExceptionEntity(e, "Cannot unset the Certificate to the Organization with ID " + findUserIdentity().getOrganizationId())).build();
 		} catch (Exception e) {
 			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
@@ -177,8 +193,8 @@ public class IdentityProviderService implements IIdentityProviderService {
 				
 				entities.add(entity);
 			}
-		} catch (OrganizationException e) {
-			return Response.status(404).entity(obtainExceptionEntity("ORG_NOT_FOUND", "Organization not found", e)).build();
+		} catch (AbstractIdentityProviderException e) {
+			return Response.status(e.getCode().getStatus()).entity(obtainExceptionEntity(e, "Cannot get the Users of the Organization with ID " + findUserIdentity().getOrganizationId())).build();
 		} catch (Exception e) {
 			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
@@ -212,8 +228,8 @@ public class IdentityProviderService implements IIdentityProviderService {
 				
 				entity.getDetails().add(userDetailsEntity);
 			}
-		} catch (UserException e) {
-			return Response.status(404).entity(obtainExceptionEntity("USER_NOT_FOUND", "User not found", e)).build();
+		} catch (AbstractIdentityProviderException e) {
+			return Response.status(e.getCode().getStatus()).entity(obtainExceptionEntity(e, "Cannot get User with ID " + id)).build();
 		} catch (Exception e) {
 			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
@@ -223,7 +239,12 @@ public class IdentityProviderService implements IIdentityProviderService {
 	
 	@Override
 	public Response createUser(HttpServletRequest request, UserEntity entity) {
-		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getUsername());
+		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonNull(entity);
+		if (validationResult.hasError()) {
+			return Response.status(405).entity(obtainExceptionEntity(validationResult)).build();
+		}
+		
+		validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getUsername());
 		if (validationResult.hasError()) {
 			return Response.status(417).entity(obtainExceptionEntity(validationResult)).build();
 		}
@@ -256,16 +277,14 @@ public class IdentityProviderService implements IIdentityProviderService {
 					responseBuilder.header(IdentityProviderConstants.AUTH_HEADER_ACTIVATION_TOKEN, link);
 				}
 			} catch (ActivationException e) {
-				return Response.status(406).entity(obtainExceptionEntity(new SanitizerValidationImpl(Severity.ERROR, "Unable to create link"))).build();
+				return Response.status(e.getCode().getStatus()).entity(obtainExceptionEntity(e, "Cannot create a new Activation link to the Organization with ID " + findUserIdentity().getOrganizationId())).build();
 			}
 			
 			entity.setId(user.getExternalId());
 			entity.setEmail(user.getEmail());
 			entity.setEnabled(user.isEnabled());
-		} catch (UserException e) {
-			return Response.status(409).entity(obtainExceptionEntity("USER_FOUND", "User already exists", e)).build();
-		} catch (OrganizationException  e) {
-			return Response.status(404).entity(obtainExceptionEntity("ORG_NOT_FOUND", "Organization not found", e)).build();
+		} catch (AbstractIdentityProviderException e) {
+			return Response.status(e.getCode().getStatus()).entity(obtainExceptionEntity(e, "Cannot create a new User to the Organization with ID " + findUserIdentity().getOrganizationId())).build();
 		} catch (Exception e) {
 			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
@@ -275,14 +294,19 @@ public class IdentityProviderService implements IIdentityProviderService {
 	
 	@Override
 	public Response updateUser(UserEntity entity) {
-		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getId());
-		validationResult.getValidations().addAll(SanitizerUtils.sanitize((enabled) -> {
+		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonNull(entity);
+		if (validationResult.hasError()) {
+			return Response.status(405).entity(obtainExceptionEntity(validationResult)).build();
+		}
+		
+		validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getId());
+		validationResult.add(SanitizerUtils.sanitize((enabled) -> {
 			if (enabled && !idpApplication.findActivationsByUser(entity.getId(), findUserIdentity().getOrganizationId()).isEmpty()) {
 				return new SanitizerValidationImpl(Severity.ERROR, "Cannot unlock User with pending Activation");
 			}
 			
 			return new SanitizerValidationImpl(Severity.OK, "");
-		}, entity.isEnabled()).getValidations());
+		}, entity.isEnabled()));
 		
 		if (validationResult.hasError()) {
 			return Response.status(417).entity(obtainExceptionEntity(validationResult)).build();
@@ -292,10 +316,8 @@ public class IdentityProviderService implements IIdentityProviderService {
 			User user = idpApplication.updateUser(entity.getId(), null, entity.isAdministrator(), entity.isEnabled(),
 					idpApplication.findOrganizationByExternalId(findUserIdentity().getOrganizationId()));
 			entity.setEmail(user.getEmail());
-		} catch (UserException e) {
-			return Response.status(404).entity(obtainExceptionEntity("USER_NOT_FOUND", "User not found", e)).build();
-		} catch (OrganizationException e) {
-			return Response.status(404).entity(obtainExceptionEntity("ORG_NOT_FOUND", "Organization not found", e)).build();
+		} catch (AbstractIdentityProviderException e) {
+			return Response.status(e.getCode().getStatus()).entity(obtainExceptionEntity(e, "Cannot update the User with ID " + entity.getId())).build();
 		} catch (Exception e) {
 			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
@@ -305,7 +327,12 @@ public class IdentityProviderService implements IIdentityProviderService {
 	
 	@Override
 	public Response deleteUser(UserEntity entity) {
-		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getId());
+		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonNull(entity);
+		if (validationResult.hasError()) {
+			return Response.status(405).entity(obtainExceptionEntity(validationResult)).build();
+		}
+		
+		validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getId());
 		if (validationResult.hasError()) {
 			return Response.status(417).entity(obtainExceptionEntity(validationResult)).build();
 		}
@@ -313,10 +340,8 @@ public class IdentityProviderService implements IIdentityProviderService {
 		try {
 			idpApplication.deleteUser(entity.getId(), 
 					idpApplication.findOrganizationByExternalId(findUserIdentity().getOrganizationId()));
-		} catch (UserException e) {
-			return Response.status(404).entity(obtainExceptionEntity("USER_NOT_FOUND", "User not found", e)).build();
-		} catch (OrganizationException e) {
-			return Response.status(404).entity(obtainExceptionEntity("ORG_NOT_FOUND", "Organization not found", e)).build();
+		} catch (AbstractIdentityProviderException e) {
+			return Response.status(e.getCode().getStatus()).entity(obtainExceptionEntity(e, "Cannot delete the User with ID " + entity.getId())).build();
 		} catch (Exception e) {
 			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
@@ -398,8 +423,8 @@ public class IdentityProviderService implements IIdentityProviderService {
 				
 				entity.getClaims().add(claimEntity);
 			}
-		} catch (ApplicationException e) {
-			return Response.status(404).entity(obtainExceptionEntity("APP_NOT_FOUND", "Application not found", e)).build();
+		} catch (AbstractIdentityProviderException e) {
+			return Response.status(e.getCode().getStatus()).entity(obtainExceptionEntity(e, "Cannot get Application with URN " + urn)).build();
 		} catch (Exception e) {
 			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
@@ -409,7 +434,12 @@ public class IdentityProviderService implements IIdentityProviderService {
 	
 	@Override
 	public Response createApplication(ApplicationEntity entity) {
-		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getUrn(), entity.getName(), entity.getAcsUrl(), entity.getLogoutUrl());
+		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonNull(entity);
+		if (validationResult.hasError()) {
+			return Response.status(405).entity(obtainExceptionEntity(validationResult)).build();
+		}
+		
+		validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getUrn(), entity.getName(), entity.getAcsUrl(), entity.getLogoutUrl());
 		if (validationResult.hasError()) {
 			return Response.status(417).entity(obtainExceptionEntity(validationResult)).build();
 		}
@@ -418,15 +448,8 @@ public class IdentityProviderService implements IIdentityProviderService {
 			Application application = idpApplication.createApplication(entity.getUrn(), entity.getName(), entity.getDescription(), entity.getAcsUrl(), entity.getLogoutUrl(), 
 					idpApplication.findOrganizationByExternalId(findUserIdentity().getOrganizationId()), findUserIdentity().getUserId());
 			entity.setId(application.getExternalId());
-		} catch (ApplicationException e) {
-			ExceptionEntity exceptionEntity = new ExceptionEntity();
-			exceptionEntity.setCode("APP_FOUND");
-			exceptionEntity.setMessage("Application already exists");
-			exceptionEntity.setReason(e.getMessage());
-			
-			return Response.status(409).entity(obtainExceptionEntity("APP_FOUND", "Application already exists", e)).build();
-		} catch (OrganizationException  e) {
-			return Response.status(404).entity(obtainExceptionEntity("ORG_NOT_FOUND", "Organization not found", e)).build();
+		} catch (AbstractIdentityProviderException e) {
+			return Response.status(e.getCode().getStatus()).entity(obtainExceptionEntity(e, "Cannot create new Application in the Organization with ID " + findUserIdentity().getOrganizationId())).build();
 		} catch (Exception e) {
 			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
@@ -436,7 +459,12 @@ public class IdentityProviderService implements IIdentityProviderService {
 	
 	@Override
 	public Response updateApplication(ApplicationEntity entity) {
-		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getId(), entity.getUrn(), entity.getName(), entity.getAcsUrl(), entity.getLogoutUrl());
+		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonNull(entity);
+		if (validationResult.hasError()) {
+			return Response.status(405).entity(obtainExceptionEntity(validationResult)).build();
+		}
+		
+		validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getId(), entity.getUrn(), entity.getName(), entity.getAcsUrl(), entity.getLogoutUrl());
 		if (validationResult.hasError()) {
 			return Response.status(417).entity(obtainExceptionEntity(validationResult)).build();
 		}
@@ -444,10 +472,8 @@ public class IdentityProviderService implements IIdentityProviderService {
 		try {
 			idpApplication.updateApplication(entity.getId(), entity.getUrn(), entity.getName(), entity.getDescription(), entity.getAcsUrl(), entity.getLogoutUrl(), 
 					idpApplication.findOrganizationByExternalId(findUserIdentity().getOrganizationId()));
-		} catch (ApplicationException e) {
-			return Response.status(404).entity(obtainExceptionEntity("APP_NOT_FOUND", "Application not found", e)).build();
-		} catch (OrganizationException  e) {
-			return Response.status(404).entity(obtainExceptionEntity("ORG_NOT_FOUND", "Organization not found", e)).build();
+		} catch (AbstractIdentityProviderException e) {
+			return Response.status(e.getCode().getStatus()).entity(obtainExceptionEntity(e, "Cannot update Application with URN " + entity.getUrn())).build();
 		} catch (Exception e) {
 			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
@@ -457,29 +483,33 @@ public class IdentityProviderService implements IIdentityProviderService {
 	
 	@Override
 	public Response updateApplicationClaims(List<ClaimEntity> entities, String id) {
-		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonEmpty(id);
+		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonNull(entities);
+		if (validationResult.hasError()) {
+			return Response.status(405).entity(obtainExceptionEntity(validationResult)).build();
+		}
+		
+		validationResult = SanitizerUtils.sanitizeNonEmpty(id);
 		if (validationResult.hasError()) {
 			return Response.status(417).entity(obtainExceptionEntity(validationResult)).build();
 		}
 		
-		Set<String> entitiesName = entities.stream().map(entity -> entity.getName()).collect(Collectors.toSet());
+		Set<String> entitiesName = entities.stream().map(entity -> entity.getName().toLowerCase()).collect(Collectors.toSet());
 		Application application = null;
 		
 		try {
 			application = idpApplication.updateApplicationClaims(id,
-					idpApplication.findAllClaims(findUserIdentity().getOrganizationId()).stream().
+					idpApplication.findAllClaims(findUserIdentity().getOrganizationId()).
+							stream().
 							filter(claim -> entitiesName.contains(claim.getName().toLowerCase())).
 							collect(Collectors.toSet()),
 					idpApplication.findOrganizationByExternalId(findUserIdentity().getOrganizationId()));
-		} catch (ApplicationException e) {
-			return Response.status(404).entity(obtainExceptionEntity("APP_NOT_FOUND", "Application not found", e)).build();
-		} catch (OrganizationException  e) {
-			return Response.status(404).entity(obtainExceptionEntity("ORG_NOT_FOUND", "Organization not found", e)).build();
+		} catch (AbstractIdentityProviderException e) {
+			return Response.status(e.getCode().getStatus()).entity(obtainExceptionEntity(e, "Cannot update Claims for Application with ID " + id)).build();
 		} catch (Exception e) {
 			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
 		
-		entities = new ArrayList<>();
+		entities.clear();
 		for (Claim claim : application.getClaims()) {
 			ClaimEntity claimEntity = new ClaimEntity();
 			claimEntity.setId(claim.getExternalId());
@@ -495,7 +525,12 @@ public class IdentityProviderService implements IIdentityProviderService {
 	
 	@Override
 	public Response deleteApplication(ApplicationEntity entity) {
-		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getId());
+		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonNull(entity);
+		if (validationResult.hasError()) {
+			return Response.status(405).entity(obtainExceptionEntity(validationResult)).build();
+		}
+		
+		validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getId());
 		if (validationResult.hasError()) {
 			return Response.status(417).entity(obtainExceptionEntity(validationResult)).build();
 		}
@@ -503,10 +538,8 @@ public class IdentityProviderService implements IIdentityProviderService {
 		try {
 			idpApplication.deleteApplication(entity.getId(),
 					idpApplication.findOrganizationByExternalId(findUserIdentity().getOrganizationId()));
-		} catch (ApplicationException e) {
-			return Response.status(404).entity(obtainExceptionEntity("APP_NOT_FOUND", "Application not found", e)).build();
-		} catch (OrganizationException  e) {
-			return Response.status(404).entity(obtainExceptionEntity("ORG_NOT_FOUND", "Organization not found", e)).build();
+		} catch (AbstractIdentityProviderException e) {
+			return Response.status(e.getCode().getStatus()).entity(obtainExceptionEntity(e, "Cannot delete Application with ID " + entity.getId())).build();
 		} catch (Exception e) {
 			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
@@ -516,7 +549,17 @@ public class IdentityProviderService implements IIdentityProviderService {
 	
 	@Override
 	public Response createAccess(AccessEntity entity) {
-		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getUser().getId(), entity.getRole().getId(), entity.getApplication().getUrn());
+		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonNull(entity);
+		if (validationResult.hasError()) {
+			return Response.status(405).entity(obtainExceptionEntity(validationResult)).build();
+		}
+		
+		validationResult = SanitizerUtils.sanitizeNonNull(entity.getUser(), entity.getRole(), entity.getApplication());
+		if (validationResult.hasError()) {
+			return Response.status(417).entity(obtainExceptionEntity(validationResult)).build();
+		}
+		
+		validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getUser().getId(), entity.getRole().getId(), entity.getApplication().getUrn());
 		if (validationResult.hasError()) {
 			return Response.status(417).entity(obtainExceptionEntity(validationResult)).build();
 		}
@@ -553,16 +596,8 @@ public class IdentityProviderService implements IIdentityProviderService {
 			} catch (FederationException e) {
 				entity.setFederation(new FederationEntity());
 			}
-		} catch (AccessException e) {
-			return Response.status(409).entity(obtainExceptionEntity("ACCESS_FOUND", "Access already exists", e)).build();
-		} catch (UserException e) {
-			return Response.status(404).entity(obtainExceptionEntity("USER_NOT_FOUND", "User not found", e)).build();
-		} catch (ApplicationException e) {
-			return Response.status(404).entity(obtainExceptionEntity("APP_NOT_FOUND", "Application not found", e)).build();
-		} catch (OrganizationException  e) {
-			return Response.status(404).entity(obtainExceptionEntity("ORG_NOT_FOUND", "Organization not found", e)).build();
-		} catch (RoleException e) {
-			return Response.status(404).entity(obtainExceptionEntity("ROLE_NOT_FOUND", "Role not found", e)).build();
+		} catch (AbstractIdentityProviderException e) {
+			return Response.status(e.getCode().getStatus()).entity(obtainExceptionEntity(e, "Cannot create new Access for Organization with ID " + findUserIdentity().getOrganizationId())).build();
 		} catch (Exception e) {
 			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
@@ -572,7 +607,12 @@ public class IdentityProviderService implements IIdentityProviderService {
 	
 	@Override
 	public Response updateAccess(AccessEntity entity) {
-		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getId());
+		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonNull(entity);
+		if (validationResult.hasError()) {
+			return Response.status(405).entity(obtainExceptionEntity(validationResult)).build();
+		}
+		
+		validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getId());
 		if (validationResult.hasError()) {
 			return Response.status(417).entity(obtainExceptionEntity(validationResult)).build();
 		}
@@ -614,10 +654,8 @@ public class IdentityProviderService implements IIdentityProviderService {
 			} catch (FederationException e) {
 				entity.setFederation(new FederationEntity());
 			}
-		} catch (AccessException e) {
-			return Response.status(404).entity(obtainExceptionEntity("ACCESS_NOT_FOUND", "Access not found", e)).build();
-		} catch (OrganizationException e) {
-			return Response.status(404).entity(obtainExceptionEntity("ORG_NOT_FOUND", "Organization not found", e)).build();
+		} catch (AbstractIdentityProviderException e) {
+			return Response.status(e.getCode().getStatus()).entity(obtainExceptionEntity(e, "Cannot update Access with ID " + entity.getId())).build();
 		} catch (Exception e) {
 			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
@@ -627,7 +665,12 @@ public class IdentityProviderService implements IIdentityProviderService {
 	
 	@Override
 	public Response deleteAccess(AccessEntity entity) {
-		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getId());
+		SanitizerValidationResult validationResult = SanitizerUtils.sanitizeNonNull(entity);
+		if (validationResult.hasError()) {
+			return Response.status(405).entity(obtainExceptionEntity(validationResult)).build();
+		}
+		
+		validationResult = SanitizerUtils.sanitizeNonEmpty(entity.getId());
 		if (validationResult.hasError()) {
 			return Response.status(417).entity(obtainExceptionEntity(validationResult)).build();
 		}
@@ -635,10 +678,8 @@ public class IdentityProviderService implements IIdentityProviderService {
 		try {
 			idpApplication.deleteAccess(entity.getId(),
 					idpApplication.findOrganizationByExternalId(findUserIdentity().getOrganizationId()));
-		} catch (AccessException e) {
-			return Response.status(404).entity(obtainExceptionEntity("ACCESS_NOT_FOUND", "Access not found", e)).build();
-		} catch (OrganizationException e) {
-			return Response.status(404).entity(obtainExceptionEntity("ORG_NOT_FOUND", "Organization not found", e)).build();
+		} catch (AbstractIdentityProviderException e) {
+			return Response.status(e.getCode().getStatus()).entity(obtainExceptionEntity(e, "Cannot delete Access with ID " + entity.getId())).build();
 		} catch (Exception e) {
 			return Response.status(500).entity(obtainInternalExceptionEntity(e)).build();
 		}
@@ -698,20 +739,11 @@ public class IdentityProviderService implements IIdentityProviderService {
 		return exceptionEntity;
 	}
 	
-	private ExceptionEntity obtainExceptionEntity(SanitizerValidation validationResult) {
+	private ExceptionEntity obtainExceptionEntity(AbstractIdentityProviderException e, String reason) {
 		ExceptionEntity exceptionEntity = new ExceptionEntity();
-		exceptionEntity.setCode("VALIDATION_FAILED");
-		exceptionEntity.setMessage("Field validation failed");
-		exceptionEntity.setReason(validationResult.getMessage());
-		
-		return exceptionEntity;
-	}
-	
-	private ExceptionEntity obtainExceptionEntity(String code, String message, Exception e) {
-		ExceptionEntity exceptionEntity = new ExceptionEntity();
-		exceptionEntity.setCode(code);
-		exceptionEntity.setMessage(message);
-		exceptionEntity.setReason(e.getMessage());
+		exceptionEntity.setCode(e.getCode().getCode());
+		exceptionEntity.setMessage(e.getMessage());
+		exceptionEntity.setReason(reason);
 		
 		return exceptionEntity;
 	}

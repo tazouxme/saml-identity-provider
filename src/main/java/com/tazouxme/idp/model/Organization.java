@@ -76,8 +76,8 @@ public class Organization extends AbstractModel {
 	
 	@Audited
 	@Lob
-	@Column(name = "certificate", updatable = true, nullable = true)
-	private String certificate;
+	@Column(name = "certificate", length = 8096, updatable = true, nullable = true)
+	private byte[] certificate;
 	
 	@JsonIgnoreProperties("organization")
 	@OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -159,11 +159,11 @@ public class Organization extends AbstractModel {
 		this.federation = federation;
 	}
 	
-	public String getCertificate() {
+	public byte[] getCertificate() {
 		return certificate;
 	}
 	
-	public void setCertificate(String certificate) {
+	public void setCertificate(byte[] certificate) {
 		this.certificate = certificate;
 	}
 

@@ -15,10 +15,12 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 import com.tazouxme.idp.IdentityProviderConstants;
 import com.tazouxme.idp.activation.processor.AbstractActivationProcessor;
 import com.tazouxme.idp.activation.processor.ActivationProcessorFactory;
-import com.tazouxme.idp.bo.contract.IActivationBo;
-import com.tazouxme.idp.bo.contract.IUserBo;
-import com.tazouxme.idp.exception.ActivationException;
-import com.tazouxme.idp.exception.UserException;
+import com.tazouxme.idp.application.contract.IIdentityProviderApplication;
+import com.tazouxme.idp.application.exception.ActivationException;
+import com.tazouxme.idp.application.exception.OrganizationException;
+import com.tazouxme.idp.application.exception.UserException;
+import com.tazouxme.idp.model.Activation;
+import com.tazouxme.idp.model.Organization;
 import com.tazouxme.idp.model.User;
 import com.tazouxme.idp.sanitizer.NonEmptySanitizer;
 import com.tazouxme.idp.sanitizer.Sanitizer;
@@ -30,8 +32,7 @@ public class ActivationServlet extends HttpServlet {
 	
 	private ApplicationContext context;
 	
-	private IActivationBo activationBo;
-	private IUserBo userBo;
+	private IIdentityProviderApplication application;
 	
 	@Override
 	public void init() throws ServletException {
@@ -39,8 +40,7 @@ public class ActivationServlet extends HttpServlet {
 			context = WebApplicationContextUtils.findWebApplicationContext(getServletContext());
 		}
 		
-		activationBo = context.getBean(IActivationBo.class);
-		userBo = context.getBean(IUserBo.class);
+		application = context.getBean(IIdentityProviderApplication.class);
 		
 		super.init();
 	}
@@ -105,13 +105,13 @@ public class ActivationServlet extends HttpServlet {
 		String userId = req.getParameter(IdentityProviderConstants.AUTH_PARAM_USERNAME);
 		
 		try {
-			User user = userBo.findByExternalId(userId, organizationId);
-			user.setEnabled(true);
-			user.setPassword(BCrypt.hashpw(password, BCrypt.gensalt(6)));
+			User user = application.findUserByExternalId(userId, organizationId);
+			Activation activation = application.findActivation(userId, organizationId, step);
+			Organization organization = application.findOrganizationByExternalId(organizationId);
 			
-			userBo.update(user);
-			activationBo.delete(activationBo.find(organizationId, userId, step));
-		} catch (UserException | ActivationException e) {
+			application.updateUser(user.getExternalId(), BCrypt.hashpw(password, BCrypt.gensalt(6)), user.isAdministrator(), true, organization);
+			application.deleteActivation(activation.getExternalId(), organization);
+		} catch (UserException | ActivationException | OrganizationException e) {
 			req.setAttribute(IdentityProviderConstants.SERVLET_ERROR_WRONG_PASS, "Unable to enable the User");
 			req.getRequestDispatcher("/password.jsp").forward(req, res);
 			return;

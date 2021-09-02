@@ -1,4 +1,4 @@
-package com.tazouxme.saml.test.client;
+package com.tazouxme.idp.test.client;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;

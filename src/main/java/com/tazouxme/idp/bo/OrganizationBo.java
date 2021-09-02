@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.tazouxme.idp.bo.contract.IOrganizationBo;
 import com.tazouxme.idp.dao.contract.IOrganizationDao;
-import com.tazouxme.idp.exception.OrganizationException;
 import com.tazouxme.idp.model.Organization;
 import com.tazouxme.idp.util.IDUtils;
 
@@ -17,17 +16,17 @@ public class OrganizationBo implements IOrganizationBo {
 	private IOrganizationDao dao;
 
 	@Override
-	public Organization findByExternalId(String externalId) throws OrganizationException {
+	public Organization findByExternalId(String externalId) {
 		return dao.findByExternalId(externalId);
 	}
 
 	@Override
-	public Organization findByDomain(String domain) throws OrganizationException {
+	public Organization findByDomain(String domain) {
 		return dao.findByDomain(domain);
 	}
 
 	@Override
-	public Organization create(Organization org) throws OrganizationException {
+	public Organization create(Organization org) {
 		org.setExternalId(IDUtils.generateId("ORG_", 8));
 		org.setCreationDate(new Date().getTime());
 		org.setStatus(1);
@@ -36,7 +35,7 @@ public class OrganizationBo implements IOrganizationBo {
 	}
 
 	@Override
-	public Organization update(Organization org) throws OrganizationException {
+	public Organization update(Organization org) {
 		Organization pOrg = findByExternalId(org.getExternalId());
 		pOrg.setName(org.getName());
 		
@@ -48,7 +47,7 @@ public class OrganizationBo implements IOrganizationBo {
 	}
 	
 	@Override
-	public Organization updateCertificate(Organization org) throws OrganizationException {
+	public Organization updateCertificate(Organization org) {
 		Organization pOrg = findByExternalId(org.getExternalId());
 		pOrg.setCertificate(org.getCertificate());
 		
@@ -56,7 +55,7 @@ public class OrganizationBo implements IOrganizationBo {
 	}
 
 	@Override
-	public void delete(Organization org) throws OrganizationException {
+	public void delete(Organization org) {
 		dao.delete(findByExternalId(org.getExternalId()));
 	}
 

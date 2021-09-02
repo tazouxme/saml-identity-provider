@@ -1,16 +1,18 @@
 -- Organization
 ALTER SEQUENCE Organization_sequence RESTART WITH 1
 insert into tz_organization
-(organization_id, external_id, domain, code, name, description, enabled, federation, certificate, creation_date, created_by, status)
+(organization_id, external_id, domain, code, name, description, enabled, federation, creation_date, created_by, status)
 values
-(NEXT VALUE FOR Organization_sequence, 'ORG_test', 'test.com', 'TEST', 'Test', 'Test Organization', 1, 1, 'xxx', 1627398003, 'SYSTEM', 1);
+(NEXT VALUE FOR Organization_sequence, 'ORG_test', 'test.com', 'TEST', 'Test', 'Test Organization', 1, 1, 1627398003, 'SYSTEM', 1);
 
 -- User
 ALTER SEQUENCE User_sequence RESTART WITH 1
 insert into tz_user
 (user_id, external_id, username, email, password, enabled, administrator, organization_id, creation_date, created_by, status)
 values
-(NEXT VALUE FOR User_sequence, 'USE_user1', 'user1', 'user1@test.com', '$2a$06$2LBQG1NSsF66DBkEFc5Csuw1UyXQWU2j7Wv1AGXfWc9FQmk1Gd322', 1, 1, 1, 1627398003, 'USE_user1', 1); -- password= "pass"
+(NEXT VALUE FOR User_sequence, 'USE_user1', 'user1', 'user1@test.com', '$2a$06$2LBQG1NSsF66DBkEFc5Csuw1UyXQWU2j7Wv1AGXfWc9FQmk1Gd322', 1, 1, 1, 1627398003, 'USE_user1', 1), -- password= "pass"
+(NEXT VALUE FOR User_sequence, 'USE_user2', 'user2', 'user2@test.com', '$2a$06$2LBQG1NSsF66DBkEFc5Csuw1UyXQWU2j7Wv1AGXfWc9FQmk1Gd322', 1, 0, 1, 1627398003, 'USE_user2', 1), -- password= "pass"
+(NEXT VALUE FOR User_sequence, 'USE_user3', 'user3', 'user3@test.com', '$2a$06$2LBQG1NSsF66DBkEFc5Csuw1UyXQWU2j7Wv1AGXfWc9FQmk1Gd322', 0, 0, 1, 1627398003, 'USE_user3', 1); -- password= "pass"
 
 -- Application
 ALTER SEQUENCE Application_sequence RESTART WITH 1
@@ -66,6 +68,13 @@ values
 (NEXT VALUE FOR UserDetails_sequence, 2, 'user1@test.com', 1, 1627398003, 'USE_user1', 1),
 (NEXT VALUE FOR UserDetails_sequence, 3, 'Joel', 1, 1627398003, 'USE_user1', 1),
 (NEXT VALUE FOR UserDetails_sequence, 4, 'Tazzari', 1, 1627398003, 'USE_user1', 1);
+
+-- Activation
+ALTER SEQUENCE Activation_sequence RESTART WITH 1
+insert into tz_activation
+(activation_id, external_id, user_external_id, organization_external_id, step, creation_date, created_by, status)
+values
+(NEXT VALUE FOR Activation_sequence, 'ACT_1', 'USE_user3', 'ORG_test', 'PASSWORD', 1627398003, 'USE_user1', 1);
 
 -- Application Claims
 insert into tz_application_claims

@@ -1,4 +1,4 @@
-package com.tazouxme.saml.test.client;
+package com.tazouxme.idp.test.client;
 
 import java.security.Security;
 
@@ -19,7 +19,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.tazouxme.saml.test.util.DbKiller;
+import com.tazouxme.idp.test.util.DbKiller;
 
 @ContextConfiguration("classpath:spring/db-killer.xml")
 @DirtiesContext

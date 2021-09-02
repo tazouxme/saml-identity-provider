@@ -18,10 +18,10 @@ import org.springframework.context.ApplicationContext;
 
 import com.tazouxme.idp.IdentityProviderConfiguration;
 import com.tazouxme.idp.IdentityProviderConstants;
-import com.tazouxme.idp.bo.contract.ISessionBo;
-import com.tazouxme.idp.exception.SessionException;
-import com.tazouxme.idp.exception.base.AbstractIdentityProviderException;
-import com.tazouxme.idp.model.Session;
+import com.tazouxme.idp.application.contract.IIdentityProviderApplication;
+import com.tazouxme.idp.application.exception.SessionException;
+import com.tazouxme.idp.model.Organization;
+import com.tazouxme.idp.model.User;
 import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.security.stage.exception.StageException;
 import com.tazouxme.idp.security.stage.exception.StageExceptionType;
@@ -57,7 +57,7 @@ public abstract class AbstractAuthenticationHandler {
 					authentication.getDetails().getIdentity().getUserId(), response);
 			
 			try {
-				String token = registerToken(authentication.getDetails().getIdentity().getOrganizationId(), authentication.getDetails().getIdentity().getUserId());
+				String token = registerToken(authentication.getDetails().getParameters().getUser(), authentication.getDetails().getParameters().getOrganization());
 				
 				setUserCookie(authentication.getDetails().getParameters().getIdpDomain(),
 						authentication.getDetails().getParameters().getIdpPath(),
@@ -111,26 +111,11 @@ public abstract class AbstractAuthenticationHandler {
 		}
 	}
 	
-	private String registerToken(String organizationId, String userId) {
+	private String registerToken(User user, Organization organization) {
 		// register new token
-		Session session = new Session();
-		session.setOrganizationExternalId(organizationId);
-		session.setUserExternalId(userId);
-		session.setCreatedBy(userId);
-		
 		try {
-			ISessionBo sessionBo = context.getBean(ISessionBo.class);
-			
-			try {
-				sessionBo.delete(session);
-			} catch (Exception e) {
-				if (!(e instanceof AbstractIdentityProviderException)) {
-					logger.error("Unable to delete a Session", e);
-					throw e;
-				}
-			}
-			
-			return sessionBo.create(session).getToken();
+			IIdentityProviderApplication application = context.getBean(IIdentityProviderApplication.class);
+			return application.createSession(user, organization, user.getExternalId()).getToken();
 		} catch (SessionException e) {
 			logger.error("Unable to create a Session", e);
 			throw new StageException(StageExceptionType.ACCESS, StageResultCode.FAT_1102);

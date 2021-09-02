@@ -3,11 +3,6 @@ package com.tazouxme.idp.service.entity;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonProperty.Access;
-
 public class OrganizationEntity {
 	
 	private String id;
@@ -19,8 +14,6 @@ public class OrganizationEntity {
 	private long creationDate;
 	private Set<ClaimEntity> claims = new HashSet<>();
 	private Set<RoleEntity> roles = new HashSet<>();
-	
-	@JsonProperty(access = Access.WRITE_ONLY)
 	private String certificate;
 	private boolean hasCertificate = false;
 
@@ -78,8 +71,6 @@ public class OrganizationEntity {
 	
 	public void setCertificate(String certificate) {
 		this.certificate = certificate;
-		
-		setHasCertificate(!StringUtils.isBlank(certificate));
 	}
 	
 	public boolean isHasCertificate() {

@@ -32,14 +32,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.tazouxme.idp.IdentityProviderConstants;
-import com.tazouxme.idp.bo.contract.IApplicationBo;
-import com.tazouxme.idp.bo.contract.IFederationBo;
-import com.tazouxme.idp.bo.contract.IOrganizationBo;
-import com.tazouxme.idp.bo.contract.IUserBo;
-import com.tazouxme.idp.exception.ApplicationException;
-import com.tazouxme.idp.exception.FederationException;
-import com.tazouxme.idp.exception.OrganizationException;
-import com.tazouxme.idp.exception.UserException;
+import com.tazouxme.idp.application.contract.IIdentityProviderApplication;
+import com.tazouxme.idp.application.exception.ApplicationException;
+import com.tazouxme.idp.application.exception.FederationException;
+import com.tazouxme.idp.application.exception.OrganizationException;
+import com.tazouxme.idp.application.exception.UserException;
 import com.tazouxme.idp.model.Application;
 import com.tazouxme.idp.model.Federation;
 import com.tazouxme.idp.model.Organization;
@@ -52,18 +49,9 @@ import com.tazouxme.idp.security.token.UserAuthenticationType;
 public class HeadLoginAuthentication implements ILoginAuthentication {
 
 	protected final Log logger = LogFactory.getLog(getClass());
-
-	@Autowired
-	private IOrganizationBo organizationBo;
 	
 	@Autowired
-	private IUserBo userBo;
-	
-	@Autowired
-	private IFederationBo federationBo;
-	
-	@Autowired
-	private IApplicationBo applicationBo;
+	private IIdentityProviderApplication idpApplication;
 
 	@Override
 	public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
@@ -102,8 +90,8 @@ public class HeadLoginAuthentication implements ILoginAuthentication {
 			}
 			
 			KeyPair keys = generateKeys();
-			Organization organization = organizationBo.findByDomain(username.split("@")[1]);
-			User user = userBo.findByEmail(username, organization.getExternalId());
+			Organization organization = idpApplication.findOrganizationByDomain(username.split("@")[1]);
+			User user = idpApplication.findUserByEmail(username, organization.getExternalId());
 			
 			if (!user.isEnabled()) {
 				logger.error("User is not active");
@@ -129,7 +117,8 @@ public class HeadLoginAuthentication implements ILoginAuthentication {
 			inAuthentication.getDetails().getIdentity().setRole(user.isAdministrator() ? "ADMIN" : "USER");
 			
 			if (UserAuthenticationType.SAML.equals(startAuthentication.getDetails().getType())) {
-				if (StringUtils.isBlank(organization.getCertificate())) {
+				byte[] certificate = organization.getCertificate();
+				if (StringUtils.isBlank(new String(certificate != null ? certificate : new byte[] {}))) {
 					if (NameID.ENCRYPTED.equals(parameters.getAuthnRequest().getNameIDPolicy().getFormat())) {
 						logger.error("Organization Certificate is not set to encrypt NameID");
 						response.setStatus(406);
@@ -150,7 +139,7 @@ public class HeadLoginAuthentication implements ILoginAuthentication {
 				// SP Initialized
 				Application application = inAuthentication.getDetails().getParameters().getApplication();
 				if (application == null) {
-					application = applicationBo.findByUrn(parameters.getAuthnRequest().getIssuer().getValue(), organization.getExternalId());
+					application = idpApplication.findApplicationByURN(parameters.getAuthnRequest().getIssuer().getValue(), organization.getExternalId());
 					inAuthentication.getDetails().getParameters().setApplication(application);
 				}
 				
@@ -173,7 +162,7 @@ public class HeadLoginAuthentication implements ILoginAuthentication {
 					}
 					
 					try {
-						Federation federation = federationBo.findByUserAndURN(user.getExternalId(), application.getUrn(), organization.getExternalId());
+						Federation federation = idpApplication.findFederationByUserAndURN(user.getExternalId(), application.getUrn(), organization.getExternalId());
 						if (!federation.isEnabled()) {
 							logger.error("Federation not enabled for User");
 							response.setStatus(406);

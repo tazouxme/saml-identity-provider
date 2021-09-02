@@ -1,11 +1,16 @@
 package com.tazouxme.idp.util;
 
+import java.util.List;
+
 import com.tazouxme.idp.sanitizer.CertificateSanitizer;
 import com.tazouxme.idp.sanitizer.EmptySanitizer;
 import com.tazouxme.idp.sanitizer.EqualsStringSanitizer;
 import com.tazouxme.idp.sanitizer.NonEmptySanitizer;
+import com.tazouxme.idp.sanitizer.NonNullSanitizer;
 import com.tazouxme.idp.sanitizer.Sanitizer;
 import com.tazouxme.idp.sanitizer.entity.Equality;
+import com.tazouxme.idp.sanitizer.validation.SanitizerValidation.Severity;
+import com.tazouxme.idp.sanitizer.validation.SanitizerValidationImpl;
 import com.tazouxme.idp.sanitizer.validation.SanitizerValidationResult;
 import com.tazouxme.idp.sanitizer.validation.SanitizerValidationResultImpl;
 
@@ -20,7 +25,13 @@ public class SanitizerUtils {
 	@SafeVarargs
 	public static <T> SanitizerValidationResult sanitize(Sanitizer<T> sanitizer, T... values) {
 		SanitizerValidationResult result = new SanitizerValidationResultImpl();
+		if (sanitizer == null) {
+			result.addValidation(new SanitizerValidationImpl(Severity.ERROR, "Sanitizer is null"));
+			return result;
+		}
+		
 		if (values == null) {
+			result.addValidation(new SanitizerValidationImpl(Severity.ERROR, "Values is null"));
 			return result;
 		}
 		
@@ -40,6 +51,7 @@ public class SanitizerUtils {
 	public static SanitizerValidationResult sanitizeEmpty(String... values) {
 		SanitizerValidationResult result = new SanitizerValidationResultImpl();
 		if (values == null) {
+			result.addValidation(new SanitizerValidationImpl(Severity.ERROR, "Values is null"));
 			return result;
 		}
 		
@@ -64,6 +76,46 @@ public class SanitizerUtils {
 	}
 	
 	/**
+	 * Helper method to sanitize more than one non null values with one Sanitizer
+	 * @param sanitizer
+	 * @param values
+	 * @return
+	 */
+	public static SanitizerValidationResult sanitizeNonNull(List<?> values) {
+		SanitizerValidationResult result = new SanitizerValidationResultImpl();
+		if (values == null) {
+			result.addValidation(new SanitizerValidationImpl(Severity.ERROR, "Values is null"));
+			return result;
+		}
+		
+		for (Object value : values) {
+			result.addValidation(new NonNullSanitizer().sanitize(value));
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * Helper method to sanitize more than one non null values with one Sanitizer
+	 * @param sanitizer
+	 * @param values
+	 * @return
+	 */
+	public static SanitizerValidationResult sanitizeNonNull(Object... values) {
+		SanitizerValidationResult result = new SanitizerValidationResultImpl();
+		if (values == null) {
+			result.addValidation(new SanitizerValidationImpl(Severity.ERROR, "Values is null"));
+			return result;
+		}
+		
+		for (Object value : values) {
+			result.addValidation(new NonNullSanitizer().sanitize(value));
+		}
+		
+		return result;
+	}
+	
+	/**
 	 * Helper method to sanitize more than one non empty values with one Sanitizer
 	 * @param sanitizer
 	 * @param values
@@ -72,6 +124,7 @@ public class SanitizerUtils {
 	public static SanitizerValidationResult sanitizeNonEmpty(String... values) {
 		SanitizerValidationResult result = new SanitizerValidationResultImpl();
 		if (values == null) {
+			result.addValidation(new SanitizerValidationImpl(Severity.ERROR, "Values is null"));
 			return result;
 		}
 		

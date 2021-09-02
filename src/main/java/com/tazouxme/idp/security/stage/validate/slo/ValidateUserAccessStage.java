@@ -4,12 +4,9 @@ import java.util.Set;
 
 import org.opensaml.saml.saml2.core.NameID;
 import org.opensaml.saml.saml2.core.NameIDType;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import com.tazouxme.idp.bo.contract.IAccessBo;
-import com.tazouxme.idp.bo.contract.IFederationBo;
-import com.tazouxme.idp.exception.AccessException;
-import com.tazouxme.idp.exception.FederationException;
+import com.tazouxme.idp.application.exception.AccessException;
+import com.tazouxme.idp.application.exception.FederationException;
 import com.tazouxme.idp.model.Access;
 import com.tazouxme.idp.model.Federation;
 import com.tazouxme.idp.model.User;
@@ -28,19 +25,13 @@ public class ValidateUserAccessStage extends AbstractStage {
 	public ValidateUserAccessStage() {
 		super(UserAuthenticationPhase.ORGANIZATION_ACCESS_VALID, UserAuthenticationPhase.USER_ACCESS_VALID);
 	}
-
-	@Autowired
-	private IAccessBo accessBo;
-	
-	@Autowired
-	private IFederationBo federationBo;
 	
 	@Override
 	public UserAuthenticationToken executeInternal(UserAuthenticationToken authentication, StageParameters o) throws StageException {
 		// find user and check SaaS access
 		Access access = null;
 		try {
-			access = accessBo.findByUserAndURN(o.getUserId(), o.getLogoutRequest().getIssuer().getValue(), o.getOrganizationId());
+			access = idpApplication.findAccessByUserAndURN(o.getUserId(), o.getLogoutRequest().getIssuer().getValue(), o.getOrganizationId());
 			if (!access.isEnabled()) {
 				throw new StageException(StageExceptionType.ACCESS, StageResultCode.ACC_0681, o);
 			}
@@ -76,7 +67,7 @@ public class ValidateUserAccessStage extends AbstractStage {
 			}
 			
 			try {
-				Federation federation = federationBo.findByUserAndURN(
+				Federation federation = idpApplication.findFederationByUserAndURN(
 						user.getExternalId(), o.getApplication().getUrn(), authentication.getDetails().getIdentity().getOrganizationId());
 				
 				if (!o.getLogoutRequest().getNameID().getValue().equals(federation.getExternalId())) {

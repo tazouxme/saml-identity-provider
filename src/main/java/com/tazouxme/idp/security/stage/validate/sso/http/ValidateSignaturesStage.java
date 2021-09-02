@@ -23,10 +23,8 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.encoders.Base64;
 import org.opensaml.saml.common.xml.SAMLConstants;
 import org.opensaml.saml.saml2.core.NameID;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import com.tazouxme.idp.bo.contract.ISessionBo;
-import com.tazouxme.idp.exception.SessionException;
+import com.tazouxme.idp.application.exception.SessionException;
 import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.security.stage.exception.StageException;
 import com.tazouxme.idp.security.stage.exception.StageExceptionType;
@@ -43,15 +41,13 @@ public class ValidateSignaturesStage extends AbstractStage {
 	public ValidateSignaturesStage() {
 		super(UserAuthenticationPhase.COOKIES_VALID, UserAuthenticationPhase.SIGNATURES_VALID);
 	}
-
-	@Autowired
-	private ISessionBo bo;
 	
 	@Override
 	public UserAuthenticationToken executeInternal(UserAuthenticationToken authentication, StageParameters o) throws StageException {
 		try {
 			if (NameID.ENCRYPTED.equals(o.getAuthnRequest().getNameIDPolicy().getFormat())) {
-				if (StringUtils.isBlank(o.getOrganization().getCertificate())) {
+				byte[] certificate = o.getOrganization().getCertificate();
+				if (StringUtils.isBlank(new String(certificate != null ? certificate : new byte[] {}))) {
 					throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0415, o);
 				}
 			}
@@ -64,7 +60,7 @@ public class ValidateSignaturesStage extends AbstractStage {
 			}
 			
 			// find Session by user + organization
-			String token = bo.find(o.getOrganizationId(), o.getUserId()).getToken();
+			String token = idpApplication.findSession(o.getUserId(), o.getOrganizationId()).getToken();
 			if (!verifyCookieSignature(token.getBytes(), o.getSignature().getBytes(), o.getPublicCredential().getPublicKey())) {
 				throw new StageException(StageExceptionType.AUTHENTICATION, StageResultCode.AUT_0401, o);
 			}
@@ -96,7 +92,8 @@ public class ValidateSignaturesStage extends AbstractStage {
 	}
 	
 	private boolean verifyRequestSignature(StageParameters o) {
-		if (StringUtils.isBlank(o.getOrganization().getCertificate())) {
+		byte[] certificate = o.getOrganization().getCertificate();
+		if (StringUtils.isBlank(new String(certificate != null ? certificate : new byte[] {}))) {
 			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0414, o);
 		}
 		
@@ -114,7 +111,7 @@ public class ValidateSignaturesStage extends AbstractStage {
 			byte[] signaturesBytes = Base64.decode(obtainQueryParam("Signature", incomingParams, o));
 		
 			Signature sig = Signature.getInstance("SHA256withRSA");
-			sig.initVerify(obtainPublicKey(o.getOrganization().getCertificate()));
+			sig.initVerify(obtainPublicKey(certificate));
 			sig.update(verifierUrl.buildQueryString().getBytes("UTF-8"));
 			return sig.verify(signaturesBytes);
 		} catch (SignatureException e) {
@@ -146,7 +143,7 @@ public class ValidateSignaturesStage extends AbstractStage {
 		throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0413, o);
 	}
 	
-	private PublicKey obtainPublicKey(String certificate) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException, CertificateException {
+	private PublicKey obtainPublicKey(byte[] certificate) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException, CertificateException {
 		InputStream in = new ByteArrayInputStream(Base64.decode(certificate));
 		
 		X509Certificate cert = (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(in);

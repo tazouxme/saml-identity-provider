@@ -4,11 +4,24 @@ import java.util.Date;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 
 import com.tazouxme.idp.IdentityProviderConstants;
 import com.tazouxme.idp.application.contract.IIdentityProviderApplication;
+import com.tazouxme.idp.application.exception.AccessException;
+import com.tazouxme.idp.application.exception.ActivationException;
+import com.tazouxme.idp.application.exception.ApplicationException;
+import com.tazouxme.idp.application.exception.ClaimException;
+import com.tazouxme.idp.application.exception.FederationException;
+import com.tazouxme.idp.application.exception.OrganizationException;
+import com.tazouxme.idp.application.exception.RoleException;
+import com.tazouxme.idp.application.exception.SessionException;
+import com.tazouxme.idp.application.exception.StoreException;
+import com.tazouxme.idp.application.exception.UserException;
+import com.tazouxme.idp.application.exception.code.IdentityProviderExceptionCode;
 import com.tazouxme.idp.bo.contract.IAccessBo;
 import com.tazouxme.idp.bo.contract.IActivationBo;
 import com.tazouxme.idp.bo.contract.IApplicationBo;
@@ -16,15 +29,9 @@ import com.tazouxme.idp.bo.contract.IClaimBo;
 import com.tazouxme.idp.bo.contract.IFederationBo;
 import com.tazouxme.idp.bo.contract.IOrganizationBo;
 import com.tazouxme.idp.bo.contract.IRoleBo;
+import com.tazouxme.idp.bo.contract.ISessionBo;
+import com.tazouxme.idp.bo.contract.IStoreBo;
 import com.tazouxme.idp.bo.contract.IUserBo;
-import com.tazouxme.idp.exception.AccessException;
-import com.tazouxme.idp.exception.ActivationException;
-import com.tazouxme.idp.exception.ApplicationException;
-import com.tazouxme.idp.exception.ClaimException;
-import com.tazouxme.idp.exception.FederationException;
-import com.tazouxme.idp.exception.OrganizationException;
-import com.tazouxme.idp.exception.RoleException;
-import com.tazouxme.idp.exception.UserException;
 import com.tazouxme.idp.model.Access;
 import com.tazouxme.idp.model.Activation;
 import com.tazouxme.idp.model.Application;
@@ -32,12 +39,16 @@ import com.tazouxme.idp.model.Claim;
 import com.tazouxme.idp.model.Federation;
 import com.tazouxme.idp.model.Organization;
 import com.tazouxme.idp.model.Role;
+import com.tazouxme.idp.model.Session;
+import com.tazouxme.idp.model.Store;
 import com.tazouxme.idp.model.User;
 import com.tazouxme.idp.model.UserDetails;
 import com.tazouxme.idp.util.defaults.ClaimsDefaults;
 import com.tazouxme.idp.util.defaults.RolesDefaults;
 
 public class IdentityProviderApplication implements IIdentityProviderApplication {
+
+	protected final Log logger = LogFactory.getLog(getClass());
 	
 	@Autowired
 	private IAccessBo accessBo;
@@ -61,7 +72,31 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 	private IRoleBo roleBo;
 	
 	@Autowired
+	private ISessionBo sessionBo;
+	
+	@Autowired
+	private IStoreBo storeBo;
+	
+	@Autowired
 	private IUserBo userBo;
+	
+	@Override
+	public Access findAccessByExternalId(String externalId, String organizationId) throws AccessException {
+		try {
+			return accessBo.findByExternalId(externalId, organizationId);
+		} catch (Exception e) {
+			throw new AccessException(IdentityProviderExceptionCode.ACCESS_NOT_FOUND, "Unable to find Access by its ID", e);
+		}
+	}
+	
+	@Override
+	public Access findAccessByUserAndURN(String externalId, String urn, String organizationId) throws AccessException {
+		try {
+			return accessBo.findByUserAndURN(externalId, urn, organizationId);
+		} catch (Exception e) {
+			throw new AccessException(IdentityProviderExceptionCode.ACCESS_NOT_FOUND, "Unable to find Access by User and Application's URN", e);
+		}
+	}
 	
 	@Override
 	public Access createAccess(User user, Application application, Role role, Organization organization, String createdBy) throws AccessException {
@@ -73,13 +108,17 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 		access.setEnabled(true);
 		access.setCreatedBy(createdBy);
 		
-		accessBo.create(access);
+		try {
+			accessBo.create(access);
+		} catch (Exception e) {
+			throw new AccessException(IdentityProviderExceptionCode.ACCESS_ALREADY_EXISTS, "Unable to create new Access", e);
+		}
 		
 		if (access.getOrganization().isFederation()) {
 			try {
 				createFederation(user, application, organization, createdBy);
 			} catch (FederationException e) {
-				throw new AccessException("Cannot create a new Federation for Access", e);
+				throw new AccessException(e.getCode(), "Cannot create a new Federation for Access", e);
 			}
 		}
 		
@@ -92,25 +131,48 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 		access.setExternalId(externalId);
 		access.setEnabled(enabled);
 		access.setOrganization(organization);
-		
-		return accessBo.update(access);
+
+		try {
+			return accessBo.update(access);
+		} catch (Exception e) {
+			throw new AccessException(IdentityProviderExceptionCode.ACCESS_NOT_FOUND, "Unable to update Access", e);
+		}
 	}
 	
 	@Override
 	public void deleteAccess(String externalId, Organization organization) throws AccessException {
-		Access access = accessBo.findByExternalId(externalId, organization.getExternalId());
+		Access access = findAccessByExternalId(externalId, organization.getExternalId());
 		
 		try {
-			Federation federation = new Federation();
-			federation.setUser(access.getUser());
-			federation.setApplication(access.getApplication());
-			federation.setOrganization(organization);
-			federationBo.delete(federation);
+			Federation federation = findFederationByUserAndURN(access.getUser().getExternalId(), access.getApplication().getUrn(), organization.getExternalId());
+			deleteFederation(federation, organization);
 		} catch (FederationException e) {
-			throw new AccessException("Cannot delete Federation for Access", e);
+			throw new AccessException(e.getCode(), "Cannot delete Federation for Access", e);
 		}
 		
-		accessBo.delete(access);
+		try {
+			accessBo.delete(access);
+		} catch (Exception e) {
+			throw new AccessException(IdentityProviderExceptionCode.ACCESS_NOT_FOUND, "Unable to delete Access", e);
+		}
+	}
+	
+	@Override
+	public Activation findActivationByExternalId(String externalId) throws ActivationException {
+		try {
+			return activationBo.findByExternalId(externalId);
+		} catch (Exception e) {
+			throw new ActivationException(IdentityProviderExceptionCode.ACTIVATION_NOT_FOUND, "Unable to find an Activation by its ID", e);
+		}
+	}
+	
+	@Override
+	public Activation findActivation(String userExternalId, String organizationId, String step) throws ActivationException {
+		try {
+			return activationBo.find(organizationId, userExternalId, step);
+		} catch (Exception e) {
+			throw new ActivationException(IdentityProviderExceptionCode.ACTIVATION_NOT_FOUND, "Unable to find an Activation by User and step", e);
+		}
 	}
 	
 	@Override
@@ -126,7 +188,24 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 		activation.setStep(step);
 		activation.setCreatedBy(createdBy);
 		
-		return activationBo.create(activation);
+		try {
+			return activationBo.create(activation);
+		} catch (Exception e) {
+			throw new ActivationException(IdentityProviderExceptionCode.ACTIVATION_ALREADY_EXISTS, "Unable to create Activation", e);
+		}
+	}
+	
+	@Override
+	public void deleteActivation(String externalId, Organization organization) throws ActivationException {
+		Activation activation = new Activation();
+		activation.setExternalId(externalId);
+		activation.setOrganizationExternalId(organization.getExternalId());
+		
+		try {
+			activationBo.delete(activation);
+		} catch (Exception e) {
+			throw new ActivationException(IdentityProviderExceptionCode.ACTIVATION_NOT_FOUND, "Unable to delete Activation", e);
+		}
 	}
 	
 	@Override
@@ -136,12 +215,20 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 	
 	@Override
 	public Application findApplicationByExternalId(String externalId, String organizationId) throws ApplicationException {
-		return applicationBo.findByExternalId(externalId, organizationId);
+		try {
+			return applicationBo.findByExternalId(externalId, organizationId);
+		} catch (Exception e) {
+			throw new ApplicationException(IdentityProviderExceptionCode.APPLICATION_NOT_FOUND, "Unable to find Application by its ID", e);
+		}
 	}
 	
 	@Override
 	public Application findApplicationByURN(String urn, String organizationId) throws ApplicationException {
-		return applicationBo.findByUrn(urn, organizationId);
+		try {
+			return applicationBo.findByUrn(urn, organizationId);
+		} catch (Exception e) {
+			throw new ApplicationException(IdentityProviderExceptionCode.APPLICATION_NOT_FOUND, "Unable to find Application by its URN", e);
+		}
 	}
 	
 	@Override
@@ -154,8 +241,12 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 		application.setLogoutUrl(logoutUrl);
 		application.setOrganization(organization);
 		application.setCreatedBy(createdBy);
-		
-		return applicationBo.create(application);
+
+		try {
+			return applicationBo.create(application);
+		} catch (Exception e) {
+			throw new ApplicationException(IdentityProviderExceptionCode.APPLICATION_ALREADY_EXISTS, "Unable to create new Application", e);
+		}
 	}
 	
 	@Override
@@ -168,8 +259,12 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 		application.setAssertionUrl(acsUrl);
 		application.setLogoutUrl(logoutUrl);
 		application.setOrganization(organization);
-		
-		return applicationBo.update(application);
+
+		try {
+			return applicationBo.update(application);
+		} catch (Exception e) {
+			throw new ApplicationException(IdentityProviderExceptionCode.APPLICATION_NOT_FOUND, "Unable to update Application", e);
+		}
 	}
 	
 	@Override
@@ -178,8 +273,12 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 		application.setExternalId(externalId);
 		application.setOrganization(organization);
 		application.getClaims().addAll(claims);
-		
-		return applicationBo.updateClaims(application);
+
+		try {
+			return applicationBo.updateClaims(application);
+		} catch (Exception e) {
+			throw new ApplicationException(IdentityProviderExceptionCode.APPLICATION_NOT_FOUND, "Unable to update Application's Claims", e);
+		}
 	}
 	
 	@Override
@@ -188,21 +287,17 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 		
 		for (Access access : application.getAccesses()) {
 			try {
-				accessBo.delete(access);
+				deleteAccess(access.getExternalId(), organization);
 			} catch (AccessException e) {
-				throw new ApplicationException("Unable to delete Access for Application", e);
+				throw new ApplicationException(e.getCode(), "Unable to delete Access for Application", e);
 			}
 		}
-		
-		for (Federation federation : application.getFederations()) {
-			try {
-				federationBo.delete(federation);
-			} catch (FederationException e) {
-				throw new ApplicationException("Unable to delete Federation for Application", e);
-			}
+
+		try {
+			applicationBo.delete(application);
+		} catch (Exception e) {
+			throw new ApplicationException(IdentityProviderExceptionCode.APPLICATION_NOT_FOUND, "Unable to delete Application", e);
 		}
-		
-		applicationBo.delete(application);
 	}
 	
 	@Override
@@ -217,7 +312,11 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 	
 	@Override
 	public Federation findFederationByUserAndURN(String userExternalId, String urn, String organizationExternalId) throws FederationException {
-		return federationBo.findByUserAndURN(userExternalId, urn, organizationExternalId);
+		try {
+			return federationBo.findByUserAndURN(userExternalId, urn, organizationExternalId);
+		} catch (Exception e) {
+			throw new FederationException(IdentityProviderExceptionCode.FEDERATION_NOT_FOUND, "Unable to find Federation by User and Application URN", e);
+		}
 	}
 	
 	@Override
@@ -228,18 +327,41 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 		federation.setApplication(application);
 		federation.setEnabled(true);
 		federation.setCreatedBy(createdBy);
-		
-		return federationBo.create(federation);
+
+		try {
+			return federationBo.create(federation);
+		} catch (Exception e) {
+			throw new FederationException(IdentityProviderExceptionCode.FEDERATION_ALREADY_EXISTS, "Unable to create new Federation", e);
+		}
+	}
+	
+	@Override
+	public void deleteFederation(Federation federation, Organization organization) throws FederationException {
+		federation.setOrganization(organization);
+
+		try {
+			federationBo.delete(federation);
+		} catch (Exception e) {
+			throw new FederationException(IdentityProviderExceptionCode.FEDERATION_NOT_FOUND, "Unable to delete Federation", e);
+		}
 	}
 	
 	@Override
 	public Organization findOrganizationByExternalId(String externalId) throws OrganizationException {
-		return organizationBo.findByExternalId(externalId);
+		try {
+			return organizationBo.findByExternalId(externalId);
+		} catch (Exception e) {
+			throw new OrganizationException(IdentityProviderExceptionCode.ORGANIZATION_NOT_FOUND, "Unable to find Organization by its ID", e);
+		}
 	}
 	
 	@Override
 	public Organization findOrganizationByDomain(String domain) throws OrganizationException {
-		return organizationBo.findByDomain(domain);
+		try {
+			return organizationBo.findByDomain(domain);
+		} catch (Exception e) {
+			throw new OrganizationException(IdentityProviderExceptionCode.ORGANIZATION_NOT_FOUND, "Unable to find Organization by its Domain", e);
+		}
 	}
 	
 	@Override
@@ -248,17 +370,22 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 		organization.setCode(code);
 		organization.setName(code);
 		organization.setDomain(domain);
-		organization.setCertificate("");
+		organization.setCertificate(null);
 		organization.setEnabled(false);
 		organization.setFederation(false);
 		organization.setCreatedBy(createdBy);
-		organization = organizationBo.create(organization);
+
+		try {
+			organization = organizationBo.create(organization);
+		} catch (Exception e) {
+			throw new OrganizationException(IdentityProviderExceptionCode.ORGANIZATION_ALREADY_EXISTS, "Unable to create new Organization", e);
+		}
 		
 		for (ClaimsDefaults claim : ClaimsDefaults.values()) {
 			try {
 				createClaim(claim.getUri(), claim.getName(), claim.getDescription(), organization, createdBy);
 			} catch (ClaimException e) {
-				throw new OrganizationException("Unable to create new default Claim for Organization", e);
+				throw new OrganizationException(e.getCode(), "Unable to create new default Claim for Organization", e);
 			}
 		}
 		
@@ -266,7 +393,7 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 			try {
 				createRole(role.getUri(), role.getName(), organization, createdBy);
 			} catch (RoleException e) {
-				throw new OrganizationException("Unable to create new default Role for Organization", e);
+				throw new OrganizationException(e.getCode(), "Unable to create new default Role for Organization", e);
 			}
 		}
 		
@@ -282,29 +409,52 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 		if (organization.isFederation() && !federation || !organization.isFederation() && federation) {
 			organization.setFederation(federation);
 		}
-		
-		return organizationBo.update(organization);
+
+		try {
+			return organizationBo.update(organization);
+		} catch (Exception e) {
+			throw new OrganizationException(IdentityProviderExceptionCode.ORGANIZATION_NOT_FOUND, "Unable to update Organization", e);
+		}
 	}
 	
 	@Override
 	public Organization setCertificate(String id, String certificate) throws OrganizationException {
-		Organization organization = findOrganizationByExternalId(id);
-		organization.setCertificate(certificate);
-		
-		return organizationBo.updateCertificate(organization);
+		Organization organization = new Organization();
+		organization.setExternalId(id);
+		organization.setCertificate(certificate.getBytes());
+
+		try {
+			return organizationBo.updateCertificate(organization);
+		} catch (Exception e) {
+			throw new OrganizationException(IdentityProviderExceptionCode.ORGANIZATION_NOT_FOUND, "Unable to update Organization's Certificate", e);
+		}
 	}
 	
 	@Override
 	public Organization deleteCertificate(String id) throws OrganizationException {
-		Organization organization = findOrganizationByExternalId(id);
-		organization.setCertificate("");
-		
-		return organizationBo.updateCertificate(organization);
+		Organization organization = new Organization();
+		organization.setExternalId(id);
+		organization.setCertificate(null);
+
+		try {
+			return organizationBo.updateCertificate(organization);
+		} catch (Exception e) {
+			throw new OrganizationException(IdentityProviderExceptionCode.ORGANIZATION_NOT_FOUND, "Unable to delete Organization's Certificate", e);
+		}
 	}
 	
 	@Override
 	public Set<Claim> findAllClaims(String organizationId) {
 		return claimBo.findAll(organizationId);
+	}
+	
+	@Override
+	public Claim findClaimByURI(String uri, String organizationId) throws ClaimException {
+		try {
+			return claimBo.findByURI(uri, organizationId);
+		} catch (Exception e) {
+			throw new ClaimException(IdentityProviderExceptionCode.CLAIM_NOT_FOUND, "Unable to find Claim by its URI", e);
+		}
 	}
 	
 	@Override
@@ -316,7 +466,11 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 		claim.setOrganization(o);
 		claim.setCreatedBy(createdBy);
 		
-		return claimBo.create(claim);
+		try {
+			return claimBo.create(claim);
+		} catch (Exception e) {
+			throw new ClaimException(IdentityProviderExceptionCode.CLAIM_ALREADY_EXISTS, "Unable to create new Claim", e);
+		}
 	}
 	
 	@Override
@@ -326,7 +480,11 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 	
 	@Override
 	public Role findRoleByExternalId(String roleExteralId, String organizationId) throws RoleException {
-		return roleBo.findByExternalId(roleExteralId, organizationId);
+		try {
+			return roleBo.findByExternalId(roleExteralId, organizationId);
+		} catch (Exception e) {
+			throw new RoleException(IdentityProviderExceptionCode.ROLE_NOT_FOUND, "Unable to find Role by its ID", e);
+		}
 	}
 	
 	@Override
@@ -336,13 +494,72 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 		role.setName(name);
 		role.setOrganization(o);
 		role.setCreatedBy(createdBy);
+
+		try {
+			return roleBo.create(role);
+		} catch (Exception e) {
+			throw new RoleException(IdentityProviderExceptionCode.ROLE_ALREADY_EXISTS, "Unable to create new Role", e);
+		}
+	}
+	
+	@Override
+	public Session findSession(String userExternalId, String organizationId) throws SessionException {
+		try {
+			return sessionBo.find(organizationId, userExternalId);
+		} catch (Exception e) {
+			throw new SessionException(IdentityProviderExceptionCode.SESSION_NOT_FOUND, "Unable to find Session for User", e);
+		}
+	}
+	
+	@Override
+	public Session createSession(User user, Organization organization, String createdBy) throws SessionException {
+		Session session = new Session();
+		session.setUserExternalId(user.getExternalId());
+		session.setOrganizationExternalId(organization.getExternalId());
+		session.setCreatedBy(createdBy);
 		
-		return roleBo.create(role);
+		try {
+			try {
+				deleteSession(user, organization);
+			} catch (SessionException e) {
+				logger.info("No Session found... proceeding");
+			}
+			
+			return sessionBo.create(session);
+		} catch (Exception e) {
+			throw new SessionException(IdentityProviderExceptionCode.SESSION_ALREADY_EXISTS, "Unable to create new Session", e);
+		}
+	}
+	
+	@Override
+	public void deleteSession(User user, Organization organization) throws SessionException {
+		Session session = new Session();
+		session.setUserExternalId(user.getExternalId());
+		session.setOrganizationExternalId(organization.getExternalId());
+		
+		try {
+			sessionBo.delete(session);
+		} catch (Exception e) {
+			throw new SessionException(IdentityProviderExceptionCode.SESSION_NOT_FOUND, "Unable to delete Session", e);
+		}
+	}
+	
+	@Override
+	public User findUserByEmail(String email, String organizationExternalId) throws UserException {
+		try {
+			return userBo.findByEmail(email, organizationExternalId);
+		} catch (Exception e) {
+			throw new UserException(IdentityProviderExceptionCode.USER_NOT_FOUND, "Unable to find User by its Email", e);
+		}
 	}
 	
 	@Override
 	public User findUserByExternalId(String externalId, String organizationExternalId) throws UserException {
-		return userBo.findByExternalId(externalId, organizationExternalId);
+		try {
+			return userBo.findByExternalId(externalId, organizationExternalId);
+		} catch (Exception e) {
+			throw new UserException(IdentityProviderExceptionCode.USER_NOT_FOUND, "Unable to find User by its ID", e);
+		}
 	}
 	
 	@Override
@@ -360,10 +577,14 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 			user.getDetails().add(createUserDetails(IdentityProviderConstants.SAML_CLAIM_ORGANIZATION, organization.getDomain(), organization.getExternalId(), user, createdBy));
 			user.getDetails().add(createUserDetails(IdentityProviderConstants.SAML_CLAIM_EMAIL, user.getEmail(), organization.getExternalId(), user, createdBy));
 		} catch (ClaimException e) {
-			throw new UserException("Unable to create new default Claim for User", e);
+			throw new UserException(e.getCode(), "Unable to create new default Claim for User", e);
 		}
 		
-		return userBo.create(user);
+		try {
+			return userBo.create(user);
+		} catch (Exception e) {
+			throw new UserException(IdentityProviderExceptionCode.USER_ALREADY_EXISTS, "Unable to create new User", e);
+		}
 	}
 	
 	@Override
@@ -378,7 +599,11 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 			user.setPassword(BCrypt.hashpw(password, BCrypt.gensalt(6)));
 		}
 		
-		return userBo.update(user);
+		try {
+			return userBo.update(user);
+		} catch (Exception e) {
+			throw new UserException(IdentityProviderExceptionCode.USER_NOT_FOUND, "Unable to update User", e);
+		}
 	}
 	
 	@Override
@@ -387,34 +612,96 @@ public class IdentityProviderApplication implements IIdentityProviderApplication
 		
 		for (Access access : user.getAccesses()) {
 			try {
-				accessBo.delete(access);
+				deleteAccess(access.getExternalId(), organization);
 			} catch (AccessException e) {
-				throw new UserException("Unable to delete Access for User", e);
+				throw new UserException(e.getCode(), "Unable to delete Access for User", e);
 			}
 		}
 		
-		for (Activation activation : findActivationsByUser(organization.getExternalId(), externalId)) {
+		for (Activation activation : findActivationsByUser(externalId, organization.getExternalId())) {
 			try {
-				activationBo.delete(activation);
+				deleteActivation(activation.getExternalId(), organization);
 			} catch (ActivationException e) {
-				throw new UserException("Unable to delete Activation for User", e);
+				throw new UserException(e.getCode(), "Unable to delete Activation for User", e);
 			}
 		}
 		
 		for (Federation federation : findFederationsByUser(externalId, organization.getExternalId())) {
 			try {
-				federationBo.delete(federation);
+				deleteFederation(federation, organization);
 			} catch (FederationException e) {
-				throw new UserException("Unable to delete Federation for User", e);
+				throw new UserException(e.getCode(), "Unable to delete Federation for User", e);
 			}
 		}
+
+		try {
+			userBo.delete(user);
+		} catch (Exception e) {
+			throw new UserException(IdentityProviderExceptionCode.USER_NOT_FOUND, "Unable to delete User", e);
+		}
+	}
+	
+	@Override
+	public Store findStoreByKey(String context, String key, String organizationId) throws StoreException {
+		try {
+			return storeBo.findByKey(context, key, organizationId);
+		} catch (Exception e) {
+			throw new StoreException(IdentityProviderExceptionCode.STORE_NOT_FOUND, "Unable to find Store", e);
+		}
+	}
+	
+	@Override
+	public Store findStoreByKeyAndVersion(String context, String key, long version, String organizationId) throws StoreException {
+		try {
+			return storeBo.findByKeyAndVersion(context, key, version, organizationId);
+		} catch (Exception e) {
+			throw new StoreException(IdentityProviderExceptionCode.STORE_NOT_FOUND, "Unable to find Store", e);
+		}
+	}
+	
+	@Override
+	public Store createStore(String context, String key, String value, Long expiration, Organization organization, String createdBy) throws StoreException {
+		Store store = new Store();
+		store.setContext(context);
+		store.setStoreKey(key);
+		store.setStoreValue(value.getBytes());
+		store.setExpiration(expiration);
+		store.setVersion(1L);
+		store.setOrganization(organization);
+		store.setCreatedBy(createdBy);
 		
-		userBo.delete(user);
+		try {
+			return storeBo.create(store);
+		} catch (Exception e) {
+			throw new StoreException(IdentityProviderExceptionCode.STORE_ALREADY_EXISTS, "Unable to create new Store", e);
+		}
+	}
+	
+	@Override
+	public Store updateStore(Store store, Organization organization) throws StoreException {
+		store.setOrganization(organization);
+		
+		try {
+			return storeBo.update(store);
+		} catch (Exception e) {
+			throw new StoreException(IdentityProviderExceptionCode.STORE_NOT_FOUND, "Unable to update Store", e);
+		}
+	}
+	
+	@Override
+	public void deleteStore(Store store, Organization organization) throws StoreException {
+		store.setOrganization(organization);
+		
+		try {
+			storeBo.delete(store);
+		} catch (Exception e) {
+			throw new StoreException(IdentityProviderExceptionCode.STORE_NOT_FOUND, "Unable to delete Store", e);
+		}
 	}
 	
 	private UserDetails createUserDetails(String key, String value, String organizationId, User user, String createdBy) throws ClaimException {
 		UserDetails details = new UserDetails();
-		details.setClaim(claimBo.findByURI(key, organizationId));
+		details.setClaim(findClaimByURI(key, organizationId));
 		details.setClaimValue(value);
 		details.setCreationDate(new Date().getTime());
 		details.setCreatedBy(createdBy);

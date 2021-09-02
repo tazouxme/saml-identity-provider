@@ -7,8 +7,8 @@ import javax.servlet.ServletException;
 import org.springframework.context.ApplicationContext;
 
 import com.tazouxme.idp.IdentityProviderConstants;
-import com.tazouxme.idp.bo.contract.IActivationBo;
-import com.tazouxme.idp.exception.ActivationException;
+import com.tazouxme.idp.application.contract.IIdentityProviderApplication;
+import com.tazouxme.idp.application.exception.ActivationException;
 import com.tazouxme.idp.model.Activation;
 
 public class ActivationPasswordProcessor extends AbstractActivationProcessor {
@@ -19,7 +19,7 @@ public class ActivationPasswordProcessor extends AbstractActivationProcessor {
 	
 	@Override
 	public void activate(String[] codes) throws ServletException, IOException {
-		IActivationBo activationBo = getApplicationContext().getBean(IActivationBo.class);
+		IIdentityProviderApplication application = getApplicationContext().getBean(IIdentityProviderApplication.class);
 		
 		if (codes.length != 1) {
 			return;
@@ -27,7 +27,7 @@ public class ActivationPasswordProcessor extends AbstractActivationProcessor {
 		
 		String code = codes[0];
 		try {
-			Activation activation = activationBo.findByExternalId(code);
+			Activation activation = application.findActivationByExternalId(code);
 			if (!IdentityProviderConstants.ACTIVATION_CONST_PASSWORD.equals(activation.getStep())) {
 				getServletRequest().setAttribute(IdentityProviderConstants.SERVLET_ERROR_REGISTER, "Activation step is not correct");
 				getServletRequest().getRequestDispatcher("/register.jsp").forward(getServletRequest(), getServletResponse());

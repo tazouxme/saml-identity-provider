@@ -74,7 +74,7 @@
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>CXFServlet</servlet-name>
-		<url-pattern>/api/*</url-pattern>
+		<url-pattern>/services/*</url-pattern>
 	</servlet-mapping>
 
 	<servlet>

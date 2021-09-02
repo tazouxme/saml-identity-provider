@@ -1,17 +1,13 @@
 package com.tazouxme.idp.security.stage.validate.sso.http;
 
 import org.opensaml.saml.saml2.core.NameID;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import com.tazouxme.idp.bo.contract.IAccessBo;
-import com.tazouxme.idp.bo.contract.IFederationBo;
-import com.tazouxme.idp.bo.contract.ISessionBo;
-import com.tazouxme.idp.exception.AccessException;
-import com.tazouxme.idp.exception.FederationException;
-import com.tazouxme.idp.exception.SessionException;
+import com.tazouxme.idp.application.exception.AccessException;
+import com.tazouxme.idp.application.exception.FederationException;
+import com.tazouxme.idp.application.exception.SessionException;
 import com.tazouxme.idp.model.Access;
 import com.tazouxme.idp.model.Federation;
-import com.tazouxme.idp.model.Session;
+import com.tazouxme.idp.model.Organization;
 import com.tazouxme.idp.model.User;
 import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.security.stage.exception.StageException;
@@ -28,22 +24,13 @@ public class ValidateUserAccessStage extends AbstractStage {
 	public ValidateUserAccessStage() {
 		super(UserAuthenticationPhase.ORGANIZATION_ACCESS_VALID, UserAuthenticationPhase.USER_ACCESS_VALID);
 	}
-
-	@Autowired
-	private IAccessBo accessBo;
-	
-	@Autowired
-	private ISessionBo sessionBo;
-	
-	@Autowired
-	private IFederationBo federationBo;
 	
 	@Override
 	public UserAuthenticationToken executeInternal(UserAuthenticationToken authentication, StageParameters o) throws StageException {
 		// find user and check SaaS access
 		Access access = null;
 		try {
-			access = accessBo.findByUserAndURN(o.getUserId(), o.getAuthnRequest().getIssuer().getValue(), o.getOrganizationId());
+			access = idpApplication.findAccessByUserAndURN(o.getUserId(), o.getAuthnRequest().getIssuer().getValue(), o.getOrganizationId());
 			if (!access.isEnabled()) {
 				throw new StageException(StageExceptionType.ACCESS, StageResultCode.ACC_0601, o);
 			}
@@ -62,7 +49,7 @@ public class ValidateUserAccessStage extends AbstractStage {
 			}
 			
 			try {
-				Federation federation = federationBo.findByUserAndURN(
+				Federation federation = idpApplication.findFederationByUserAndURN(
 						user.getExternalId(), o.getApplication().getUrn(), authentication.getDetails().getIdentity().getOrganizationId());
 				authentication.getDetails().getIdentity().setFederatedUserId(federation.getExternalId());
 			} catch (FederationException e) {
@@ -79,7 +66,7 @@ public class ValidateUserAccessStage extends AbstractStage {
 		authentication.getDetails().setIdentity(identity);
 		
 		try {
-			String token = registerToken(o.getOrganizationId(), o.getUserId());
+			String token = registerToken(o.getUser(), o.getOrganization());
 			authentication.getDetails().getIdentity().setToken(token);
 		} catch (SessionException e) {
 			throw new StageException(StageExceptionType.ACCESS, StageResultCode.ACC_0603, o);
@@ -94,16 +81,9 @@ public class ValidateUserAccessStage extends AbstractStage {
 		return true;
 	}
 	
-	protected String registerToken(String organizationId, String userId) throws SessionException {
-		// register new token
-		Session session = new Session();
-		session.setOrganizationExternalId(organizationId);
-		session.setUserExternalId(userId);
-		session.setCreatedBy(userId);
-		
+	protected String registerToken(User user, Organization organization) throws SessionException {
 		try {
-			sessionBo.delete(session);
-			return sessionBo.create(session).getToken();
+			return idpApplication.createSession(user, organization, user.getExternalId()).getToken();
 		} catch (SessionException e) {
 			throw new StageException(StageExceptionType.ACCESS, StageResultCode.FAT_1102);
 		}

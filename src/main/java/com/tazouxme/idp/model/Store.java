@@ -41,7 +41,7 @@ public class Store extends AbstractModel {
 	private String storeKey;
 	
 	@Lob
-	@Column(name = "store_value", updatable = false, nullable = false)
+	@Column(name = "store_value", length = 8096, updatable = false, nullable = false)
 	private byte[] storeValue;
 	
 	@Column(name = "expiration", length = 16, updatable = false, nullable = false)

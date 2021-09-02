@@ -4,7 +4,6 @@ import java.util.Set;
 
 import org.springframework.transaction.annotation.Transactional;
 
-import com.tazouxme.idp.exception.StoreException;
 import com.tazouxme.idp.model.Store;
 
 public interface IStoreBo {
@@ -13,18 +12,18 @@ public interface IStoreBo {
 	public Set<Store> findAll(String context, String organizationId);
 	
 	@Transactional(readOnly = true)
-	public Store findByKey(String context, String key, String organizationId) throws StoreException;
+	public Store findByKey(String context, String key, String organizationId);
 	
 	@Transactional(readOnly = true)
-	public Store findByKeyAndVersion(String context, String key, long version, String organizationId) throws StoreException;
+	public Store findByKeyAndVersion(String context, String key, long version, String organizationId);
 	
 	@Transactional
-	public Store create(Store store) throws StoreException;
+	public Store create(Store store);
 	
 	@Transactional
-	public Store update(Store store) throws StoreException;
+	public Store update(Store store);
 	
 	@Transactional
-	public void delete(Store store) throws StoreException;
+	public void delete(Store store);
 
 }

@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.tazouxme.idp.bo.contract.IStoreBo;
 import com.tazouxme.idp.dao.contract.IStoreDao;
-import com.tazouxme.idp.exception.StoreException;
 import com.tazouxme.idp.model.Store;
 
 public class StoreBo implements IStoreBo {
@@ -23,17 +22,17 @@ public class StoreBo implements IStoreBo {
 	}
 
 	@Override
-	public Store findByKey(String context, String key, String organizationId) throws StoreException {
+	public Store findByKey(String context, String key, String organizationId) {
 		return dao.findByKey(context, key, organizationId);
 	}
 
 	@Override
-	public Store findByKeyAndVersion(String context, String key, long version, String organizationId) throws StoreException {
+	public Store findByKeyAndVersion(String context, String key, long version, String organizationId) {
 		return dao.findByKeyAndVersion(context, key, version, organizationId);
 	}
 
 	@Override
-	public Store create(Store store) throws StoreException {
+	public Store create(Store store) {
 		store.setCreationDate(new Date().getTime());
 		store.setStatus(1);
 		
@@ -41,15 +40,11 @@ public class StoreBo implements IStoreBo {
 	}
 
 	@Override
-	public Store update(Store store) throws StoreException {
+	public Store update(Store store) {
 		String context = store.getContext();
 		String key = store.getStoreKey();
 		byte[] value = store.getStoreValue();
 		Long version = store.getVersion();
-		
-		if (StringUtils.isBlank(context)) {
-			throw new StoreException("");
-		}
 		
 		Set<Store> stores = new HashSet<>();
 		if (!StringUtils.isBlank(key)) {
@@ -79,14 +74,10 @@ public class StoreBo implements IStoreBo {
 	}
 
 	@Override
-	public void delete(Store store) throws StoreException {
+	public void delete(Store store) {
 		String context = store.getContext();
 		String key = store.getStoreKey();
 		Long version = store.getVersion();
-		
-		if (StringUtils.isBlank(context)) {
-			throw new StoreException("");
-		}
 		
 		Set<Store> stores = new HashSet<>();
 		if (!StringUtils.isBlank(key)) {

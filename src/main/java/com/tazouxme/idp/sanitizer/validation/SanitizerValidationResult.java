@@ -14,6 +14,12 @@ public interface SanitizerValidationResult {
 	 * Add a validation result in the list
 	 * @param validation
 	 */
+	public void add(SanitizerValidationResult validation);
+	
+	/**
+	 * Add a validation in the list
+	 * @param validation
+	 */
 	public void addValidation(SanitizerValidation validation);
 	
 	/**

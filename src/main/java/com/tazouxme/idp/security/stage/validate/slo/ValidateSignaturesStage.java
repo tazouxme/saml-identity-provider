@@ -8,10 +8,8 @@ import java.security.SignatureException;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.encoders.Base64;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import com.tazouxme.idp.bo.contract.ISessionBo;
-import com.tazouxme.idp.exception.SessionException;
+import com.tazouxme.idp.application.exception.SessionException;
 import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.security.stage.exception.StageException;
 import com.tazouxme.idp.security.stage.exception.StageExceptionType;
@@ -25,15 +23,12 @@ public class ValidateSignaturesStage extends AbstractStage {
 	public ValidateSignaturesStage() {
 		super(UserAuthenticationPhase.COOKIES_VALID, UserAuthenticationPhase.SIGNATURES_VALID);
 	}
-
-	@Autowired
-	private ISessionBo bo;
 	
 	@Override
 	public UserAuthenticationToken executeInternal(UserAuthenticationToken authentication, StageParameters o) throws StageException {
 		try {
 			// find Session by user + organization
-			String token = bo.find(o.getOrganizationId(), o.getUserId()).getToken();
+			String token = idpApplication.findSession(o.getUserId(), o.getOrganizationId()).getToken();
 			if (!verifyCookieSignature(token.getBytes(), o.getSignature().getBytes(), o.getPublicCredential().getPublicKey())) {
 				throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_0485, o);
 			}

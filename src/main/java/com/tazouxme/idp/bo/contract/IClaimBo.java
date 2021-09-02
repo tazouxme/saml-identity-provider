@@ -4,7 +4,6 @@ import java.util.Set;
 
 import org.springframework.transaction.annotation.Transactional;
 
-import com.tazouxme.idp.exception.ClaimException;
 import com.tazouxme.idp.model.Claim;
 
 public interface IClaimBo {
@@ -13,18 +12,18 @@ public interface IClaimBo {
 	public Set<Claim> findAll(String externalOrganizationId);
 
 	@Transactional(readOnly = true)
-	public Claim findByExternalId(String externalId, String externalOrganizationId) throws ClaimException;
+	public Claim findByExternalId(String externalId, String externalOrganizationId);
 	
 	@Transactional(readOnly = true)
-	public Claim findByURI(String uri, String externalOrganizationId) throws ClaimException;
+	public Claim findByURI(String uri, String externalOrganizationId);
 
 	@Transactional
-	public Claim create(Claim claim) throws ClaimException;
+	public Claim create(Claim claim);
 	
 	@Transactional
-	public Claim update(Claim claim) throws ClaimException;
+	public Claim update(Claim claim);
 	
 	@Transactional
-	public void delete(Claim claim) throws ClaimException;
+	public void delete(Claim claim);
 
 }

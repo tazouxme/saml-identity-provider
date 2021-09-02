@@ -13,7 +13,7 @@
 	<context:property-placeholder location="classpath:test-application.properties" />
 	<context:annotation-config />
 	
-	<bean id="dbKiller" class="com.tazouxme.saml.test.util.DbKiller" />
+	<bean id="dbKiller" class="com.tazouxme.idp.test.util.DbKiller" />
 	
 	<bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
 		<property name="dataSource" ref="dataSource" />

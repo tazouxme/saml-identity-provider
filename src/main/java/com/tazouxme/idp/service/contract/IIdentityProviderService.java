@@ -16,7 +16,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import com.tazouxme.idp.sanitizer.validation.SanitizerValidationImpl;
 import com.tazouxme.idp.service.entity.AccessEntity;
 import com.tazouxme.idp.service.entity.ApplicationEntity;
 import com.tazouxme.idp.service.entity.ClaimEntity;
@@ -58,6 +57,7 @@ public interface IIdentityProviderService {
 		responses = {
 			@ApiResponse(description = "Updated Organization entity", content = @Content(schema = @Schema(implementation = OrganizationEntity.class)), responseCode = "202"),
 			@ApiResponse(description = "Unable to get the Organization", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "404"),
+			@ApiResponse(description = "Input entity is null", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "405"),
 			@ApiResponse(description = "Variable 'id' or 'name' from the entity is not set or wrong ID passed to the entity", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "417"),
 			@ApiResponse(description = "Unexpected server error", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "500")
 		}
@@ -74,6 +74,7 @@ public interface IIdentityProviderService {
 		responses = {
 			@ApiResponse(description = "Updated Organization entity", content = @Content(schema = @Schema(implementation = OrganizationEntity.class)), responseCode = "202"),
 			@ApiResponse(description = "Unable to get the Organization", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "404"),
+			@ApiResponse(description = "Input entity is null", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "405"),
 			@ApiResponse(description = "Variable 'certificate' from the entity is not set or wrong ID passed to the entity", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "417"),
 			@ApiResponse(description = "Unexpected server error", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "500")	
 		}
@@ -90,6 +91,7 @@ public interface IIdentityProviderService {
 		responses = {
 			@ApiResponse(description = "Certificate successfully deleted", responseCode = "204"),
 			@ApiResponse(description = "Unable to get the Organization", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "404"),
+			@ApiResponse(description = "Input entity is null", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "405"),
 			@ApiResponse(description = "Variable 'certificate' from the entity is set or wrong ID passed to the entity", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "417"),
 			@ApiResponse(description = "Unexpected server error", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "500")	
 		}
@@ -134,7 +136,7 @@ public interface IIdentityProviderService {
 		responses = {
 			@ApiResponse(description = "Created User entity", responseCode = "201"),
 			@ApiResponse(description = "Unable to get the Organization", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "404"),
-			@ApiResponse(description = "Activation link cannot be created", content = @Content(schema = @Schema(implementation = SanitizerValidationImpl.class)), responseCode = "406"),
+			@ApiResponse(description = "Input entity is null", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "405"),
 			@ApiResponse(description = "User already exists", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "409"),
 			@ApiResponse(description = "Variable 'username' from the entity is not set", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "417"),
 			@ApiResponse(description = "Unexpected server error", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "500")
@@ -152,6 +154,7 @@ public interface IIdentityProviderService {
 		responses = {
 			@ApiResponse(description = "Updated User entity", responseCode = "202"),
 			@ApiResponse(description = "Unable to get the Organization or User", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "404"),
+			@ApiResponse(description = "Input entity is null", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "405"),
 			@ApiResponse(description = "Variable 'id' from the entity is not set or an activation is pending", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "417"),
 			@ApiResponse(description = "Unexpected server error", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "500")
 		}
@@ -168,6 +171,7 @@ public interface IIdentityProviderService {
 		responses = {
 			@ApiResponse(description = "Deleted User entity", responseCode = "204"),
 			@ApiResponse(description = "Unable to get the Organization or User", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "404"),
+			@ApiResponse(description = "Input entity is null", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "405"),
 			@ApiResponse(description = "Variable 'id' from the entity is not set", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "417"),
 			@ApiResponse(description = "Unexpected server error", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "500")
 		}
@@ -211,6 +215,7 @@ public interface IIdentityProviderService {
 		responses = {
 			@ApiResponse(description = "Created Application entity", responseCode = "201"),
 			@ApiResponse(description = "Unable to get the Organization", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "404"),
+			@ApiResponse(description = "Input entity is null", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "405"),
 			@ApiResponse(description = "Application already exists", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "409"),
 			@ApiResponse(description = "Variable 'urn', 'name', 'acsUrl' or 'logoutUrl' from the entity is not set", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "417"),
 			@ApiResponse(description = "Unexpected server error", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "500")
@@ -228,6 +233,7 @@ public interface IIdentityProviderService {
 		responses = {
 			@ApiResponse(description = "Updated Application entity", responseCode = "202"),
 			@ApiResponse(description = "Unable to get the Organization or Application", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "404"),
+			@ApiResponse(description = "Input entity is null", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "405"),
 			@ApiResponse(description = "Variable 'urn', 'name', 'acsUrl' or 'logoutUrl' from the entity is not set", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "417"),
 			@ApiResponse(description = "Unexpected server error", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "500")
 		}
@@ -243,6 +249,7 @@ public interface IIdentityProviderService {
 		responses = {
 			@ApiResponse(description = "Updated Application entity", responseCode = "202"),
 			@ApiResponse(description = "Unable to get the Organization or Application", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "404"),
+			@ApiResponse(description = "Input entity is null", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "405"),
 			@ApiResponse(description = "Variable 'id' in URI is not set", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "417"),
 			@ApiResponse(description = "Unexpected server error", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "500")
 		}
@@ -259,6 +266,7 @@ public interface IIdentityProviderService {
 		responses = {
 			@ApiResponse(description = "Application entity deleted", responseCode = "202"),
 			@ApiResponse(description = "Unable to get the Organization or Application", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "404"),
+			@ApiResponse(description = "Input entity is null", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "405"),
 			@ApiResponse(description = "Variable 'id' from the entity is not set", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "417"),
 			@ApiResponse(description = "Unexpected server error", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "500")
 		}
@@ -275,6 +283,7 @@ public interface IIdentityProviderService {
 		responses = {
 			@ApiResponse(description = "Created Access entity", responseCode = "201"),
 			@ApiResponse(description = "Unable to get the Organization or Role or Application or User", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "404"),
+			@ApiResponse(description = "Input entity is null", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "405"),
 			@ApiResponse(description = "Access already exists", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "409"),
 			@ApiResponse(description = "Variable User 'id', Role 'id' or Application 'urn' from the entity is not set", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "417"),
 			@ApiResponse(description = "Unexpected server error", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "500")
@@ -292,6 +301,7 @@ public interface IIdentityProviderService {
 		responses = {
 			@ApiResponse(description = "Updated Access entity", responseCode = "202"),
 			@ApiResponse(description = "Unable to get the Organization or Access", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "404"),
+			@ApiResponse(description = "Input entity is null", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "405"),
 			@ApiResponse(description = "Variable 'id' in entity is not set", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "417"),
 			@ApiResponse(description = "Unexpected server error", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "500")
 		}
@@ -308,6 +318,7 @@ public interface IIdentityProviderService {
 		responses = {
 			@ApiResponse(description = "Access entity deleted", responseCode = "204"),
 			@ApiResponse(description = "Unable to get the Organization or Access", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "404"),
+			@ApiResponse(description = "Input entity is null", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "405"),
 			@ApiResponse(description = "Variable 'id' from the entity is not set", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "417"),
 			@ApiResponse(description = "Unexpected server error", content = @Content(schema = @Schema(implementation = ExceptionEntity.class)), responseCode = "500")
 		}

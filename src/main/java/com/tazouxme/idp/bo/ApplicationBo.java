@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.tazouxme.idp.bo.contract.IApplicationBo;
 import com.tazouxme.idp.dao.contract.IApplicationDao;
-import com.tazouxme.idp.exception.ApplicationException;
 import com.tazouxme.idp.model.Application;
 import com.tazouxme.idp.util.IDUtils;
 
@@ -22,17 +21,17 @@ public class ApplicationBo implements IApplicationBo {
 	}
 
 	@Override
-	public Application findByUrn(String urn, String organizationExternalId) throws ApplicationException {
+	public Application findByUrn(String urn, String organizationExternalId) {
 		return dao.findByUrn(urn, organizationExternalId);
 	}
 
 	@Override
-	public Application findByExternalId(String externalId, String organizationExternalId) throws ApplicationException {
+	public Application findByExternalId(String externalId, String organizationExternalId) {
 		return dao.findByExternalId(externalId, organizationExternalId);
 	}
 
 	@Override
-	public Application create(Application application) throws ApplicationException {
+	public Application create(Application application) {
 		application.setExternalId(IDUtils.generateId("APP_", 8));
 		application.setCreationDate(new Date().getTime());
 		application.setStatus(1);
@@ -41,7 +40,7 @@ public class ApplicationBo implements IApplicationBo {
 	}
 
 	@Override
-	public Application update(Application application) throws ApplicationException {
+	public Application update(Application application) {
 		Application pApplication = findByExternalId(application.getExternalId(), application.getOrganization().getExternalId());
 		pApplication.setName(application.getName());
 		pApplication.setDescription(application.getDescription());
@@ -52,7 +51,7 @@ public class ApplicationBo implements IApplicationBo {
 	}
 
 	@Override
-	public Application updateClaims(Application application) throws ApplicationException {
+	public Application updateClaims(Application application) {
 		Application pApplication = findByExternalId(application.getExternalId(), application.getOrganization().getExternalId());
 		if (pApplication.getClaims().size() != application.getClaims().size() || !pApplication.getClaims().containsAll(application.getClaims())) {
 			pApplication.getClaims().clear();
@@ -63,7 +62,7 @@ public class ApplicationBo implements IApplicationBo {
 	}
 
 	@Override
-	public void delete(Application application) throws ApplicationException {
+	public void delete(Application application) {
 		dao.delete(findByExternalId(application.getExternalId(), application.getOrganization().getExternalId()));
 	}
 

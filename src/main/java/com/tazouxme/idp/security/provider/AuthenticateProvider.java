@@ -16,8 +16,8 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 
-import com.tazouxme.idp.bo.contract.IAccessBo;
-import com.tazouxme.idp.exception.AccessException;
+import com.tazouxme.idp.application.contract.IIdentityProviderApplication;
+import com.tazouxme.idp.application.exception.AccessException;
 import com.tazouxme.idp.model.Access;
 import com.tazouxme.idp.security.filter.entity.PasswordEntity;
 import com.tazouxme.idp.security.stage.StageResultCode;
@@ -32,7 +32,7 @@ public class AuthenticateProvider implements AuthenticationProvider {
 	protected final Log logger = LogFactory.getLog(getClass());
 	
 	@Autowired
-	private IAccessBo accessBo;
+	private IIdentityProviderApplication application;
 
 	@Override
 	public Authentication authenticate(Authentication authentication) throws AuthenticationException {
@@ -68,7 +68,7 @@ public class AuthenticateProvider implements AuthenticationProvider {
 		try {
 			if (UserAuthenticationType.SAML.equals(inAuthentication.getDetails().getType())) {
 				// SP Initialized
-				Access access = accessBo.findByUserAndURN(
+				Access access = application.findAccessByUserAndURN(
 					inAuthentication.getDetails().getIdentity().getUserId(), 
 					inAuthentication.getDetails().getParameters().getAuthnRequest().getIssuer().getValue(),
 					inAuthentication.getDetails().getIdentity().getOrganizationId());

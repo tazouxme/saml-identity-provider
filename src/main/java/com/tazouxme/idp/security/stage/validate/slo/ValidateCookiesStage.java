@@ -1,10 +1,8 @@
 package com.tazouxme.idp.security.stage.validate.slo;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import com.tazouxme.idp.bo.contract.IUserBo;
-import com.tazouxme.idp.exception.UserException;
+import com.tazouxme.idp.application.exception.UserException;
 import com.tazouxme.idp.model.User;
 import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.security.stage.exception.StageException;
@@ -19,9 +17,6 @@ public class ValidateCookiesStage extends AbstractStage {
 	public ValidateCookiesStage() {
 		super(UserAuthenticationPhase.REQUEST_VALUES_VALID, UserAuthenticationPhase.COOKIES_VALID);
 	}
-
-	@Autowired
-	private IUserBo bo;
 	
 	@Override
 	public UserAuthenticationToken executeInternal(UserAuthenticationToken authentication,  StageParameters o) throws StageException {
@@ -36,7 +31,7 @@ public class ValidateCookiesStage extends AbstractStage {
 		}
 		
 		try {
-			User user = bo.findByExternalId(o.getUserId(), o.getOrganizationId());
+			User user = idpApplication.findUserByExternalId(o.getUserId(), o.getOrganizationId());
 			o.setOrganization(user.getOrganization());
 			o.setUser(user);
 			

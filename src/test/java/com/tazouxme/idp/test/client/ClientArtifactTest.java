@@ -1,4 +1,4 @@
-package com.tazouxme.saml.test.client;
+package com.tazouxme.idp.test.client;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -81,8 +81,8 @@ import org.opensaml.soap.common.SOAPException;
 import com.tazouxme.idp.IdentityProviderConstants;
 import com.tazouxme.idp.security.filter.entity.PasswordEntity;
 import com.tazouxme.idp.security.stage.StageResultCode;
-import com.tazouxme.saml.test.util.SAMLUtilsTest;
-import com.tazouxme.saml.test.util.SelfEntityIDResolver;
+import com.tazouxme.idp.test.util.SAMLUtilsTest;
+import com.tazouxme.idp.test.util.SelfEntityIDResolver;
 
 import net.shibboleth.utilities.java.support.codec.Base64Support;
 import net.shibboleth.utilities.java.support.collection.Pair;

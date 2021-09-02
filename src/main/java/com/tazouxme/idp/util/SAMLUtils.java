@@ -539,7 +539,7 @@ public class SAMLUtils {
 		return XMLObjectProviderRegistrySupport.getBuilderFactory();
 	}
 	
-	private static Credential obtainPublicCredential(String certificate) {
+	private static Credential obtainPublicCredential(byte[] certificate) {
 		InputStream in = new ByteArrayInputStream(Base64.decode(certificate));
 		
 		try {

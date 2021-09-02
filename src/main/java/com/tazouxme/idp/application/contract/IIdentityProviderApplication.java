@@ -2,14 +2,16 @@ package com.tazouxme.idp.application.contract;
 
 import java.util.Set;
 
-import com.tazouxme.idp.exception.AccessException;
-import com.tazouxme.idp.exception.ActivationException;
-import com.tazouxme.idp.exception.ApplicationException;
-import com.tazouxme.idp.exception.ClaimException;
-import com.tazouxme.idp.exception.FederationException;
-import com.tazouxme.idp.exception.OrganizationException;
-import com.tazouxme.idp.exception.RoleException;
-import com.tazouxme.idp.exception.UserException;
+import com.tazouxme.idp.application.exception.AccessException;
+import com.tazouxme.idp.application.exception.ActivationException;
+import com.tazouxme.idp.application.exception.ApplicationException;
+import com.tazouxme.idp.application.exception.ClaimException;
+import com.tazouxme.idp.application.exception.FederationException;
+import com.tazouxme.idp.application.exception.OrganizationException;
+import com.tazouxme.idp.application.exception.RoleException;
+import com.tazouxme.idp.application.exception.SessionException;
+import com.tazouxme.idp.application.exception.StoreException;
+import com.tazouxme.idp.application.exception.UserException;
 import com.tazouxme.idp.model.Access;
 import com.tazouxme.idp.model.Activation;
 import com.tazouxme.idp.model.Application;
@@ -17,9 +19,30 @@ import com.tazouxme.idp.model.Claim;
 import com.tazouxme.idp.model.Federation;
 import com.tazouxme.idp.model.Organization;
 import com.tazouxme.idp.model.Role;
+import com.tazouxme.idp.model.Session;
+import com.tazouxme.idp.model.Store;
 import com.tazouxme.idp.model.User;
 
 public interface IIdentityProviderApplication {
+	
+	/**
+	 * Get an Access by its External ID and the Organization External ID
+	 * @param externalId - Access External ID
+	 * @param organizationId - Organization to which the Access belongs
+	 * @return The Access
+	 * @throws AccessException
+	 */
+	public Access findAccessByExternalId(String externalId, String organizationId) throws AccessException;
+	
+	/**
+	 * Get an Access by its External ID and the Organization External ID
+	 * @param externalId - Access External ID
+	 * @param urn - Application's URN
+	 * @param organizationId - Organization to which the Access belongs
+	 * @return The Access
+	 * @throws AccessException
+	 */
+	public Access findAccessByUserAndURN(String externalId, String urn, String organizationId) throws AccessException;
 	
 	/**
 	 * Create an Access to an Application (and a Federation if enabled)
@@ -52,6 +75,22 @@ public interface IIdentityProviderApplication {
 	public void deleteAccess(String externalId, Organization organization) throws AccessException;
 	
 	/**
+	 * Get a unique Activation for a specific User and Step
+	 * @param userExternalId - User External ID
+	 * @param organizationId - External Organization ID
+	 * @param step - Either ACTIVATE or PASSWORD
+	 * @return Found Activation
+	 */
+	public Activation findActivation(String userExternalId, String organizationId, String step) throws ActivationException;
+	
+	/**
+	 * Get a unique Activation by its External ID
+	 * @param externalId - activation External ID
+	 * @return Found Activation
+	 */
+	public Activation findActivationByExternalId(String externalId) throws ActivationException;
+	
+	/**
 	 * Get all Activations for a specific User
 	 * @param userExternalId - User External ID
 	 * @param organizationId - External Organization ID
@@ -69,6 +108,14 @@ public interface IIdentityProviderApplication {
 	 * @throws ActivationException - When an Activation with the same External ID exists
 	 */
 	public Activation createActivation(String organizationId, String userId, String step, String createdBy) throws ActivationException;
+	
+	/**
+	 * Create an Activation entry in the database
+	 * @param externalId - Activation External ID
+	 * @param organization - Organization to which the Access belongs
+	 * @throws ActivationException - When an Activation with the same External ID does not exist
+	 */
+	public void deleteActivation(String externalId, Organization organization) throws ActivationException;
 	
 	/**
 	 * Get all existing registered Applications for the Organization
@@ -179,6 +226,14 @@ public interface IIdentityProviderApplication {
 	public Federation createFederation(User user, Application application, Organization organization, String createdBy) throws FederationException;
 	
 	/**
+	 * Delete an existing Federation entry
+	 * @param federation - Federation to delete
+	 * @param organization - Organization to which the Access belongs
+	 * @throws FederationException
+	 */
+	public void deleteFederation(Federation federation, Organization organization) throws FederationException;
+	
+	/**
 	 * Get an Organization via its External ID
 	 * @param externalId - Organization External ID
 	 * @return The Organization
@@ -240,6 +295,14 @@ public interface IIdentityProviderApplication {
 	public Set<Claim> findAllClaims(String organizationId);
 	
 	/**
+	 * Get a Claim by its URI
+	 * @param uri - Claim's URI
+	 * @param organizationId - Organization External ID
+	 * @return 
+	 */
+	public Claim findClaimByURI(String uri, String organizationId) throws ClaimException;
+	
+	/**
 	 * Create a Claim entry in the database
 	 * @param uri - Claim designated URI
 	 * @param name - Claim name
@@ -276,6 +339,42 @@ public interface IIdentityProviderApplication {
 	 * @throws RoleException - When the Role with External ID or URI already exists
 	 */
 	public Role createRole(String uri, String name, Organization o, String createdBy) throws RoleException;
+	
+	/**
+	 * Find a Session for a User
+	 * @param userExternalId - User External ID
+	 * @param organizationId - Organization External ID
+	 * @return Found Session 
+	 * @throws SessionException When no Session exists
+	 */
+	public Session findSession(String userExternalId, String organizationId) throws SessionException;
+	
+	/**
+	 * Create a new Session for a User
+	 * @param user - User
+	 * @param organization - Organization to which the User belongs
+	 * @param createdBy - User who creates the record
+	 * @return The created Session
+	 * @throws SessionException When a Session already exists
+	 */
+	public Session createSession(User user, Organization organization, String createdBy) throws SessionException;
+	
+	/**
+	 * Delete a Session for a User
+	 * @param user - User
+	 * @param organization - Organization to which the User belongs
+	 * @throws SessionException When no Session exists
+	 */
+	public void deleteSession(User user, Organization organization) throws SessionException;
+	
+	/**
+	 * Get a User via its External Id
+	 * @param email - User Email
+	 * @param organizationExternalId - Organization External ID
+	 * @return the User
+	 * @throws UserException - When no User exists
+	 */
+	public User findUserByEmail(String email, String organizationExternalId) throws UserException;
 	
 	/**
 	 * Get a User via its External Id
@@ -317,5 +416,55 @@ public interface IIdentityProviderApplication {
 	 * @throws UserException - When a User with External Id does not exist
 	 */
 	public void deleteUser(String externalId, Organization organization) throws UserException;
+	
+	/**
+	 * Get a Store by its key
+	 * @param context - Main global key to get a Store
+	 * @param key - Unique key for the Store
+	 * @param organizationId - Organization External ID
+	 * @return
+	 * @throws StoreException
+	 */
+	public Store findStoreByKey(String context, String key, String organizationId) throws StoreException;
+	
+	/**
+	 * Get a Store by its key and version
+	 * @param context - Main global key to get a Store
+	 * @param key - Unique key for the Store
+	 * @param version - Version of the Store
+	 * @param organizationId - Organization External ID
+	 * @return
+	 * @throws StoreException
+	 */
+	public Store findStoreByKeyAndVersion(String context, String key, long version, String organizationId) throws StoreException;
+	
+	/**
+	 * Create a new Store
+	 * @param context - Main global key to get a Store
+	 * @param key - Unique key for the Store
+	 * @param value - Value of the persisted Store (usually SAML Response)
+	 * @param expiration - When the Store expires
+	 * @param organization - Organization to which the Store belongs
+	 * @param createdBy - User who creates the record
+	 * @return The created Store
+	 * @throws StoreException When a Store with context and key already exists
+	 */
+	public Store createStore(String context, String key, String value, Long expiration, Organization organization, String createdBy) throws StoreException;
+	
+	/**
+	 * Update an existing store
+	 * @param store - The Store containing the new values
+	 * @param organization - Organization to which the Store belongs
+	 * @throws StoreException
+	 */
+	public Store updateStore(Store store, Organization organization) throws StoreException;
+	
+	/**
+	 * Delete an existing Store
+	 * @param store - The Store containing the existing values
+	 * @param organization - Organization to which the Store belongs
+	 * @throws StoreException
+	 */
+	public void deleteStore(Store store, Organization organization) throws StoreException;
 
 }

@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.tazouxme.idp.bo.contract.IRoleBo;
 import com.tazouxme.idp.dao.contract.IRoleDao;
-import com.tazouxme.idp.exception.RoleException;
 import com.tazouxme.idp.model.Role;
 import com.tazouxme.idp.util.IDUtils;
 
@@ -22,17 +21,17 @@ public class RoleBo implements IRoleBo {
 	}
 
 	@Override
-	public Role findByExternalId(String externalId, String externalOrganizationId) throws RoleException {
+	public Role findByExternalId(String externalId, String externalOrganizationId) {
 		return dao.findByExternalId(externalId, externalOrganizationId);
 	}
 
 	@Override
-	public Role findByURI(String uri, String externalOrganizationId) throws RoleException {
+	public Role findByURI(String uri, String externalOrganizationId) {
 		return dao.findByURI(uri, externalOrganizationId);
 	}
 
 	@Override
-	public Role create(Role role) throws RoleException {
+	public Role create(Role role) {
 		role.setExternalId(IDUtils.generateId("ROL_", 8));
 		role.setCreationDate(new Date().getTime());
 		role.setStatus(1);
@@ -41,7 +40,7 @@ public class RoleBo implements IRoleBo {
 	}
 
 	@Override
-	public Role update(Role role) throws RoleException {
+	public Role update(Role role) {
 		Role pRole = findByExternalId(role.getExternalId(), role.getOrganization().getExternalId());
 		pRole.setName(role.getName());
 		
@@ -49,7 +48,7 @@ public class RoleBo implements IRoleBo {
 	}
 
 	@Override
-	public void delete(Role role) throws RoleException {
+	public void delete(Role role) {
 		dao.delete(findByExternalId(role.getExternalId(), role.getOrganization().getExternalId()));
 	}
 
