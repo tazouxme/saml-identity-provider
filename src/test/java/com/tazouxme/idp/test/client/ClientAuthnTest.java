@@ -6,7 +6,9 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
@@ -63,8 +65,7 @@ import org.opensaml.saml.saml2.core.NameIDType;
 import org.opensaml.saml.saml2.core.StatusResponseType;
 
 import com.tazouxme.idp.IdentityProviderConstants;
-import com.tazouxme.idp.security.filter.entity.PasswordEntity;
-import com.tazouxme.idp.security.filter.stream.NoWrapAutoEndDeflaterOutputStream;
+import com.tazouxme.idp.security.entity.PasswordEntity;
 import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.test.util.SAMLUtilsTest;
 
@@ -538,6 +539,23 @@ public class ClientAuthnTest extends AbstractClientTest {
 	    cookie.setPath("/saml-identity-provider");
 	    
 	    return cookie;
+	}
+	
+	public class NoWrapAutoEndDeflaterOutputStream extends DeflaterOutputStream {
+
+		public NoWrapAutoEndDeflaterOutputStream(final OutputStream os, final int level) {
+			super(os, new Deflater(level, true));
+		}
+
+		@Override
+		public void close() throws IOException {
+			if (def != null) {
+				def.end();
+			}
+
+			super.close();
+		}
+
 	}
 
 }

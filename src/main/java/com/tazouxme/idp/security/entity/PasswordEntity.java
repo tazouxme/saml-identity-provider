@@ -1,4 +1,4 @@
-package com.tazouxme.idp.security.filter.entity;
+package com.tazouxme.idp.security.entity;
 
 public class PasswordEntity {
 	

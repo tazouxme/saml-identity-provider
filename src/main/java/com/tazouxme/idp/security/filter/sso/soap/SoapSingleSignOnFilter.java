@@ -1,66 +1,18 @@
 package com.tazouxme.idp.security.filter.sso.soap;
 
-import java.io.IOException;
+import java.util.List;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.springframework.security.core.context.SecurityContextHolder;
-
-import com.tazouxme.idp.IdentityProviderConstants;
 import com.tazouxme.idp.security.filter.sso.AbstractSingleSignOnFilter;
-import com.tazouxme.idp.security.stage.exception.StageException;
-import com.tazouxme.idp.security.stage.exception.StageExceptionType;
-import com.tazouxme.idp.security.stage.parameters.StageParameters;
-import com.tazouxme.idp.security.token.UserAuthenticationPhase;
-import com.tazouxme.idp.security.token.UserAuthenticationToken;
-import com.tazouxme.idp.security.token.UserAuthenticationType;
-import com.tazouxme.idp.util.CookieUtils;
+import com.tazouxme.idp.security.filter.sso.ISingleSignOn;
 
 public class SoapSingleSignOnFilter extends AbstractSingleSignOnFilter {
 
-	public SoapSingleSignOnFilter() {
-		super("/sso/soap", "POST");
-	}
-	
-	@Override
-	protected StageParameters obtainStageParameters(HttpServletRequest request) {
-		Cookie organizationCookie = CookieUtils.find(request, IdentityProviderConstants.COOKIE_ORGANIZATION);
-		Cookie userCookie = CookieUtils.find(request, IdentityProviderConstants.COOKIE_USER);
-		Cookie signatureCookie = CookieUtils.find(request, IdentityProviderConstants.COOKIE_SIGNATURE);
-		
-		return new StageParameters(
-			configuration,
-			request,
-			organizationCookie != null ? organizationCookie.getValue() : null,
-			userCookie != null ? userCookie.getValue() : null,
-			signatureCookie != null ? signatureCookie.getValue() : null);
+	public SoapSingleSignOnFilter(List<ISingleSignOn> steps) {
+		this("/sso/soap", steps);
 	}
 
-	@Override
-	protected void userAuthenticatedSuccess(HttpServletRequest request, HttpServletResponse response, FilterChain chain, UserAuthenticationToken authentication) throws IOException, ServletException {
-		authentication.getDetails().setPhase(UserAuthenticationPhase.IS_AUTHENTICATED);
-		SecurityContextHolder.getContext().setAuthentication(authentication);
-		
-		chain.doFilter(request, response);
-	}
-
-	@Override
-	protected void userAuthenticatedFail(HttpServletRequest request, HttpServletResponse response, FilterChain chain, StageException e) throws IOException, ServletException {
-		UserAuthenticationToken authentication = new UserAuthenticationToken();
-		authentication.getDetails().setResultCode(e.getCode());
-		authentication.getDetails().setParameters(e.getParams());
-		authentication.getDetails().setType(UserAuthenticationType.SOAP);
-		
-		if (StageExceptionType.FATAL.equals(e.getType()) || StageExceptionType.ACCESS.equals(e.getType()) || StageExceptionType.ACTIVATION.equals(e.getType())) {
-			authentication.getDetails().setPhase(UserAuthenticationPhase.SSO_FAILED);
-		}
-		
-		SecurityContextHolder.getContext().setAuthentication(authentication);
-		chain.doFilter(request, response);
+	public SoapSingleSignOnFilter(String path, List<ISingleSignOn> steps) {
+		super(path, steps);
 	}
 
 }

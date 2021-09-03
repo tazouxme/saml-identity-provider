@@ -19,7 +19,11 @@ public class LoginAuthenticationFilter extends AbstractIdentityProviderFilter {
 	private Map<String, ILoginAuthentication> steps = new HashMap<>();
 
 	public LoginAuthenticationFilter(List<ILoginAuthentication> steps) {
-		super(new AntPathRequestMatcher("/login"));
+		this("/login", steps);
+	}
+
+	public LoginAuthenticationFilter(String path, List<ILoginAuthentication> steps) {
+		super(new AntPathRequestMatcher(path));
 		
 		for (ILoginAuthentication step : steps) {
 			this.steps.put(step.getMethod(), step);
@@ -27,14 +31,14 @@ public class LoginAuthenticationFilter extends AbstractIdentityProviderFilter {
 	}
 
 	@Override
-	protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws IOException, ServletException {
+	protected boolean doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws IOException, ServletException {
 		ILoginAuthentication authentication = this.steps.get(req.getMethod());
 		if (authentication == null) {
 			res.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
-			return;
+			return false;
 		}
 		
-		authentication.doFilterInternal(req, res, chain);
+		return authentication.doFilterInternal(req, res, chain);
 	}
 
 }

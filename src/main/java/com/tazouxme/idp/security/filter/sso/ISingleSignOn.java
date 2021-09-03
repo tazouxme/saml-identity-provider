@@ -1,4 +1,4 @@
-package com.tazouxme.idp.security.filter.login;
+package com.tazouxme.idp.security.filter.sso;
 
 import java.io.IOException;
 
@@ -7,7 +7,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public interface ILoginAuthentication {
+public interface ISingleSignOn {
 	
 	/**
 	 * Get HTTP Method applicable to this Filter

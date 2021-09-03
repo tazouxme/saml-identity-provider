@@ -67,7 +67,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.tazouxme.idp.IdentityProviderConstants;
-import com.tazouxme.idp.security.filter.entity.PasswordEntity;
+import com.tazouxme.idp.security.entity.PasswordEntity;
 import com.tazouxme.idp.test.util.DbKiller;
 
 @ContextConfiguration("classpath:spring/db-killer.xml")

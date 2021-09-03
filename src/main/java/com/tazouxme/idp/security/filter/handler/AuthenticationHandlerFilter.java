@@ -1,4 +1,4 @@
-package com.tazouxme.idp.security.filter;
+package com.tazouxme.idp.security.filter.handler;
 
 import java.io.IOException;
 
@@ -14,23 +14,19 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.filter.GenericFilterBean;
 
 import com.tazouxme.idp.IdentityProviderConstants;
-import com.tazouxme.idp.security.filter.handler.AbstractAuthenticationHandler;
-import com.tazouxme.idp.security.filter.handler.AuthenticationHandlerFactory;
 import com.tazouxme.idp.security.stage.parameters.StageParameters;
 import com.tazouxme.idp.security.token.UserAuthenticationToken;
 
-public class AuthenticationHandlerFilter extends GenericFilterBean {
+public class AuthenticationHandlerFilter {
 	
 	protected final Log logger = LogFactory.getLog(getClass());
 	
 	@Autowired
 	private ApplicationContext context;
 
-	@Override
-	public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
+	public void finalize(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
 		Object activeAuthentication = req.getAttribute(IdentityProviderConstants.REQUEST_ACTIVE_AUTHENTICATION);
 		UserAuthenticationToken endAuthentication = (UserAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
 		

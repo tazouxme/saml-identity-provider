@@ -54,7 +54,7 @@ public class HeadLoginAuthentication implements ILoginAuthentication {
 	private IIdentityProviderApplication idpApplication;
 
 	@Override
-	public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
+	public boolean doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
 		String csrf = request.getHeader(IdentityProviderConstants.AUTH_HEADER_CSRF);
 		String publicKey = request.getHeader(IdentityProviderConstants.AUTH_HEADER_PUBLIC_KEY);
 		String username = request.getHeader(IdentityProviderConstants.AUTH_HEADER_USERNAME);
@@ -63,7 +63,7 @@ public class HeadLoginAuthentication implements ILoginAuthentication {
 			logger.error("Empty Header detected");
 			response.setStatus(412);
 			response.setHeader(IdentityProviderConstants.AUTH_HEADER_ERROR, "Empty Header detected");
-			return;
+			return false;
 		}
 		
 		UserAuthenticationToken startAuthentication = (UserAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
@@ -78,7 +78,7 @@ public class HeadLoginAuthentication implements ILoginAuthentication {
 				response.setStatus(406);
 				response.setHeader(IdentityProviderConstants.AUTH_HEADER_CSRF, csrf);
 				response.setHeader(IdentityProviderConstants.AUTH_HEADER_ERROR, "Authentication phase is not correct");
-				return;
+				return false;
 			}
 			
 			if (!validateUsername(username)) {
@@ -86,7 +86,7 @@ public class HeadLoginAuthentication implements ILoginAuthentication {
 				response.setStatus(404);
 				response.setHeader(IdentityProviderConstants.AUTH_HEADER_CSRF, csrf);
 				response.setHeader(IdentityProviderConstants.AUTH_HEADER_ERROR, "Invalid username");
-				return;
+				return false;
 			}
 			
 			KeyPair keys = generateKeys();
@@ -98,7 +98,7 @@ public class HeadLoginAuthentication implements ILoginAuthentication {
 				response.setStatus(406);
 				response.setHeader(IdentityProviderConstants.AUTH_HEADER_CSRF, csrf);
 				response.setHeader(IdentityProviderConstants.AUTH_HEADER_ERROR, "User is not active");
-				return;
+				return false;
 			}
 			
 			UserAuthenticationToken inAuthentication = new UserAuthenticationToken(user.getExternalId(), user.getPassword());
@@ -124,7 +124,7 @@ public class HeadLoginAuthentication implements ILoginAuthentication {
 						response.setStatus(406);
 						response.setHeader(IdentityProviderConstants.AUTH_HEADER_CSRF, csrf);
 						response.setHeader(IdentityProviderConstants.AUTH_HEADER_ERROR, "Organization PublicKey is not set to encrypt NameID");
-						return;
+						return false;
 					}
 					
 					if ("POST".equals(parameters.getUrlMethod()) && SAMLConstants.SAML2_POST_SIMPLE_SIGN_BINDING_URI.equals(parameters.getAuthnRequest().getProtocolBinding())) {
@@ -132,7 +132,7 @@ public class HeadLoginAuthentication implements ILoginAuthentication {
 						response.setStatus(406);
 						response.setHeader(IdentityProviderConstants.AUTH_HEADER_CSRF, csrf);
 						response.setHeader(IdentityProviderConstants.AUTH_HEADER_ERROR, "Organization PublicKey is not set to verify Signature");
-						return;
+						return false;
 					}
 				}
 				
@@ -148,7 +148,7 @@ public class HeadLoginAuthentication implements ILoginAuthentication {
 					response.setStatus(406);
 					response.setHeader(IdentityProviderConstants.AUTH_HEADER_CSRF, csrf);
 					response.setHeader(IdentityProviderConstants.AUTH_HEADER_ERROR, "Invalid Assertion Consumer Service URL in AuthnRequest");
-					return;
+					return false;
 				}
 				
 				if (NameID.PERSISTENT.equals(parameters.getAuthnRequest().getNameIDPolicy().getFormat())) {
@@ -158,7 +158,7 @@ public class HeadLoginAuthentication implements ILoginAuthentication {
 						response.setStatus(406);
 						response.setHeader(IdentityProviderConstants.AUTH_HEADER_CSRF, csrf);
 						response.setHeader(IdentityProviderConstants.AUTH_HEADER_ERROR, "Federation not enabled for Organization");
-						return;
+						return false;
 					}
 					
 					try {
@@ -168,7 +168,7 @@ public class HeadLoginAuthentication implements ILoginAuthentication {
 							response.setStatus(406);
 							response.setHeader(IdentityProviderConstants.AUTH_HEADER_CSRF, csrf);
 							response.setHeader(IdentityProviderConstants.AUTH_HEADER_ERROR, "Federation not enabled for User");
-							return;
+							return false;
 						}
 						
 						inAuthentication.getDetails().getIdentity().setFederatedUserId(federation.getExternalId());
@@ -177,7 +177,7 @@ public class HeadLoginAuthentication implements ILoginAuthentication {
 						response.setStatus(406);
 						response.setHeader(IdentityProviderConstants.AUTH_HEADER_CSRF, csrf);
 						response.setHeader(IdentityProviderConstants.AUTH_HEADER_ERROR, "Federation not found");
-						return;
+						return false;
 					}
 				}
 			}
@@ -210,6 +210,8 @@ public class HeadLoginAuthentication implements ILoginAuthentication {
 			response.setHeader(IdentityProviderConstants.AUTH_HEADER_CSRF, csrf);
 			response.setHeader(IdentityProviderConstants.AUTH_HEADER_ERROR, "Unable to generate the SecretKey from the PublicKey");
 		}
+
+		return false;
 	}
 	
 	@Override

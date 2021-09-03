@@ -19,7 +19,7 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 import com.tazouxme.idp.application.contract.IIdentityProviderApplication;
 import com.tazouxme.idp.application.exception.AccessException;
 import com.tazouxme.idp.model.Access;
-import com.tazouxme.idp.security.filter.entity.PasswordEntity;
+import com.tazouxme.idp.security.entity.PasswordEntity;
 import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.security.stage.exception.StageException;
 import com.tazouxme.idp.security.stage.exception.StageExceptionType;

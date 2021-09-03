@@ -17,7 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tazouxme.idp.IdentityProviderConstants;
-import com.tazouxme.idp.security.filter.entity.PasswordEntity;
+import com.tazouxme.idp.security.entity.PasswordEntity;
 import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.security.stage.exception.StageException;
 import com.tazouxme.idp.security.stage.exception.StageExceptionType;
@@ -31,7 +31,7 @@ public class PostLoginAuthentication implements ILoginAuthentication {
 	private AuthenticationManager authenticationManager;
 
 	@Override
-	public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
+	public boolean doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
 		UserAuthenticationToken inAuthentication = (UserAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
 		
 		String organization = request.getParameter(IdentityProviderConstants.AUTH_PARAM_ORGANIZATION);
@@ -42,8 +42,8 @@ public class PostLoginAuthentication implements ILoginAuthentication {
 			logger.info(StageResultCode.FAT_1101.getReason());
 			inAuthentication.getDetails().setResultCode(StageResultCode.FAT_1101);
 			
-			chain.doFilter(request, response);
-			return;
+//			chain.doFilter(request, response);
+			return true;
 		}
 		
 		if (StringUtils.isEmpty(password)) {
@@ -53,7 +53,7 @@ public class PostLoginAuthentication implements ILoginAuthentication {
 			
 			request.setAttribute(IdentityProviderConstants.SERVLET_ERROR_WRONG_USER_PASS, "Wrong username / password");
 			request.getRequestDispatcher("/authenticate.jsp").forward(request, response);
-			return;
+			return false;
 		}
 		
 		try {
@@ -65,21 +65,21 @@ public class PostLoginAuthentication implements ILoginAuthentication {
 				// SAML Response
 				SecurityContextHolder.getContext().setAuthentication(endAuthentication);
 				
-				chain.doFilter(request, response);
-				return;
+//				chain.doFilter(request, response);
+				return true;
 			}
 			
 			throw new StageException(StageExceptionType.FATAL, StageResultCode.FAT_1103);
 		} catch (Exception e) {
 			if (e instanceof StageException) {
-				handleStageException((StageException) e, request, response, chain);
-				return;
+				return handleStageException((StageException) e, request, response, chain);
 			}
 			
 			logger.info("Other issue", e);
 			// JSON issue, should not happen - post SAML error
 			inAuthentication.getDetails().setResultCode(StageResultCode.FAT_1104);
-			chain.doFilter(request, response);
+//			chain.doFilter(request, response);
+			return true;
 		}
 	}
 	
@@ -88,7 +88,7 @@ public class PostLoginAuthentication implements ILoginAuthentication {
 		return "POST";
 	}
 	
-	private void handleStageException(StageException s, ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
+	private boolean handleStageException(StageException s, ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
 		if (StageExceptionType.CREDENTIALS.equals(s.getType())) {
 			logger.info("Wrong username / password");
 			// display error message on authenticate page
@@ -97,7 +97,7 @@ public class PostLoginAuthentication implements ILoginAuthentication {
 			
 			req.setAttribute(IdentityProviderConstants.SERVLET_ERROR_WRONG_USER_PASS, "Wrong username / password");
 			req.getRequestDispatcher("/authenticate.jsp").forward(req, res);
-			return;
+			return false;
 		}
 		
 		if (StageExceptionType.ACCESS.equals(s.getType()) || StageExceptionType.FATAL.equals(s.getType())) {
@@ -107,9 +107,11 @@ public class PostLoginAuthentication implements ILoginAuthentication {
 			startAuthentication.getDetails().setPhase(UserAuthenticationPhase.SSO_FAILED);
 			startAuthentication.getDetails().setResultCode(s.getCode());
 			
-			chain.doFilter(req, res);
-			return;
+//			chain.doFilter(req, res);
+			return true;
 		}
+		
+		return true;
 	}
 	
 	public void setAuthenticationManager(AuthenticationManager authenticationManager) {

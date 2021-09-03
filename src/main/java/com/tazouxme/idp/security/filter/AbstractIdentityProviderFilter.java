@@ -4,19 +4,16 @@ import java.io.IOException;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.security.web.util.matcher.RequestMatcher;
-import org.springframework.web.filter.GenericFilterBean;
 
 import com.tazouxme.idp.IdentityProviderConstants;
 
-public abstract class AbstractIdentityProviderFilter extends GenericFilterBean {
+public abstract class AbstractIdentityProviderFilter {
 
 	protected final Log logger = LogFactory.getLog(getClass());
 	private final RequestMatcher requiresAuthenticationRequestMatcher;
@@ -25,22 +22,25 @@ public abstract class AbstractIdentityProviderFilter extends GenericFilterBean {
 		this.requiresAuthenticationRequestMatcher = requiresAuthenticationRequestMatcher;
 	}
 
-	@Override
-	public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
-			throws IOException, ServletException {
-		HttpServletRequest request = (HttpServletRequest) req;
-		HttpServletResponse response = (HttpServletResponse) res;
-
-		if (!requiresAuthenticationRequestMatcher.matches(request)) {
-			chain.doFilter(request, response);
-			return;
-		}
-		
+	public boolean doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
 		request.setAttribute(IdentityProviderConstants.REQUEST_ACTIVE_AUTHENTICATION, Boolean.TRUE);
-		doFilterInternal(request, response, chain);
+		return doFilterInternal(request, response, chain);
 	}
 	
-	protected abstract void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
+	public final boolean isRequested(HttpServletRequest request) {
+		return requiresAuthenticationRequestMatcher.matches(request);
+	}
+	
+	/**
+	 * Proceed with Request filtering
+	 * @param req - HttpServletRequest
+	 * @param res - HttpServletResponse
+	 * @param chain - FilterChain
+	 * @return True if the filter process must go through AuthenticationHandlerFilter, false otherwise
+	 * @throws IOException
+	 * @throws ServletException
+	 */
+	protected abstract boolean doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
 			throws IOException, ServletException;
 
 }

@@ -21,13 +21,13 @@ public class GetLoginAuthentication implements ILoginAuthentication {
 	protected final Log logger = LogFactory.getLog(getClass());
 
 	@Override
-	public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
+	public boolean doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
 		UserAuthenticationToken startAuthentication = (UserAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
 		
 		if (startAuthentication == null || startAuthentication.getDetails().getParameters() == null ||
 				UserAuthenticationPhase.IS_AUTHENTICATED.equals(startAuthentication.getDetails().getPhase())) {
 			response.sendRedirect("./dashboard");
-			return;
+			return false;
 		}
 		
 		if (!UserAuthenticationPhase.MUST_AUTHENTICATE.equals(startAuthentication.getDetails().getPhase())) {
@@ -38,8 +38,8 @@ public class GetLoginAuthentication implements ILoginAuthentication {
 			
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 			
-			chain.doFilter(request, response);
-			return;
+//			chain.doFilter(request, response);
+			return true;
 		}
 		
 		if (UserAuthenticationType.SAML.equals(startAuthentication.getDetails().getType())) {
@@ -52,6 +52,7 @@ public class GetLoginAuthentication implements ILoginAuthentication {
 		
 		// display authenticate page
 		request.getRequestDispatcher("/authenticate.jsp").forward(request, response);
+		return false;
 	}
 	
 	@Override

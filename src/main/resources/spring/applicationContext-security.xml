@@ -23,19 +23,7 @@
 				<!-- Security -->
 				<security:filter-chain pattern="/**" filters="
 					securityContextPersistenceFilter,
-					
-					getSingleLogoutFilter,
-					postSingleLogoutFilter,
-					
-					logoutAuthenticateFilter,
-					
-					getSingleSignOnFilter,
-					postSingleSignOnFilter,
-					soapSingleSignOnFilter,
-					
-					loginAuthenticateFilter,
-					
-					authenticationHandlerFilter,
+					identityProviderFilter,
 					exceptionTranslationFilter,
 					filterSecurityInterceptor" />
 			</list>
@@ -43,7 +31,16 @@
 	</bean>
 
 	<bean id="securityContextPersistenceFilter" class="org.springframework.security.web.context.SecurityContextPersistenceFilter" />
-	
+	<bean id="identityProviderFilter" class="com.tazouxme.idp.security.filter.IdentityProviderFilter">
+		<property name="filters">
+			<list>
+				<ref bean="httpSingleLogoutFilter" />
+				<ref bean="httpSingleSignOnFilter" />
+				<ref bean="soapSingleSignOnFilter" />
+				<ref bean="loginAuthenticateFilter" />
+			</list>
+		</property>
+	</bean>
 	<bean id="ssoHttpStages" class="com.tazouxme.idp.security.stage.chain.StageChain">
 		<property name="stages">
 			<list>
@@ -84,26 +81,55 @@
 		</property>
 	</bean>
 	
-	<bean id="getSingleLogoutFilter" class="com.tazouxme.idp.security.filter.slo.http.GetSingleLogoutFilter">
-		<property name="stages" ref="sloStages" />
-	</bean>
-	<bean id="postSingleLogoutFilter" class="com.tazouxme.idp.security.filter.slo.http.PostSingleLogoutFilter">
-		<property name="stages" ref="sloStages" />
+	<bean id="httpSingleLogoutFilter" class="com.tazouxme.idp.security.filter.slo.http.HttpSingleLogoutFilter">
+		<constructor-arg index="0" value="${idp.slo.path}" />
+		<constructor-arg index="1">
+			<list>
+				<bean class="com.tazouxme.idp.security.filter.slo.http.GetSingleLogout">
+					<constructor-arg index="0" ref="configuration" />
+					<constructor-arg index="1" ref="sloStages" />
+				</bean>
+				<bean class="com.tazouxme.idp.security.filter.slo.http.PostSingleLogout">
+					<constructor-arg index="0" ref="configuration" />
+					<constructor-arg index="1" ref="sloStages" />
+				</bean>
+			</list>
+		</constructor-arg>
 	</bean>
 	
-	<bean id="getSingleSignOnFilter" class="com.tazouxme.idp.security.filter.sso.http.GetSingleSignOnFilter">
-		<property name="stages" ref="ssoHttpStages" />
-	</bean>
-	<bean id="postSingleSignOnFilter" class="com.tazouxme.idp.security.filter.sso.http.PostSingleSignOnFilter">
-		<property name="stages" ref="ssoHttpStages" />
+	<bean id="httpSingleSignOnFilter" class="com.tazouxme.idp.security.filter.sso.http.HttpSingleSignOnFilter">
+		<constructor-arg index="0" value="${idp.sso.path}" />
+		<constructor-arg index="1">
+			<list>
+				<bean class="com.tazouxme.idp.security.filter.sso.http.GetSingleSignOn">
+					<constructor-arg index="0" ref="configuration" />
+					<constructor-arg index="1" ref="ssoHttpStages" />
+				</bean>
+				<bean class="com.tazouxme.idp.security.filter.sso.http.PostSingleSignOn">
+					<constructor-arg index="0" ref="configuration" />
+					<constructor-arg index="1" ref="ssoHttpStages" />
+				</bean>
+			</list>
+		</constructor-arg>
 	</bean>
 	<bean id="soapSingleSignOnFilter" class="com.tazouxme.idp.security.filter.sso.soap.SoapSingleSignOnFilter">
-		<property name="stages" ref="ssoSoapStages" />
+		<constructor-arg index="0" value="${idp.sso.soap.path}" />
+		<constructor-arg index="1">
+			<list>
+				<bean class="com.tazouxme.idp.security.filter.sso.soap.SoapSingleSignOn">
+					<constructor-arg index="0" ref="configuration" />
+					<constructor-arg index="1" ref="ssoSoapStages" />
+				</bean>
+			</list>
+		</constructor-arg>
 	</bean>
-	<bean id="logoutAuthenticateFilter" class="com.tazouxme.idp.security.filter.logout.LogoutAuthenticationFilter" />
+	<bean id="logoutAuthenticateFilter" class="com.tazouxme.idp.security.filter.logout.LogoutAuthenticationFilter">
+		<constructor-arg index="0" value="${idp.logout.path}" />
+	</bean>
 	
 	<bean id="loginAuthenticateFilter" class="com.tazouxme.idp.security.filter.login.LoginAuthenticationFilter">
-		<constructor-arg>
+		<constructor-arg index="0" value="${idp.login.path}" />
+		<constructor-arg index="1">
 			<list>
 				<bean class="com.tazouxme.idp.security.filter.login.GetLoginAuthentication" />
 				<bean class="com.tazouxme.idp.security.filter.login.HeadLoginAuthentication" />
@@ -114,7 +140,7 @@
 		</constructor-arg>
 	</bean>
 	
-	<bean id="authenticationHandlerFilter" class="com.tazouxme.idp.security.filter.AuthenticationHandlerFilter" />
+	<bean id="authenticationHandlerFilter" class="com.tazouxme.idp.security.filter.handler.AuthenticationHandlerFilter" />
 	
 	<bean id="exceptionTranslationFilter" class="org.springframework.security.web.access.ExceptionTranslationFilter">
 		<constructor-arg index="0">

@@ -79,7 +79,7 @@ import org.opensaml.soap.client.http.AbstractPipelineHttpSOAPClient;
 import org.opensaml.soap.common.SOAPException;
 
 import com.tazouxme.idp.IdentityProviderConstants;
-import com.tazouxme.idp.security.filter.entity.PasswordEntity;
+import com.tazouxme.idp.security.entity.PasswordEntity;
 import com.tazouxme.idp.security.stage.StageResultCode;
 import com.tazouxme.idp.test.util.SAMLUtilsTest;
 import com.tazouxme.idp.test.util.SelfEntityIDResolver;
